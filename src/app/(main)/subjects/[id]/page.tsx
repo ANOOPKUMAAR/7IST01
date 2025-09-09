@@ -11,15 +11,24 @@ export default function SubjectDetailsPage() {
   const { subjects, attendance, isLoaded } = useAppContext();
   
   if (!isLoaded) {
-    return <Skeleton className="h-[400px] w-full" />
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+            <Skeleton className="h-8 w-1/2" />
+            <Skeleton className="h-5 w-1/3" />
+        </div>
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    )
   }
   
   const subject = subjects.find(s => s.id === id);
-  const subjectAttendance = attendance[id] || [];
-
+  
   if (!subject) {
     notFound();
   }
+  
+  const subjectAttendance = attendance[id] || [];
 
   return (
     <div className="flex flex-col gap-6">

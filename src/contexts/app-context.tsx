@@ -13,13 +13,6 @@ import type {
   UserCredentials,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
-import { useRouter } from "next/navigation";
-
-interface RegistrationData {
-    name: string;
-    rollNo: string;
-    password?: string;
-}
 
 interface AppContextType {
   subjects: Subject[];
@@ -27,10 +20,7 @@ interface AppContextType {
   wifiZones: WifiZone[];
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
-  userCredentials: UserCredentials;
   isLoaded: boolean;
-  isLoggedIn: boolean;
-  registerUser: (data: RegistrationData) => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -130,20 +120,13 @@ const initialUserDetails: UserDetails = {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
-  const [userCredentials, setUserCredentials] = useState<UserCredentials>({
-      userId: "",
-      password: "",
-  });
-
-
+  
   useEffect(() => {
     try {
       const storedSubjects = localStorage.getItem("witrack_subjects");
@@ -151,64 +134,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
-      const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
-      const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
 
-      const isLoggedInStatus = storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false;
-      
-      if (isLoggedInStatus) {
-        setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
-        setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
-        setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
-        setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-        setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { userId: '20221IST0001', password: '123' });
-        setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
-      }
-      setIsLoggedIn(isLoggedInStatus);
+      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
+      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
+      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+      setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
+      setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      setIsLoggedIn(false);
     }
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("witrack_isLoggedIn", JSON.stringify(isLoggedIn));
-      if (isLoggedIn) {
-        localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
-        localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
-        localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
-        localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
-        localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
-      } else {
-        localStorage.removeItem("witrack_activeCheckIn");
-      }
+      localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
+      localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
+      localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
+      localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
+      localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
     }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoggedIn, isLoaded]);
-
-  const registerUser = (data: RegistrationData) => {
-    const newUserDetails: UserDetails = {
-        ...initialUserDetails,
-        name: data.name,
-        rollNo: data.rollNo,
-    };
-
-    const newUserCredentials: UserCredentials = {
-        userId: data.rollNo,
-        password: data.password
-    };
-
-    setUserDetails(newUserDetails);
-    setUserCredentials(newUserCredentials);
-    setSubjects(initialSubjects);
-    setAttendance(generateInitialAttendance());
-    setWifiZones(initialWifiZones);
-    setActiveCheckIn(null);
-    setIsLoggedIn(true);
-  };
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, isLoaded]);
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -310,14 +257,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateUserDetails = (details: UserDetails) => {
     setUserDetails(details);
-    setUserCredentials(prev => ({...prev, userId: details.rollNo}));
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
+  // This function is now a no-op but kept for type consistency if needed later.
   const updateUserCredentials = (newCredentials: Omit<UserCredentials, 'userId'>) => {
-    setUserCredentials(prev => ({...prev, ...newCredentials}));
-    toast({ title: "Credentials Updated", description: "Your password has been updated." });
-    return true;
+    toast({ title: "Credentials Updated", description: "This feature is currently disabled." });
+    return false;
   };
 
   const value = {
@@ -326,10 +272,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     wifiZones,
     activeCheckIn,
     userDetails,
-    userCredentials,
     isLoaded,
-    isLoggedIn,
-    registerUser,
     addSubject,
     bulkAddSubjects,
     updateSubject,

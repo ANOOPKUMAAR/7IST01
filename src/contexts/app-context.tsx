@@ -56,7 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [adminMode, setAdminMode] = useState<boolean>(false);
-  const [adminCode, setAdminCode] = useState<string>("1234");
+  const [adminCode, setAdminCode] = useState<string>("0000");
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
 
   useEffect(() => {
@@ -71,7 +71,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       if (storedAdminCode) {
-        setAdminCode(storedAdminCode);
+        // Handle cases where code might be stored with quotes
+        try {
+          const parsedCode = JSON.parse(storedAdminCode);
+          setAdminCode(parsedCode);
+        } catch {
+          setAdminCode(storedAdminCode);
+        }
+      } else {
+        setAdminCode("0000");
       }
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
@@ -246,3 +254,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

@@ -81,7 +81,7 @@ export function AdminSettings() {
             <CardHeader>
                 <CardTitle>Admin Mode</CardTitle>
                 <CardDescription>
-                Enable admin mode to modify all data. Default code is 1234.
+                Enable admin mode to modify all data. Default code is 0000.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -191,3 +191,5 @@ export function AdminSettings() {
     </div>
   );
 }
+
+    

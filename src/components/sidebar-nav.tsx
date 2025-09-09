@@ -76,18 +76,6 @@ export function SidebarNav() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={isActive("/profile")}
-              tooltip={{ children: "Profile" }}
-            >
-              <Link href="/profile">
-                <User />
-                <span>Profile</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
         </SidebarMenu>
         <SidebarSeparator />
         <SidebarMenu>
@@ -139,6 +127,18 @@ export function SidebarNav() {
           </Button>
          )}
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/profile")}
+              tooltip={{ children: "Profile" }}
+            >
+              <Link href="/profile">
+                <User />
+                <span>Profile</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild

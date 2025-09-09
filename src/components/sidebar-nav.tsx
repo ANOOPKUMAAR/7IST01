@@ -32,7 +32,10 @@ export function SidebarNav() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Icons.logo />
+        <Link href="/" className="flex items-center gap-2">
+            <Icons.logo />
+            <span className="text-lg font-bold">WiTrack</span>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>

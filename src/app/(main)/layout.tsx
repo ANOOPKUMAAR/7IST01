@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarInset, SidebarRail } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { Header } from "@/components/header";
+import { Icons } from "@/components/icons";
 
 export default function MainLayout({
   children,

@@ -47,14 +47,12 @@ const initialSubjects: Subject[] = [
 ];
 
 const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // Sunday - 0, Monday - 1, etc.
-  
   const getPastDate = (targetDay: number) => {
     const date = new Date();
     const currentDay = date.getDay();
-    const diff = currentDay - targetDay;
-    date.setDate(date.getDate() - (diff >= 0 ? diff : diff + 7));
+    let diff = currentDay - targetDay;
+    if (diff < 0) diff += 7;
+    date.setDate(date.getDate() - diff);
     return date;
   }
 
@@ -101,7 +99,6 @@ const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => {
     ]
   };
 };
-
 
 const initialWifiZones: WifiZone[] = [
     { id: 'wifi1', ssid: 'Campus-WiFi' },
@@ -150,7 +147,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : initialUserCredentials);
       
-      const today = new Date().getDay();
       if(storedAttendance === null) {
         setAttendance(generateInitialAttendance());
       } else {

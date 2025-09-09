@@ -1,8 +1,6 @@
 
 "use client";
 
-import { useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { useAppContext } from "@/contexts/app-context";
 import {
   Table,
@@ -20,16 +18,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -42,36 +30,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertTriangle, Trash, PlusCircle } from "lucide-react";
+import { AlertTriangle, Trash } from "lucide-react";
 import type { Subject, AttendanceRecord } from "@/lib/types";
 
-type ManualEntryInputs = {
-    date: string;
-    checkIn: string;
-    checkOut: string;
-}
-
 export function AttendanceTable({ subject, records }: { subject: Subject; records: AttendanceRecord[] }) {
-  const { addManualEntry, deleteAttendanceRecord } = useAppContext();
-  const { register, handleSubmit, reset } = useForm<ManualEntryInputs>();
-  const [isDialogOpen, setDialogOpen] = useState(false);
-
-  const onAddManualEntry: SubmitHandler<ManualEntryInputs> = (data) => {
-    const checkInDateTime = new Date(`${data.date}T${data.checkIn}`).toISOString();
-    const checkOutDateTime = new Date(`${data.date}T${data.checkOut}`).toISOString();
-
-    addManualEntry(subject.id, {
-        date: data.date,
-        checkIn: checkInDateTime,
-        checkOut: checkOutDateTime,
-    });
-
-    reset();
-    setDialogOpen(false);
-  };
+  const { deleteAttendanceRecord } = useAppContext();
 
   const sortedRecords = records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -83,36 +47,6 @@ export function AttendanceTable({ subject, records }: { subject: Subject; record
                     <CardTitle>Attendance Log</CardTitle>
                     <CardDescription>A detailed record of your check-ins and check-outs.</CardDescription>
                 </div>
-                
-                <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4"/>Add Manual Entry</Button></DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add Manual Attendance</DialogTitle>
-                            <DialogDescription>Manually add an attendance record for {subject.name}.</DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit(onAddManualEntry)} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="date">Date</Label>
-                                <Input id="date" type="date" {...register("date", { required: true })} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="checkIn">Check-in Time</Label>
-                                    <Input id="checkIn" type="time" {...register("checkIn", { required: true })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="checkOut">Check-out Time</Label>
-                                    <Input id="checkOut" type="time" {...register("checkOut", { required: true })} />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                                <Button type="submit">Save Record</Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
             </div>
         </CardHeader>
         <CardContent>

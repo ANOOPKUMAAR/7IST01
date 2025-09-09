@@ -155,16 +155,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Simulate Wi-Fi check. In a real scenario, you'd need a native API to get SSID.
-    // For this web-based prototype, we'll check if any Wi-Fi zones are defined.
-    // If zones are defined, we assume the user must be "in" one to check in.
-    if (wifiZones.length > 0) {
-      // Here, we are simulating a successful Wi-Fi check.
-      console.log("Simulating Wi-Fi check. Found defined zones, proceeding with check-in.");
-    } else {
+    // Check for defined Wi-Fi zones.
+    if (wifiZones.length === 0) {
       toast({
         title: "Wi-Fi Zone Required",
         description: "Please define at least one Wi-Fi zone in settings to enable check-in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check connection type using the Network Information API.
+    // @ts-ignore - for navigator.connection
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (connection && connection.type !== 'wifi') {
+      toast({
+        title: "Wi-Fi Connection Required",
+        description: "You must be connected to a Wi-Fi network to check in. Cellular data is not permitted.",
         variant: "destructive",
       });
       return;

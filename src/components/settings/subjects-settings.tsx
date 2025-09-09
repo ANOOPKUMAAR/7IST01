@@ -37,9 +37,10 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { Trash, Edit, PlusCircle, FileUp } from "lucide-react";
+import { Trash, Edit, PlusCircle, FileUp, Loader2 } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
+import { extractTimetable } from "@/ai/flows/extract-timetable-flow";
 
 type Inputs = {
   name: string;
@@ -130,6 +131,7 @@ function UploadDialog({ onDone }: { onDone: () => void }) {
     const { bulkAddSubjects } = useAppContext();
     const { toast } = useToast();
     const [file, setFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -137,69 +139,57 @@ function UploadDialog({ onDone }: { onDone: () => void }) {
         }
     };
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
         if (!file) {
             toast({ title: "No file selected", variant: "destructive" });
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const text = e.target?.result as string;
-            try {
-                const lines = text.split('\n').filter(line => line.trim() !== '');
-                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-                const requiredHeaders = ['name', 'checkIn', 'checkOut', 'totalClasses', 'dayOfWeek'];
-                
-                if(!requiredHeaders.every(h => headers.includes(h))) {
-                    toast({ title: "Invalid CSV format", description: `File must have headers: ${requiredHeaders.join(', ')}`, variant: "destructive"});
-                    return;
-                }
-                
-                const newSubjects: Omit<Subject, 'id'>[] = [];
-                for(let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                    const day = daysOfWeek.find(d => d.label.toLowerCase() === values[4].toLowerCase());
-                    
-                    if(!day) {
-                        toast({ title: "Invalid Day", description: `Day "${values[4]}" on line ${i+1} is not valid.`, variant: "destructive" });
-                        continue;
-                    }
+        setIsUploading(true);
 
-                    newSubjects.push({
-                        name: values[0],
-                        expectedCheckIn: values[1],
-                        expectedCheckOut: values[2],
-                        totalClasses: parseInt(values[3]),
-                        dayOfWeek: parseInt(day.value)
-                    });
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async (e) => {
+            const fileDataUri = e.target?.result as string;
+            try {
+                const result = await extractTimetable({ fileDataUri });
+                if (result.subjects && result.subjects.length > 0) {
+                    bulkAddSubjects(result.subjects);
+                    onDone();
+                } else {
+                    toast({ title: "No subjects found", description: "The AI could not find any subjects in the uploaded file.", variant: "destructive" });
                 }
-                bulkAddSubjects(newSubjects);
-                onDone();
             } catch (error) {
-                console.error("Error parsing CSV: ", error);
-                toast({ title: "Error parsing file", description: "Please check the file format and content.", variant: "destructive" });
+                console.error("Error extracting timetable: ", error);
+                toast({ title: "Error analyzing file", description: "There was a problem processing your timetable. Please try another file.", variant: "destructive" });
+            } finally {
+                setIsUploading(false);
             }
         };
-        reader.readAsText(file);
+        reader.onerror = () => {
+            toast({ title: "Error reading file", description: "Could not read the selected file.", variant: "destructive" });
+            setIsUploading(false);
+        }
     };
 
     return (
         <>
             <div className="space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="timetable-file">Upload CSV File</Label>
-                    <Input id="timetable-file" type="file" accept=".csv" onChange={handleFileChange} />
+                    <Label htmlFor="timetable-file">Upload Timetable File</Label>
+                    <Input id="timetable-file" type="file" accept="image/png, image/jpeg, application/pdf" onChange={handleFileChange} />
                     <p className="text-xs text-muted-foreground">
-                        CSV headers: name,checkIn,checkOut,totalClasses,dayOfWeek
+                        Upload an image (PNG, JPG) or a PDF of your timetable.
                     </p>
                 </div>
             </div>
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
+                    <Button type="button" variant="outline" disabled={isUploading}>Cancel</Button>
                 </DialogClose>
-                <Button onClick={handleUpload}>Upload and Save</Button>
+                <Button onClick={handleUpload} disabled={isUploading}>
+                    {isUploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Analyzing...</> : "Upload and Save"}
+                </Button>
             </DialogFooter>
         </>
     );
@@ -226,8 +216,8 @@ export function SubjectsSettings() {
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Upload Timetable from CSV</DialogTitle>
-                            <DialogDescription>Select a CSV file to bulk-import subjects. The file should contain specific headers.</DialogDescription>
+                            <DialogTitle>Upload Timetable</DialogTitle>
+                            <DialogDescription>Select an image or PDF file to bulk-import subjects using AI.</DialogDescription>
                         </DialogHeader>
                         <UploadDialog onDone={() => setUploadDialogOpen(false)} />
                     </DialogContent>

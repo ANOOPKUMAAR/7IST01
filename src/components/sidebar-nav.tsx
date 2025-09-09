@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -24,12 +24,15 @@ import { BookCopy, Home, Settings, LogOut, BarChart3, ChevronDown, User } from "
 import { Skeleton } from "./ui/skeleton";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { subjects, isLoaded } = useAppContext();
+  const { subjects, isLoaded, logout } = useAppContext();
   const [isSubjectsOpen, setSubjectsOpen] = React.useState(true);
   const { state: sidebarState } = useSidebar();
+  const router = useRouter();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (sidebarState === "collapsed") {
@@ -38,12 +41,17 @@ export function SidebarNav() {
   }, [sidebarState]);
 
   const isActive = (path: string) => {
-    // Exact match for the root path, otherwise startsWith for others.
-    if (path === "/") return pathname === path;
+    if (path === "/dashboard") return pathname === path;
     return pathname.startsWith(path);
   };
   
   const isSubjectsActive = isActive('/subjects');
+
+  const handleLogout = () => {
+    logout();
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    router.replace('/login');
+  }
 
   return (
     <Sidebar>
@@ -58,10 +66,10 @@ export function SidebarNav() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/")}
+              isActive={isActive("/dashboard")}
               tooltip={{ children: "Dashboard" }}
             >
-              <Link href="/">
+              <Link href="/dashboard">
                 <Home />
                 <span>Dashboard</span>
               </Link>
@@ -146,6 +154,15 @@ export function SidebarNav() {
                 <Settings />
                 <span>Settings</span>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              tooltip={{ children: "Logout" }}
+            >
+                <LogOut />
+                <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -1,52 +1,31 @@
 
 "use client";
 
-import { Timetable } from "@/components/dashboard/time-table";
-import { Button } from "@/components/ui/button";
-import { FileUp } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { UploadTimetableDialog } from "@/components/dashboard/upload-timetable-dialog";
-import { useState } from "react";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppContext } from '@/contexts/app-context';
+import { Icons } from '@/components/icons';
 
-export default function DashboardPage() {
-  const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
+export default function HomePage() {
+  const { isLoaded, isLoggedIn } = useAppContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded) {
+      if (isLoggedIn) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/login');
+      }
+    }
+  }, [isLoaded, isLoggedIn, router]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Welcome to WiTrack!
-          </h2>
-          <p className="text-muted-foreground">
-            Here is an overview of your subjects and attendance.
-          </p>
-        </div>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <FileUp className="mr-2 h-4 w-4" /> Upload Timetable
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload Timetable</DialogTitle>
-              <DialogDescription>
-                Select an image or PDF file to bulk-import subjects using AI.
-              </DialogDescription>
-            </DialogHeader>
-            <UploadTimetableDialog onDone={() => setUploadDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <div className="flex flex-col items-center justify-center space-y-6 text-center">
+        <Icons.logo className="h-24 w-24 text-primary animate-spin" />
+        <p className="text-muted-foreground">Loading...</p>
       </div>
-      <Timetable />
     </div>
   );
 }

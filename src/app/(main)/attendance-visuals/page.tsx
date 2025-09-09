@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { AttendanceCharts } from "@/components/visuals/attendance-charts";

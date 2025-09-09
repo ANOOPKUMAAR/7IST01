@@ -10,6 +10,7 @@ import type {
   WifiZone,
   ActiveCheckIn,
   UserDetails,
+  UserCredentials,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 
@@ -20,6 +21,8 @@ interface AppContextType {
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
   isLoaded: boolean;
+  isLoggedIn: boolean;
+  userCredentials: UserCredentials[];
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -30,74 +33,19 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
+  registerUser: (credentials: UserCredentials) => boolean;
+  login: (rollNo: string, password: string) => boolean;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const initialSubjects: Subject[] = [
-    { id: 'cs101', name: 'Intro to Computer Science', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20, dayOfWeek: 1 },
+    { id: 'cs101', name: 'Intro to CS', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20, dayOfWeek: 1 },
     { id: 'ma201', name: 'Calculus II', expectedCheckIn: '11:00', expectedCheckOut: '12:30', totalClasses: 24, dayOfWeek: 2 },
-    { id: 'py101', name: 'Physics I', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20, dayOfWeek: 3 },
-    { id: 'ch101', name: 'Chemistry I', expectedCheckIn: '11:00', expectedCheckOut: '12:30', totalClasses: 24, dayOfWeek: 4 },
-    { id: 'en101', name: 'English 101', expectedCheckIn: '13:00', expectedCheckOut: '14:30', totalClasses: 20, dayOfWeek: 5 },
 ];
 
-const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => {
-    const getPastDate = (targetDay: number) => {
-        const date = new Date();
-        const currentDay = date.getDay();
-        let diff = currentDay - targetDay;
-        if (diff < 0) diff += 7;
-        if (diff === 0 && new Date().getHours() < 9) { // If it's the same day but before class time, get last week's
-            diff += 7;
-        }
-        date.setDate(date.getDate() - diff);
-        return date;
-    }
-    
-      return {
-        cs101: [
-          {
-            id: "att_1",
-            date: getPastDate(1).toISOString(),
-            checkIn: new Date(new Date(getPastDate(1)).setHours(9, 5, 0)).toISOString(),
-            checkOut: new Date(new Date(getPastDate(1)).setHours(10, 30, 0)).toISOString(),
-            isAnomaly: false,
-            anomalyReason: "",
-          }
-        ],
-        ma201: [
-          {
-            id: "att_3",
-            date: getPastDate(2).toISOString(),
-            checkIn: new Date(new Date(getPastDate(2)).setHours(11, 2, 0)).toISOString(),
-            checkOut: new Date(new Date(getPastDate(2)).setHours(12, 25, 0)).toISOString(),
-            isAnomaly: false,
-            anomalyReason: "",
-          }
-        ],
-        py101: [
-          {
-            id: "att_2",
-            date: getPastDate(3).toISOString(),
-            checkIn: new Date(new Date(getPastDate(3)).setHours(9, 2, 0)).toISOString(),
-            checkOut: new Date(new Date(getPastDate(3)).setHours(10, 28, 0)).toISOString(),
-            isAnomaly: false,
-            anomalyReason: "",
-          }
-        ],
-        en101: [
-          {
-            id: "att_4",
-            date: getPastDate(5).toISOString(),
-            checkIn: new Date(new Date(getPastDate(5)).setHours(13, 5, 0)).toISOString(),
-            checkOut: new Date(new Date(getPastDate(5)).setHours(14, 30, 0)).toISOString(),
-            isAnomaly: false,
-            anomalyReason: "",
-          }
-        ]
-      };
-};
+const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => { return {} };
 
 const initialWifiZones: WifiZone[] = [
     { id: 'wifi1', ssid: 'Campus-WiFi' },
@@ -119,11 +67,13 @@ const initialUserDetails: UserDetails = {
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
+  const [userCredentials, setUserCredentials] = useState<UserCredentials[]>([]);
   
   useEffect(() => {
     try {
@@ -132,21 +82,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
+      const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
+      const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
 
-      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
+      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : []);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+      setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : []);
+      setIsLoggedIn(storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       // If loading fails, set default data to prevent crash
-      setSubjects(initialSubjects);
+      setSubjects([]);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
       setUserDetails(initialUserDetails);
+      setUserCredentials([]);
+      setIsLoggedIn(false);
     }
     setIsLoaded(true);
   }, []);
@@ -159,11 +115,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
         localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
         localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
+        localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
+        localStorage.setItem("witrack_isLoggedIn", JSON.stringify(isLoggedIn));
       } catch (error) {
           console.error("Failed to save data to localStorage", error);
       }
     }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, isLoaded]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoggedIn, isLoaded]);
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -268,6 +226,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
+  const registerUser = (credentials: UserCredentials) => {
+    if (userCredentials.some(user => user.rollNo === credentials.rollNo)) {
+      return false; // User already exists
+    }
+    setUserCredentials(prev => [...prev, credentials]);
+    // Also update userDetails with the new name and rollNo
+    setUserDetails(prev => ({ ...prev, name: credentials.name, rollNo: credentials.rollNo }));
+    return true;
+  }
+
+  const login = (rollNo: string, password: string) => {
+    const user = userCredentials.find(u => u.rollNo === rollNo && u.password === password);
+    if (user) {
+      setIsLoggedIn(true);
+      // Update user details to match logged-in user
+      setUserDetails(prev => ({ ...prev, name: user.name, rollNo: user.rollNo }));
+      // Reset subjects and attendance for the new user
+      setSubjects(initialSubjects);
+      setAttendance(generateInitialAttendance());
+      setActiveCheckIn(null);
+      return true;
+    }
+    return false;
+  }
+
+  const logout = () => {
+    setIsLoggedIn(false);
+    setUserDetails(initialUserDetails);
+    setSubjects([]);
+    setAttendance({});
+    setActiveCheckIn(null);
+  }
+
   const value = {
     subjects,
     attendance,
@@ -275,6 +266,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeCheckIn,
     userDetails,
     isLoaded,
+    isLoggedIn,
+    userCredentials,
     addSubject,
     bulkAddSubjects,
     updateSubject,
@@ -285,6 +278,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails,
+    registerUser,
+    login,
+    logout,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

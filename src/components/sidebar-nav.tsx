@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { useAppContext } from "@/contexts/app-context";
-import { BookCopy, Home, Settings, LogOut } from "lucide-react";
+import { BookCopy, Home, Settings, LogOut, BarChart3 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 
 export function SidebarNav() {
@@ -48,6 +48,18 @@ export function SidebarNav() {
               <Link href="/dashboard">
                 <Home />
                 <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/attendance-visuals")}
+              tooltip={{ children: "Visuals" }}
+            >
+              <Link href="/attendance-visuals">
+                <BarChart3 />
+                <span>Visuals</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

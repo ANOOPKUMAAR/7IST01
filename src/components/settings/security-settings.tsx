@@ -25,7 +25,7 @@ const securitySchema = z.object({
 type SecurityFormInputs = z.infer<typeof securitySchema>;
 
 export function SecuritySettings() {
-  const { userCredentials, updateUserCredentials, userDetails } = useAppContext();
+  const { userDetails } = useAppContext();
   const { toast } = useToast();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<SecurityFormInputs>({
     resolver: zodResolver(securitySchema),
@@ -36,25 +36,13 @@ export function SecuritySettings() {
   });
 
   const onSubmit: SubmitHandler<SecurityFormInputs> = (data) => {
-    if (data.currentPassword !== userCredentials.password) {
-        toast({
-            title: "Incorrect Password",
-            description: "The current password you entered is incorrect.",
-            variant: "destructive",
-        });
-        return;
-    }
-
-    const success = updateUserCredentials({
-        password: data.newPassword,
+    // This is a placeholder for password change logic.
+    // In a real app, you would integrate with an authentication service.
+    toast({
+        title: "Password Updated (Simulated)",
+        description: "Your password has been changed.",
     });
-    
-    if (success) {
-        reset({
-            currentPassword: "",
-            newPassword: "",
-        });
-    }
+    reset();
   };
 
   return (

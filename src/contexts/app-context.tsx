@@ -10,8 +10,10 @@ import type {
   WifiZone,
   ActiveCheckIn,
   UserDetails,
+  OtpData,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
+import { generateOtp } from "@/ai/flows/otp-flow";
 
 interface AppContextType {
   subjects: Subject[];
@@ -22,6 +24,7 @@ interface AppContextType {
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
   isLoaded: boolean;
+  otpData: OtpData | null;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -29,12 +32,14 @@ interface AppContextType {
   addWifiZone: (ssid: string) => void;
   deleteWifiZone: (zoneId: string) => void;
   setAdminMode: (isAdmin: boolean) => void;
-  updateAdminCode: (code: string) => boolean;
+  updateAdminCode: (code: string, otp: string) => boolean;
   checkIn: (subjectId: string) => void;
   checkOut: (subjectId: string) => Promise<void>;
   addManualEntry: (subjectId: string, entry: Omit<AttendanceRecord, "id" | 'isAnomaly' | 'anomalyReason' >) => void;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
+  requestOtp: () => Promise<void>;
+  clearOtp: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -73,6 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [adminCode, setAdminCode] = useState<string>("0000");
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
+  const [otpData, setOtpData] = useState<OtpData | null>(null);
 
   useEffect(() => {
     try {
@@ -89,10 +95,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
 
       if (storedAdminCode) {
-        setAdminCode(storedAdminCode);
+        setAdminCode(JSON.parse(storedAdminCode));
       } else {
+        localStorage.setItem("witrack_adminCode", JSON.stringify("0000"));
         setAdminCode("0000");
-        localStorage.setItem("witrack_adminCode", "0000");
       }
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
@@ -100,6 +106,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubjects(initialSubjects);
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
+      setAdminCode("0000");
     }
     setIsLoaded(true);
   }, []);
@@ -109,7 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
       localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
       localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("witrack_adminCode", adminCode);
+      localStorage.setItem("witrack_adminCode", JSON.stringify(adminCode));
       localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
       localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
     }
@@ -157,9 +164,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Wi-Fi Zone Removed", variant: "destructive" });
   };
 
-  const updateAdminCode = (code: string) => {
+  const requestOtp = async () => {
+    const result = await generateOtp();
+    const expiry = new Date();
+    expiry.setMinutes(expiry.getMinutes() + 5); // OTP is valid for 5 minutes
+    setOtpData({
+        ...result,
+        expiry: expiry.toISOString(),
+    });
+  };
+
+  const clearOtp = () => {
+    setOtpData(null);
+  };
+  
+  const updateAdminCode = (code: string, otp: string) => {
+    if (!otpData) {
+        toast({ title: "OTP Error", description: "Please request an OTP first.", variant: "destructive" });
+        return false;
+    }
+    if (new Date() > new Date(otpData.expiry)) {
+        toast({ title: "OTP Expired", description: "Your OTP has expired. Please request a new one.", variant: "destructive" });
+        setOtpData(null);
+        return false;
+    }
+    if (otp !== otpData.otp) {
+        toast({ title: "Invalid OTP", description: "The OTP you entered is incorrect.", variant: "destructive" });
+        return false;
+    }
+
     if (/^\d{4}$/.test(code)) {
         setAdminCode(code);
+        setOtpData(null);
         toast({ title: "Admin Code Updated", description: "Your security code has been changed." });
         return true;
     }
@@ -251,6 +287,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeCheckIn,
     userDetails,
     isLoaded,
+    otpData,
     addSubject,
     bulkAddSubjects,
     updateSubject,
@@ -264,6 +301,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addManualEntry,
     deleteAttendanceRecord,
     updateUserDetails,
+    requestOtp,
+    clearOtp,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -38,3 +38,9 @@ export interface UserDetails {
   parentName: string;
   address: string;
 }
+
+export interface OtpData {
+  otp: string;
+  message: string;
+  expiry: string;
+}

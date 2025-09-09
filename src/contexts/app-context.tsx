@@ -30,7 +30,8 @@ interface AppContextType {
   userCredentials: UserCredentials;
   isLoaded: boolean;
   isLoggedIn: boolean;
-  registerAndLogin: (data: RegistrationData) => boolean;
+  registerUser: (data: RegistrationData) => boolean;
+  login: (rollNo: string, password?: string) => boolean;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
@@ -156,14 +157,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
 
       const isLoggedInStatus = storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false;
-      setIsLoggedIn(isLoggedInStatus);
-
-      if (isLoggedInStatus) {
-        setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
-        setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
-        setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
-        setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-        setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { userId: '', password: '' });
+      
+      setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
+      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
+      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+      setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { userId: '20221IST0001', password: '123' });
+      
+      if(isLoggedInStatus) {
+        setIsLoggedIn(true);
         setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       }
 
@@ -177,29 +179,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem("witrack_isLoggedIn", JSON.stringify(isLoggedIn));
-      if (isLoggedIn) {
-        localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
-        localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
-        localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
-        localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
-        localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
-      } else {
-        // Clear storage on logout
-        localStorage.removeItem("witrack_subjects");
-        localStorage.removeItem("witrack_attendance");
-        localStorage.removeItem("witrack_wifiZones");
+      localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
+      localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
+      localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
+      localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
+      localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
+      localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
+      if (!isLoggedIn) {
         localStorage.removeItem("witrack_activeCheckIn");
-        localStorage.removeItem("witrack_userDetails");
-        localStorage.removeItem("witrack_userCredentials");
       }
     }
   }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoggedIn, isLoaded]);
 
-  const registerAndLogin = (data: RegistrationData) => {
-    // In a real app, you'd send this to a server. Here, we just update the state.
+  const registerUser = (data: RegistrationData) => {
     const newUserDetails: UserDetails = {
-        ...initialUserDetails, // Start with defaults
+        ...initialUserDetails,
         name: data.name,
         rollNo: data.rollNo,
     };
@@ -211,24 +205,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setUserDetails(newUserDetails);
     setUserCredentials(newUserCredentials);
-    setIsLoggedIn(true);
-
-    // Set initial data for the new user
     setSubjects(initialSubjects);
     setAttendance(generateInitialAttendance());
     setWifiZones(initialWifiZones);
     setActiveCheckIn(null);
-
-    toast({ title: "Registration Successful", description: `Welcome, ${data.name}!` });
-    router.push("/dashboard");
     return true;
+  };
+  
+  const login = (rollNo: string, password?: string) => {
+    if (rollNo === userCredentials.userId && password === userCredentials.password) {
+        setIsLoggedIn(true);
+        return true;
+    }
+    return false;
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     setActiveCheckIn(null);
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push("/register");
+    router.push("/login");
   };
 
   const addSubject = (subject: Omit<Subject, "id">) => {
@@ -350,12 +346,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     userCredentials,
     isLoaded,
     isLoggedIn,
-    registerAndLogin,
+    registerUser,
+    login,
     logout,
     addSubject,
     bulkAddSubjects,
     updateSubject,
-deleteSubject,
+    deleteSubject,
     addWifiZone,
     deleteWifiZone,
     checkIn,

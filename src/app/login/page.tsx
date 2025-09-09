@@ -16,41 +16,35 @@ import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/icons";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function RegisterPage() {
-  const { registerUser } = useAppContext();
+export default function LoginPage() {
+  const { login } = useAppContext();
   const { toast } = useToast();
   const router = useRouter();
-  const [name, setName] = useState("");
   const [rollNo, setRollNo] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !rollNo || !password) {
+    setIsLoading(true);
+    const success = login(rollNo, password);
+    if (success) {
       toast({
-        title: "Missing Information",
-        description: "Please fill out all fields.",
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      router.push("/dashboard");
+    } else {
+      toast({
+        title: "Login Failed",
+        description: "Invalid roll number or password.",
         variant: "destructive",
       });
-      return;
     }
-    setIsLoading(true);
-    
-    registerUser({ name, rollNo, password });
-    
-    toast({
-        title: "Registration Successful",
-        description: "You can now log in with your credentials.",
-    });
-
-    setTimeout(() => {
-        setIsLoading(false);
-        router.push("/login");
-    }, 500);
+    setIsLoading(false);
   };
 
   return (
@@ -61,23 +55,13 @@ export default function RegisterPage() {
       </div>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Register</CardTitle>
+          <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Create your account to get started with WiTrack.
+            Enter your roll number and password to access your account.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="rollNo">Roll Number</Label>
               <Input
@@ -100,13 +84,13 @@ export default function RegisterPage() {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
+              Login
             </Button>
           </form>
-           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="underline">
-              Login
+          <div className="mt-4 text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="underline">
+              Register
             </Link>
           </div>
         </CardContent>

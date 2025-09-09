@@ -22,6 +22,7 @@ import { useAppContext } from "@/contexts/app-context";
 import { BookCopy, Home, Settings, LogOut, BarChart3, ChevronDown, User } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import * as React from "react";
+import { cn } from "@/lib/utils";
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -47,7 +48,7 @@ export function SidebarNav() {
       <SidebarHeader>
         <Link href="/" className="flex items-center gap-2">
             <Icons.logo />
-            <span className="text-lg font-bold">WiTrack</span>
+            <span className={cn("text-lg font-bold", sidebarState === 'collapsed' && "hidden")}>WiTrack</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>

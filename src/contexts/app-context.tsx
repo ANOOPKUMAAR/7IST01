@@ -168,7 +168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Check connection type using the Network Information API.
     // @ts-ignore - for navigator.connection
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (connection && connection.type !== 'wifi') {
+    if (!connection || connection.type !== 'wifi') {
       toast({
         title: "Wi-Fi Connection Required",
         description: "You must be connected to a Wi-Fi network to check in. Cellular data is not permitted.",

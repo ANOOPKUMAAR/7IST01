@@ -2,10 +2,11 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wifi, BookUser, ShieldCheck } from "lucide-react";
+import { Wifi, BookUser, ShieldCheck, Nfc } from "lucide-react";
 import { SubjectsSettings } from "@/components/settings/subjects-settings";
 import { WifiSettings } from "@/components/settings/wifi-settings";
 import { SecuritySettings } from "@/components/settings/security-settings";
+import { NfcSettings } from "@/components/settings/nfc-settings";
 
 export default function SettingsPage() {
   return (
@@ -18,12 +19,15 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="subjects" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="subjects">
             <BookUser className="mr-2 h-4 w-4" /> Subjects
           </TabsTrigger>
           <TabsTrigger value="wifi">
             <Wifi className="mr-2 h-4 w-4" /> Wi-Fi Zones
+          </TabsTrigger>
+           <TabsTrigger value="nfc">
+            <Nfc className="mr-2 h-4 w-4" /> NFC
           </TabsTrigger>
           <TabsTrigger value="security">
             <ShieldCheck className="mr-2 h-4 w-4" /> Security
@@ -36,6 +40,10 @@ export default function SettingsPage() {
 
         <TabsContent value="wifi" className="mt-4">
           <WifiSettings />
+        </TabsContent>
+
+        <TabsContent value="nfc" className="mt-4">
+          <NfcSettings />
         </TabsContent>
 
         <TabsContent value="security" className="mt-4">

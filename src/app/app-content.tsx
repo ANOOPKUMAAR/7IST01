@@ -3,10 +3,9 @@
 
 import type { ReactNode } from "react";
 import { useAppContext } from "@/contexts/app-context";
-import { SidebarProvider, SidebarInset, SidebarRail } from "@/components/ui/sidebar";
-import { SidebarNav } from "@/components/sidebar-nav";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
+import { BottomNav } from "@/components/bottom-nav";
 
 export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded } = useAppContext();
@@ -23,13 +22,12 @@ export function AppContent({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SidebarProvider>
-      <SidebarNav />
-      <SidebarInset>
-        <Header />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
-      </SidebarInset>
-      <SidebarRail />
-    </SidebarProvider>
+    <div className="flex flex-col h-screen">
+      <Header />
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 mb-16">
+        {children}
+      </main>
+      <BottomNav />
+    </div>
   );
 }

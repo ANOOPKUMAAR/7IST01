@@ -37,8 +37,9 @@ import {
   DialogFooter,
   DialogClose
 } from "@/components/ui/dialog";
-import { Trash, Edit, PlusCircle } from "lucide-react";
+import { Trash, Edit, PlusCircle, FileUp } from "lucide-react";
 import { Controller } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
 
 type Inputs = {
   name: string;
@@ -125,11 +126,90 @@ function SubjectForm({ subject, onSave, onDone }: { subject?: Subject, onSave: (
   )
 }
 
+function UploadDialog({ onDone }: { onDone: () => void }) {
+    const { bulkAddSubjects } = useAppContext();
+    const { toast } = useToast();
+    const [file, setFile] = useState<File | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setFile(e.target.files[0]);
+        }
+    };
+
+    const handleUpload = () => {
+        if (!file) {
+            toast({ title: "No file selected", variant: "destructive" });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result as string;
+            try {
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                const requiredHeaders = ['name', 'checkIn', 'checkOut', 'totalClasses', 'dayOfWeek'];
+                
+                if(!requiredHeaders.every(h => headers.includes(h))) {
+                    toast({ title: "Invalid CSV format", description: `File must have headers: ${requiredHeaders.join(', ')}`, variant: "destructive"});
+                    return;
+                }
+                
+                const newSubjects: Omit<Subject, 'id'>[] = [];
+                for(let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                    const day = daysOfWeek.find(d => d.label.toLowerCase() === values[4].toLowerCase());
+                    
+                    if(!day) {
+                        toast({ title: "Invalid Day", description: `Day "${values[4]}" on line ${i+1} is not valid.`, variant: "destructive" });
+                        continue;
+                    }
+
+                    newSubjects.push({
+                        name: values[0],
+                        expectedCheckIn: values[1],
+                        expectedCheckOut: values[2],
+                        totalClasses: parseInt(values[3]),
+                        dayOfWeek: parseInt(day.value)
+                    });
+                }
+                bulkAddSubjects(newSubjects);
+                onDone();
+            } catch (error) {
+                console.error("Error parsing CSV: ", error);
+                toast({ title: "Error parsing file", description: "Please check the file format and content.", variant: "destructive" });
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    return (
+        <>
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="timetable-file">Upload CSV File</Label>
+                    <Input id="timetable-file" type="file" accept=".csv" onChange={handleFileChange} />
+                    <p className="text-xs text-muted-foreground">
+                        CSV headers: name,checkIn,checkOut,totalClasses,dayOfWeek
+                    </p>
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleUpload}>Upload and Save</Button>
+            </DialogFooter>
+        </>
+    );
+}
 
 export function SubjectsSettings() {
   const { subjects, addSubject, updateSubject, deleteSubject } = useAppContext();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState<string | null>(null);
+  const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   return (
     <Card>
@@ -139,18 +219,32 @@ export function SubjectsSettings() {
                 <CardTitle>Manage Subjects</CardTitle>
                 <CardDescription>Add, edit, or remove your subjects.</CardDescription>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button><PlusCircle className="mr-2 h-4 w-4"/> Add Subject</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add a New Subject</DialogTitle>
-                        <DialogDescription>Enter the details for your new subject.</DialogDescription>
-                    </DialogHeader>
-                    <SubjectForm onSave={addSubject} onDone={() => setAddDialogOpen(false)} />
-                </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+                <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline"><FileUp className="mr-2 h-4 w-4"/> Upload Timetable</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Upload Timetable from CSV</DialogTitle>
+                            <DialogDescription>Select a CSV file to bulk-import subjects. The file should contain specific headers.</DialogDescription>
+                        </DialogHeader>
+                        <UploadDialog onDone={() => setUploadDialogOpen(false)} />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button><PlusCircle className="mr-2 h-4 w-4"/> Add Subject</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add a New Subject</DialogTitle>
+                            <DialogDescription>Enter the details for your new subject.</DialogDescription>
+                        </DialogHeader>
+                        <SubjectForm onSave={addSubject} onDone={() => setAddDialogOpen(false)} />
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

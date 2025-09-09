@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -20,6 +21,7 @@ interface AppContextType {
   activeCheckIn: ActiveCheckIn | null;
   isLoaded: boolean;
   addSubject: (subject: Omit<Subject, "id">) => void;
+  bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
   deleteSubject: (subjectId: string) => void;
   addWifiZone: (ssid: string) => void;
@@ -92,6 +94,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
     setSubjects((prev) => [...prev, newSubject]);
     toast({ title: "Subject Added", description: `${subject.name} has been added.` });
+  };
+
+  const bulkAddSubjects = (newSubjects: Omit<Subject, 'id'>[]) => {
+    const subjectsToAdd = newSubjects.map(s => ({ ...s, id: `subj_${Date.now()}_${Math.random()}` }));
+    setSubjects(prev => [...prev, ...subjectsToAdd]);
+    toast({ title: "Subjects Imported", description: `${subjectsToAdd.length} new subjects have been added from the file.` });
   };
 
   const updateSubject = (updatedSubject: Subject) => {
@@ -213,6 +221,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeCheckIn,
     isLoaded,
     addSubject,
+    bulkAddSubjects,
     updateSubject,
     deleteSubject,
     addWifiZone,

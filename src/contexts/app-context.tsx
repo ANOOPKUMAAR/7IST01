@@ -17,7 +17,6 @@ interface AppContextType {
   subjects: Subject[];
   attendance: Record<string, AttendanceRecord[]>;
   wifiZones: WifiZone[];
-  adminMode: boolean;
   adminCode: string;
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
@@ -28,7 +27,6 @@ interface AppContextType {
   deleteSubject: (subjectId: string) => void;
   addWifiZone: (ssid: string) => void;
   deleteWifiZone: (zoneId: string) => void;
-  setAdminMode: (isAdmin: boolean) => void;
   updateAdminCode: (currentCode: string, newCode: string) => boolean;
   checkIn: (subjectId: string) => void;
   checkOut: (subjectId: string) => Promise<void>;
@@ -69,8 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
-  const [adminMode, setAdminMode] = useState<boolean>(false);
-  const [adminCode, setAdminCode] = useState<string>("0000");
+  const [adminCode, setAdminCode] = useState<string>("1234");
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
 
@@ -91,8 +88,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (storedAdminCode) {
         setAdminCode(storedAdminCode);
       } else {
-        localStorage.setItem("witrack_adminCode", "0000");
-        setAdminCode("0000");
+        localStorage.setItem("witrack_adminCode", "1234");
+        setAdminCode("1234");
       }
 
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
@@ -101,7 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubjects(initialSubjects);
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
-      setAdminCode("0000");
+      setAdminCode("1234");
     }
     setIsLoaded(true);
   }, []);
@@ -250,7 +247,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     subjects,
     attendance,
     wifiZones,
-    adminMode,
     adminCode,
     activeCheckIn,
     userDetails,
@@ -261,7 +257,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteSubject,
     addWifiZone,
     deleteWifiZone,
-    setAdminMode,
     updateAdminCode,
     checkIn,
     checkOut,

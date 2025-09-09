@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -162,7 +163,7 @@ export function SubjectsSettings() {
               <div>
                 <p className="font-semibold">{subject.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {daysOfWeek.find(d => d.value === subject.dayOfWeek.toString())?.label} | {subject.expectedCheckIn} - {subject.expectedCheckOut} | {subject.totalClasses} classes
+                  {daysOfWeek.find(d => d.value === subject.dayOfWeek?.toString())?.label || 'No day set'} | {subject.expectedCheckIn} - {subject.expectedCheckOut} | {subject.totalClasses} classes
                 </p>
               </div>
               <div className="flex gap-2">

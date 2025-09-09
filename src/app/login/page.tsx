@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isLoaded && isLoggedIn) {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     }
   }, [isLoaded, isLoggedIn, router]);
 

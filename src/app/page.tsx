@@ -12,24 +12,22 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isLoaded) {
-      const timer = setTimeout(() => {
-        if (isLoggedIn) {
-            router.push("/dashboard");
-        } else {
-            router.push("/register");
-        }
-      }, 1000); // 1 second delay
-      return () => clearTimeout(timer); // Cleanup the timer
+      if (isLoggedIn) {
+          router.replace("/dashboard");
+      } else {
+          router.replace("/register");
+      }
     }
   }, [isLoaded, isLoggedIn, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background animate-pulse">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <div className="flex flex-col items-center justify-center space-y-6 text-center">
-        <Icons.logo className="h-24 w-24 text-primary" />
+        <Icons.logo className="h-24 w-24 text-primary animate-spin" />
         <h1 className="text-5xl font-bold tracking-tighter sm:text-6xl md:text-7xl">
           WiTrack
         </h1>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     </div>
   );

@@ -12,8 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 
 type Inputs = {
   ssid: string;
@@ -37,13 +36,6 @@ export function WifiSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert>
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Developer Note</AlertTitle>
-          <AlertDescription>
-            Automatic check-in/out based on Wi-Fi is not possible in web browsers due to security restrictions. This section is for record-keeping. Check-ins are a manual action.
-          </AlertDescription>
-        </Alert>
         <form onSubmit={handleSubmit(onSubmit)} className="flex gap-2">
           <div className="flex-grow space-y-2">
             <Label htmlFor="ssid" className="sr-only">SSID</Label>

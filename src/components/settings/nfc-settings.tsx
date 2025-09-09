@@ -10,8 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, Nfc } from "lucide-react";
+import { Nfc } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo, useState, useEffect } from "react";
 import type { Subject } from "@/lib/types";
@@ -43,7 +42,7 @@ export function NfcSettings() {
     });
 
     setCurrentSubject(subjectForNow);
-  }, [subjects, isLoaded]);
+  }, [subjects, isLoaded, activeCheckIn]);
 
   const handleNfcScan = () => {
     if (activeCheckIn) {
@@ -71,15 +70,6 @@ export function NfcSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert>
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Developer Note</AlertTitle>
-          <AlertDescription>
-            Direct NFC access is not possible in most web browsers due to
-            security restrictions. This section simulates how NFC attendance would
-            work. Clicking the button mimics scanning an NFC tag.
-          </AlertDescription>
-        </Alert>
         <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border-2 border-dashed p-12 text-center">
             <Nfc className="h-16 w-16 text-muted-foreground" />
             <p className="text-muted-foreground">

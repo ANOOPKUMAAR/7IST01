@@ -13,6 +13,7 @@ import type {
   UserCredentials,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
+import { useRouter } from "next/navigation";
 
 interface AppContextType {
   subjects: Subject[];
@@ -22,6 +23,9 @@ interface AppContextType {
   userDetails: UserDetails;
   userCredentials: UserCredentials;
   isLoaded: boolean;
+  isLoggedIn: boolean;
+  login: (creds: Omit<UserCredentials, 'userId'>) => boolean;
+  logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -30,10 +34,9 @@ interface AppContextType {
   deleteWifiZone: (zoneId: string) => void;
   checkIn: (subjectId: string) => void;
   checkOut: (subjectId: string) => Promise<void>;
-  addManualEntry: (subjectId: string, entry: Omit<AttendanceRecord, "id" | 'isAnomaly' | 'anomalyReason' >) => void;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
-  updateUserCredentials: (credentials: UserCredentials) => boolean;
+  updateUserCredentials: (credentials: Omit<UserCredentials, 'userId'>) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -117,13 +120,15 @@ const initialUserDetails: UserDetails = {
 };
 
 const initialUserCredentials: UserCredentials = {
-    userId: "alex.doe",
+    userId: "ST2024001",
     password: "password123",
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
@@ -140,12 +145,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
       const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
+      const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
+
+      const userDetailsData = storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails;
+      setUserDetails(userDetailsData);
 
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
-      setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : initialUserCredentials);
+      setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { ...initialUserCredentials, userId: userDetailsData.rollNo });
       
       if(storedAttendance === null) {
         setAttendance(generateInitialAttendance());
@@ -154,13 +162,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
+      setIsLoggedIn(storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false);
+
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       setSubjects(initialSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
-      setUserCredentials(initialUserCredentials);
+      setUserCredentials({ ...initialUserCredentials, userId: initialUserDetails.rollNo });
+      setIsLoggedIn(false);
     }
     setIsLoaded(true);
   }, []);
@@ -173,8 +184,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
       localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
       localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
+      localStorage.setItem("witrack_isLoggedIn", JSON.stringify(isLoggedIn));
     }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoaded]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoggedIn, isLoaded]);
+
+  const login = (creds: Pick<UserCredentials, 'password' | 'userId'>) => {
+    if (creds.userId === userCredentials.userId && creds.password === userCredentials.password) {
+      setIsLoggedIn(true);
+      toast({ title: "Login Successful", description: "Welcome back!" });
+      router.push("/dashboard");
+      return true;
+    }
+    toast({ title: "Login Failed", description: "Invalid roll number or password.", variant: "destructive" });
+    return false;
+  };
+
+  const logout = () => {
+    setIsLoggedIn(false);
+    setActiveCheckIn(null);
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    router.push("/login");
+  };
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -240,7 +270,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const checkOutTime = new Date().toISOString();
     const newRecord: Omit<AttendanceRecord, 'isAnomaly' | 'anomalyReason'> = {
       id: `att_${Date.now()}`,
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString(),
       checkIn: activeCheckIn.checkInTime,
       checkOut: checkOutTime,
     };
@@ -266,20 +296,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addManualEntry = (subjectId: string, entry: Omit<AttendanceRecord, "id" | 'isAnomaly' | 'anomalyReason'>) => {
-    const newRecord: AttendanceRecord = {
-        ...entry,
-        id: `att_manual_${Date.now()}`,
-        isAnomaly: false,
-        anomalyReason: "Manual Entry",
-    };
-    setAttendance(prev => ({
-        ...prev,
-        [subjectId]: [...(prev[subjectId] || []), newRecord].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    }));
-    toast({ title: "Manual Entry Added" });
-  };
-
   const deleteAttendanceRecord = (subjectId: string, recordId: string) => {
     setAttendance(prev => ({
         ...prev,
@@ -290,12 +306,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateUserDetails = (details: UserDetails) => {
     setUserDetails(details);
+    setUserCredentials(prev => ({...prev, userId: details.rollNo}));
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
-  const updateUserCredentials = (newCredentials: UserCredentials) => {
-    setUserCredentials(newCredentials);
-    toast({ title: "Credentials Updated", description: "Your User ID and password have been updated." });
+  const updateUserCredentials = (newCredentials: Omit<UserCredentials, 'userId'>) => {
+    setUserCredentials(prev => ({...prev, ...newCredentials}));
+    toast({ title: "Credentials Updated", description: "Your password has been updated." });
     return true;
   };
 
@@ -307,15 +324,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     userDetails,
     userCredentials,
     isLoaded,
+    isLoggedIn,
+    login,
+    logout,
     addSubject,
     bulkAddSubjects,
     updateSubject,
-    deleteSubject,
+deleteSubject,
     addWifiZone,
     deleteWifiZone,
     checkIn,
     checkOut,
-    addManualEntry,
     deleteAttendanceRecord,
     updateUserDetails,
     updateUserCredentials,

@@ -19,20 +19,18 @@ import { useToast } from "@/hooks/use-toast";
 
 const securitySchema = z.object({
     currentPassword: z.string().min(1, "Current password is required."),
-    newUserId: z.string().min(4, "User ID must be at least 4 characters."),
     newPassword: z.string().min(6, "Password must be at least 6 characters."),
 });
 
 type SecurityFormInputs = z.infer<typeof securitySchema>;
 
 export function SecuritySettings() {
-  const { userCredentials, updateUserCredentials } = useAppContext();
+  const { userCredentials, updateUserCredentials, userDetails } = useAppContext();
   const { toast } = useToast();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<SecurityFormInputs>({
     resolver: zodResolver(securitySchema),
     defaultValues: {
         currentPassword: "",
-        newUserId: userCredentials.userId,
         newPassword: "",
     }
   });
@@ -48,14 +46,12 @@ export function SecuritySettings() {
     }
 
     const success = updateUserCredentials({
-        userId: data.newUserId,
         password: data.newPassword,
     });
     
     if (success) {
         reset({
             currentPassword: "",
-            newUserId: data.newUserId,
             newPassword: "",
         });
     }
@@ -66,15 +62,14 @@ export function SecuritySettings() {
       <CardHeader>
         <CardTitle>Security Settings</CardTitle>
         <CardDescription>
-          Update your User ID and password here.
+          Update your password here. Your User ID is your roll number and cannot be changed here.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="newUserId">User ID</Label>
-                <Input id="newUserId" {...register("newUserId")} />
-                {errors.newUserId && <p className="text-sm text-destructive">{errors.newUserId.message}</p>}
+                <Label htmlFor="userId">User ID (Roll Number)</Label>
+                <Input id="userId" value={userDetails.rollNo} disabled />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current Password</Label>
@@ -88,7 +83,7 @@ export function SecuritySettings() {
             </div>
             
             <div className="flex justify-end">
-                <Button type="submit">Update Credentials</Button>
+                <Button type="submit">Update Password</Button>
             </div>
         </form>
       </CardContent>

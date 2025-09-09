@@ -1,19 +1,27 @@
+
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAppContext } from "@/contexts/app-context";
 import { Icons } from "@/components/icons";
 
 export default function HomePage() {
   const router = useRouter();
+  const { isLoaded, isLoggedIn } = useAppContext();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("/dashboard");
-    }, 1000); // 1 second delay
-
-    return () => clearTimeout(timer); // Cleanup the timer
-  }, [router]);
+    if (isLoaded) {
+      const timer = setTimeout(() => {
+        if (isLoggedIn) {
+            router.push("/dashboard");
+        } else {
+            router.push("/login");
+        }
+      }, 1000); // 1 second delay
+      return () => clearTimeout(timer); // Cleanup the timer
+    }
+  }, [isLoaded, isLoggedIn, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background animate-pulse">

@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { subjects, isLoaded } = useAppContext();
+  const { subjects, isLoaded, logout } = useAppContext();
   const [isSubjectsOpen, setSubjectsOpen] = React.useState(true);
   const { state: sidebarState } = useSidebar();
 
@@ -145,6 +145,15 @@ export function SidebarNav() {
                 <Settings />
                 <span>Settings</span>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={logout}
+              tooltip={{ children: "Logout" }}
+            >
+                <LogOut />
+                <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

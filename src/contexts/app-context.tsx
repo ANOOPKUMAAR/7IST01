@@ -56,7 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [adminMode, setAdminMode] = useState<boolean>(false);
-  const [adminCode, setAdminCode] = useState<string>("0000");
+  const [adminCode, setAdminCode] = useState<string>("1234");
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      setAdminCode(storedAdminCode ? JSON.parse(storedAdminCode) : "0000");
+      setAdminCode(storedAdminCode ? JSON.parse(storedAdminCode) : "1234");
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
       console.error("Failed to load data from localStorage", error);

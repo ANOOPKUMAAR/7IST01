@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -65,7 +66,7 @@ export function AdminSettings() {
             <CardHeader>
                 <CardTitle>Admin Mode</CardTitle>
                 <CardDescription>
-                Enable admin mode to modify all data. Default code is 0000.
+                Enable admin mode to modify all data. Default code is 1234.
                 </CardDescription>
             </CardHeader>
             <CardContent>

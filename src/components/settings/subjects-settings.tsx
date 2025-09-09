@@ -196,7 +196,7 @@ function UploadDialog({ onDone }: { onDone: () => void }) {
 }
 
 export function SubjectsSettings() {
-  const { subjects, addSubject, updateSubject, deleteSubject } = useAppContext();
+  const { subjects, addSubject, updateSubject, deleteSubject, adminMode } = useAppContext();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState<string | null>(null);
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -209,32 +209,34 @@ export function SubjectsSettings() {
                 <CardTitle>Manage Subjects</CardTitle>
                 <CardDescription>Add, edit, or remove your subjects.</CardDescription>
             </div>
-            <div className="flex gap-2">
-                <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="outline"><FileUp className="mr-2 h-4 w-4"/> Upload Timetable</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Upload Timetable</DialogTitle>
-                            <DialogDescription>Select an image or PDF file to bulk-import subjects using AI.</DialogDescription>
-                        </DialogHeader>
-                        <UploadDialog onDone={() => setUploadDialogOpen(false)} />
-                    </DialogContent>
-                </Dialog>
-                <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button><PlusCircle className="mr-2 h-4 w-4"/> Add Subject</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add a New Subject</DialogTitle>
-                            <DialogDescription>Enter the details for your new subject.</DialogDescription>
-                        </DialogHeader>
-                        <SubjectForm onSave={addSubject} onDone={() => setAddDialogOpen(false)} />
-                    </DialogContent>
-                </Dialog>
-            </div>
+            {adminMode && (
+              <div className="flex gap-2">
+                  <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                      <DialogTrigger asChild>
+                          <Button variant="outline"><FileUp className="mr-2 h-4 w-4"/> Upload Timetable</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                          <DialogHeader>
+                              <DialogTitle>Upload Timetable</DialogTitle>
+                              <DialogDescription>Select an image or PDF file to bulk-import subjects using AI.</DialogDescription>
+                          </DialogHeader>
+                          <UploadDialog onDone={() => setUploadDialogOpen(false)} />
+                      </DialogContent>
+                  </Dialog>
+                  <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
+                      <DialogTrigger asChild>
+                          <Button><PlusCircle className="mr-2 h-4 w-4"/> Add Subject</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                          <DialogHeader>
+                              <DialogTitle>Add a New Subject</DialogTitle>
+                              <DialogDescription>Enter the details for your new subject.</DialogDescription>
+                          </DialogHeader>
+                          <SubjectForm onSave={addSubject} onDone={() => setAddDialogOpen(false)} />
+                      </DialogContent>
+                  </Dialog>
+              </div>
+            )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -253,7 +255,7 @@ export function SubjectsSettings() {
               <div className="flex gap-2">
               <Dialog open={isEditDialogOpen === subject.id} onOpenChange={(isOpen) => setEditDialogOpen(isOpen ? subject.id : null)}>
                 <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" disabled={!adminMode}><Edit className="h-4 w-4" /></Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
@@ -266,7 +268,7 @@ export function SubjectsSettings() {
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" disabled={!adminMode}>
                       <Trash className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>

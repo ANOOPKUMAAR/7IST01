@@ -366,6 +366,33 @@ const SidebarHeader = React.forwardRef<
 })
 SidebarHeader.displayName = "SidebarHeader"
 
+const SidebarBrand = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentProps<"a">
+>(({ className, children, ...props }, ref) => {
+  return (
+    <a
+      ref={ref}
+      data-sidebar="brand"
+      className={cn("flex items-center gap-2", className)}
+      {...props}
+    >
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child) && child.type === "span") {
+          return React.cloneElement(child, {
+            className: cn(
+              child.props.className,
+              "duration-200 transition-[margin,opacity] ease-linear group-data-[collapsible=icon]:-ml-8 group-data-[collapsible=icon]:opacity-0"
+            ),
+          } as React.HTMLAttributes<HTMLElement>)
+        }
+        return child
+      })}
+    </a>
+  )
+})
+SidebarBrand.displayName = "SidebarBrand"
+
 const SidebarFooter = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
@@ -738,6 +765,7 @@ SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
 export {
   Sidebar,
+  SidebarBrand,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,

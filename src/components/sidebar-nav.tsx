@@ -15,6 +15,7 @@ import {
   useSidebar,
   SidebarMenuSub,
   SidebarMenuSubButton,
+  SidebarBrand,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
@@ -46,10 +47,10 @@ export function SidebarNav() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link href="/" className="flex items-center gap-2">
-            <Icons.logo />
-            <span className={cn("text-lg font-bold", sidebarState === 'collapsed' && "hidden")}>WiTrack</span>
-        </Link>
+        <SidebarBrand>
+          <Icons.logo />
+          <span className="text-lg font-bold">WiTrack</span>
+        </SidebarBrand>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>

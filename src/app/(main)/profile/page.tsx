@@ -22,20 +22,8 @@ import { useMemo, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import type { UserDetails } from "@/lib/types";
 import { User, Edit } from "lucide-react";
-
-function StatCard({ title, value, description }: { title: string, value: string | number, description?: string }) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle as="h3" className="text-xl">{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
-            </CardHeader>
-            <CardContent>
-                <p className="text-4xl font-bold">{value}</p>
-            </CardContent>
-        </Card>
-    )
-}
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function InfoRow({ label, value }: { label: string, value: string }) {
     return (
@@ -112,21 +100,23 @@ export default function ProfilePage() {
   const { subjects, attendance, isLoaded, userDetails, adminMode } = useAppContext();
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
 
-  const { totalAttendance, overallPercentage, totalPossibleClasses } = useMemo(() => {
-    let totalAttendance = 0;
-    let totalPossibleClasses = 0;
+  const { totalAttended, totalMissed, pieData } = useMemo(() => {
+    let totalAttended = 0;
+    let totalPossible = 0;
     
     subjects.forEach(subject => {
-        const attended = attendance[subject.id]?.length || 0;
-        totalAttendance += attended;
-        totalPossibleClasses += subject.totalClasses > 0 ? subject.totalClasses : attended;
+        totalAttended += attendance[subject.id]?.length || 0;
+        totalPossible += subject.totalClasses > 0 ? subject.totalClasses : (attendance[subject.id]?.length || 0);
     });
 
-    const overallPercentage = totalPossibleClasses > 0 
-        ? Math.round((totalAttendance / totalPossibleClasses) * 100) 
-        : 0;
+    const totalMissed = Math.max(0, totalPossible - totalAttended);
 
-    return { totalAttendance, overallPercentage, totalPossibleClasses };
+    const pieData = [
+        { name: 'Attended', value: totalAttended, color: 'hsl(var(--status-green))' },
+        { name: 'Missed', value: totalMissed, color: 'hsl(var(--status-red))' },
+    ];
+
+    return { totalAttended, totalMissed, pieData };
   }, [subjects, attendance]);
 
 
@@ -140,12 +130,10 @@ export default function ProfilePage() {
                     <Skeleton className="h-5 w-32" />
                 </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-                <Skeleton className="h-40 w-full" />
-                <Skeleton className="h-40 w-full" />
-                <Skeleton className="h-40 w-full" />
+            <div className="grid gap-4 md:grid-cols-2">
+                <Skeleton className="h-96 w-full" />
+                <Skeleton className="h-96 w-full" />
             </div>
-            <Skeleton className="h-96 w-full" />
         </div>
     )
   }
@@ -181,12 +169,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard title="Total Subjects" value={subjects.length} />
-        <StatCard title="Overall Attendance" value={`${overallPercentage}%`} description={`${totalAttendance} / ${totalPossibleClasses} classes attended`} />
-        <StatCard title="Records Logged" value={totalAttendance} description="Total check-ins" />
-      </div>
-
       <Card>
         <CardHeader>
             <CardTitle>Student Information</CardTitle>
@@ -204,6 +186,50 @@ export default function ProfilePage() {
                     <InfoRow label="Address" value={userDetails.address} />
                 </div>
             </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle>Attendance Overview</CardTitle>
+            <CardDescription>A visual summary of your attendance.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center">
+            <div className="h-64 w-full max-w-sm">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                            {pieData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                        </Pie>
+                        <Tooltip formatter={(value, name) => [`${value} classes`, name]}/>
+                    </PieChart>
+                </ResponsiveContainer>
+            </div>
+            <div className="mt-4 flex gap-x-6 text-center">
+                <div>
+                    <p className="text-2xl font-bold text-status-green">{totalAttended}</p>
+                    <p className="text-sm text-muted-foreground">Classes Attended</p>
+                </div>
+                <div>
+                    <p className="text-2xl font-bold text-status-red">{totalMissed}</p>
+                    <p className="text-sm text-muted-foreground">Classes Missed</p>
+                </div>
+            </div>
+
+            <Tabs defaultValue="breakdown" className="w-full mt-6">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="breakdown">Course Breakdown</TabsTrigger>
+                    <TabsTrigger value="day-hour">Day/Hour View</TabsTrigger>
+                </TabsList>
+                <TabsContent value="breakdown">
+                    <p className="p-4 text-center text-muted-foreground">Course breakdown visuals will be shown here.</p>
+                </TabsContent>
+                <TabsContent value="day-hour">
+                    <p className="p-4 text-center text-muted-foreground">Day and hour attendance patterns will be shown here.</p>
+                </TabsContent>
+            </Tabs>
         </CardContent>
       </Card>
 

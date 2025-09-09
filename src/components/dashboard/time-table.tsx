@@ -52,29 +52,30 @@ export function Timetable() {
   };
   
   const grid = useMemo(() => {
-    const newGrid = Array(timeSlots.length - 1).fill(0).map(() => Array(daysOfWeek.length).fill(null));
-    subjects.forEach(subject => {
-      const startHour = parseInt(subject.expectedCheckIn.split(':')[0]);
-      const endHour = Math.ceil(parseInt(subject.expectedCheckOut.split(':')[0]) + parseInt(subject.expectedCheckOut.split(':')[1]) / 60);
-      
-      const startIndex = timeSlots.findIndex(slot => parseInt(slot.split(':')[0]) === startHour);
+    const newGrid = Array(daysOfWeek.length).fill(0).map(() => Array(timeSlots.length - 1).fill(null));
 
-      if (startIndex !== -1) {
-        const duration = Math.max(1, endHour - startHour);
-        for(let i = 0; i < duration; i++) {
-            if (startIndex + i < newGrid.length) {
-                newGrid[startIndex + i][subject.dayOfWeek] = {
-                    ...subject,
-                    isStart: i === 0,
-                    duration: duration,
-                };
+    subjects.forEach(subject => {
+        const startHour = parseInt(subject.expectedCheckIn.split(':')[0]);
+        const endHour = Math.ceil(parseInt(subject.expectedCheckOut.split(':')[0]) + parseInt(subject.expectedCheckOut.split(':')[1]) / 60);
+        
+        const dayIndex = subject.dayOfWeek;
+        const startIndex = timeSlots.findIndex(slot => parseInt(slot.split(':')[0]) === startHour);
+
+        if (dayIndex >= 0 && dayIndex < daysOfWeek.length && startIndex !== -1) {
+            const duration = Math.max(1, endHour - startHour);
+            for(let i = 0; i < duration; i++) {
+                if (startIndex + i < newGrid[dayIndex].length) {
+                    newGrid[dayIndex][startIndex + i] = {
+                        ...subject,
+                        isStart: i === 0,
+                        duration: duration,
+                    };
+                }
             }
         }
-      }
     });
     return newGrid;
   }, [subjects]);
-
 
   if (!isLoaded) {
     return (
@@ -97,20 +98,20 @@ export function Timetable() {
         <CardDescription>Your class schedule for the week. Click on a subject to view details.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-1">
+        <div className="grid grid-cols-[auto_repeat(10,1fr)] gap-1">
           <div />
-          {daysOfWeek.map(day => (
-            <div key={day} className="text-center font-bold p-2 text-sm">
-              {day}
+          {timeSlots.slice(0, -1).map(time => (
+            <div key={time} className="text-center font-bold p-2 text-sm">
+              {time}
             </div>
           ))}
 
           {grid.map((row, rowIndex) => (
             <React.Fragment key={rowIndex}>
-              <div className="text-right p-2 text-xs text-muted-foreground pr-4">{timeSlots[rowIndex]} - {timeSlots[rowIndex+1]}</div>
+              <div className="text-right p-2 text-sm font-bold pr-4">{daysOfWeek[rowIndex]}</div>
               {row.map((subject, colIndex) => {
                 if (!subject) {
-                  return <div key={`${rowIndex}-${colIndex}`} className="border-t border-l" />;
+                  return <div key={`${rowIndex}-${colIndex}`} className="border-t border-l min-h-24" />;
                 }
                 
                 if (!subject.isStart) {
@@ -118,7 +119,7 @@ export function Timetable() {
                 }
 
                 return (
-                  <div key={`${rowIndex}-${colIndex}`} className={cn(`border-t border-l p-2 rounded-md`, getAttendanceStatus(subject.id))} style={{ gridRow: `span ${subject.duration}`}}>
+                  <div key={`${rowIndex}-${colIndex}`} className={cn(`border-t border-l p-2 rounded-md`, getAttendanceStatus(subject.id))} style={{ gridColumn: `span ${subject.duration}`}}>
                     <Link href={`/subjects/${subject.id}`} className="flex flex-col h-full">
                         <p className="font-semibold text-sm">{subject.name}</p>
                         <p className="text-xs text-muted-foreground mt-auto">{subject.expectedCheckIn} - {subject.expectedCheckOut}</p>

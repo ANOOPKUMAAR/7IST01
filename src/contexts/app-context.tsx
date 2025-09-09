@@ -141,17 +141,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
+      // If loading fails, set default data to prevent crash
+      setSubjects(initialSubjects);
+      setAttendance(generateInitialAttendance());
+      setWifiZones(initialWifiZones);
+      setActiveCheckIn(null);
+      setUserDetails(initialUserDetails);
     }
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
-      localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
-      localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
-      localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
+      try {
+        localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
+        localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
+        localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
+        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
+        localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
+      } catch (error) {
+          console.error("Failed to save data to localStorage", error);
+      }
     }
   }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, isLoaded]);
 

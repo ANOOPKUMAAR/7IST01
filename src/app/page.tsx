@@ -4,13 +4,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Icons } from "@/components/icons";
+import { useAppContext } from "@/contexts/app-context";
 
 export default function HomePage() {
   const router = useRouter();
+  const { isLoaded } = useAppContext();
 
   useEffect(() => {
-    router.replace("/dashboard");
-  }, [router]);
+    if (isLoaded) {
+      router.replace("/dashboard");
+    }
+  }, [isLoaded, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">

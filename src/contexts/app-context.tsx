@@ -226,11 +226,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
-  const registerUser = (credentials: UserCredentials) => {
+  const registerUser = (credentials: Omit<UserCredentials, 'name'> & { name: string }) => {
     if (userCredentials.some(user => user.rollNo === credentials.rollNo)) {
       return false; // User already exists
     }
-    setUserCredentials(prev => [...prev, credentials]);
+    const newUser = {
+        name: credentials.name,
+        rollNo: credentials.rollNo,
+        password: credentials.password
+    };
+
+    setUserCredentials(prev => [...prev, newUser]);
     // Also update userDetails with the new name and rollNo
     setUserDetails(prev => ({ ...prev, name: credentials.name, rollNo: credentials.rollNo }));
     return true;
@@ -265,7 +271,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     wifiZones,
     activeCheckIn,
     userDetails,
-    isLoaded,
+isLoaded,
     isLoggedIn,
     userCredentials,
     addSubject,
@@ -293,3 +299,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

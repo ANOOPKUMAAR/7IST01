@@ -10,13 +10,12 @@ export function middleware(request: NextRequest) {
   const isPublicRoute = pathname === '/login' || pathname === '/register';
   const isHomePage = pathname === '/';
 
-  // Allow access to the homepage regardless of auth state, 
-  // as it handles the initial redirection logic.
+  // The homepage handles its own redirection logic, so we let it pass.
   if (isHomePage) {
     return NextResponse.next();
   }
 
-  // If the user is logged in and trying to access a public route (login/register),
+  // If the user is logged in and tries to access a public route (login/register),
   // redirect them to the dashboard.
   if (isLoggedIn && isPublicRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url));

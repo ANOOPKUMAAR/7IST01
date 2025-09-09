@@ -16,7 +16,7 @@ export default function HomePage() {
         if (isLoggedIn) {
             router.push("/dashboard");
         } else {
-            router.push("/login");
+            router.push("/register");
         }
       }, 1000); // 1 second delay
       return () => clearTimeout(timer); // Cleanup the timer

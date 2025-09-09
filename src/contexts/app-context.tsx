@@ -15,6 +15,12 @@ import type {
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 import { useRouter } from "next/navigation";
 
+interface RegistrationData {
+    name: string;
+    rollNo: string;
+    password?: string;
+}
+
 interface AppContextType {
   subjects: Subject[];
   attendance: Record<string, AttendanceRecord[]>;
@@ -24,7 +30,7 @@ interface AppContextType {
   userCredentials: UserCredentials;
   isLoaded: boolean;
   isLoggedIn: boolean;
-  login: (creds: Omit<UserCredentials, 'userId'> & { userId: string }) => boolean;
+  registerAndLogin: (data: RegistrationData) => boolean;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
@@ -122,10 +128,6 @@ const initialUserDetails: UserDetails = {
     address: "123 University Lane, Tech City, 12345",
 };
 
-const initialUserCredentials: UserCredentials = {
-    userId: "20221IST0001",
-    password: "password123",
-};
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -138,8 +140,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
   const [userCredentials, setUserCredentials] = useState<UserCredentials>({
-      userId: "20221IST0001",
-      password: "123456",
+      userId: "",
+      password: "",
   });
 
 
@@ -153,72 +155,80 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
       const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
 
-      const userDetailsData = storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails;
-      setUserDetails(userDetailsData);
+      const isLoggedInStatus = storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false;
+      setIsLoggedIn(isLoggedInStatus);
 
-      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
-      
-      const attendanceData = storedAttendance ? JSON.parse(storedAttendance) : null;
-      if (attendanceData) {
-        setAttendance(attendanceData);
+      if (isLoggedInStatus) {
+        setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+        setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
+        setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
+        setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+        setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { userId: '', password: '' });
+        setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       }
-      
-      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      
-      const credentialsData = storedUserCredentials ? JSON.parse(storedUserCredentials) : { ...initialUserCredentials, userId: userDetailsData.rollNo, password: "123456" };
-      setUserCredentials(credentialsData);
-
-      setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
-      setIsLoggedIn(storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      // Set to defaults if local storage fails
-      setSubjects(initialSubjects);
-      setAttendance({});
-      setWifiZones(initialWifiZones);
-      setUserDetails(initialUserDetails);
-      setUserCredentials({ ...initialUserCredentials, userId: initialUserDetails.rollNo, password: "123456" });
       setIsLoggedIn(false);
     }
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-      if (!isLoaded) return;
-      if(Object.keys(attendance).length === 0) {
-        setAttendance(generateInitialAttendance());
-      }
-  }, [isLoaded, attendance]);
-  
-  useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
-      localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
-      localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
-      localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
-      localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
       localStorage.setItem("witrack_isLoggedIn", JSON.stringify(isLoggedIn));
+      if (isLoggedIn) {
+        localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
+        localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
+        localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
+        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
+        localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
+        localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
+      } else {
+        // Clear storage on logout
+        localStorage.removeItem("witrack_subjects");
+        localStorage.removeItem("witrack_attendance");
+        localStorage.removeItem("witrack_wifiZones");
+        localStorage.removeItem("witrack_activeCheckIn");
+        localStorage.removeItem("witrack_userDetails");
+        localStorage.removeItem("witrack_userCredentials");
+      }
     }
   }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoggedIn, isLoaded]);
 
-  const login = (creds: Pick<UserCredentials, 'password' | 'userId'>) => {
-    if (creds.userId.toLowerCase() === userCredentials.userId.toLowerCase() && creds.password === userCredentials.password) {
-      setIsLoggedIn(true);
-      toast({ title: "Login Successful", description: "Welcome back!" });
-      router.push("/dashboard");
-      return true;
-    }
-    toast({ title: "Login Failed", description: "Invalid roll number or password.", variant: "destructive" });
-    return false;
+  const registerAndLogin = (data: RegistrationData) => {
+    // In a real app, you'd send this to a server. Here, we just update the state.
+    const newUserDetails: UserDetails = {
+        ...initialUserDetails, // Start with defaults
+        name: data.name,
+        rollNo: data.rollNo,
+    };
+
+    const newUserCredentials: UserCredentials = {
+        userId: data.rollNo,
+        password: data.password
+    };
+
+    setUserDetails(newUserDetails);
+    setUserCredentials(newUserCredentials);
+    setIsLoggedIn(true);
+
+    // Set initial data for the new user
+    setSubjects(initialSubjects);
+    setAttendance(generateInitialAttendance());
+    setWifiZones(initialWifiZones);
+    setActiveCheckIn(null);
+
+    toast({ title: "Registration Successful", description: `Welcome, ${data.name}!` });
+    router.push("/dashboard");
+    return true;
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     setActiveCheckIn(null);
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push("/login");
+    router.push("/register");
   };
 
   const addSubject = (subject: Omit<Subject, "id">) => {
@@ -340,7 +350,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     userCredentials,
     isLoaded,
     isLoggedIn,
-    login,
+    registerAndLogin,
     logout,
     addSubject,
     bulkAddSubjects,

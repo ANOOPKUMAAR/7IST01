@@ -13,18 +13,22 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Nfc } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import type { Subject } from "@/lib/types";
 
 export function NfcSettings() {
-  const { subjects, activeCheckIn, checkIn, checkOut } = useAppContext();
+  const { subjects, activeCheckIn, checkIn, checkOut, isLoaded } = useAppContext();
   const { toast } = useToast();
+  const [currentSubject, setCurrentSubject] = useState<Subject | undefined>(undefined);
 
-  const currentSubject = useMemo(() => {
+  useEffect(() => {
+    if (!isLoaded) return;
+
     const now = new Date();
     const dayOfWeek = now.getDay();
     const currentTime = now.toTimeString().slice(0, 5);
 
-    return subjects.find(subject => {
+    const subjectForNow = subjects.find(subject => {
         if (subject.dayOfWeek !== dayOfWeek) return false;
 
         const [startHour, startMinute] = subject.expectedCheckIn.split(':').map(Number);
@@ -37,7 +41,9 @@ export function NfcSettings() {
 
         return nowTime >= startTime && nowTime <= endTime;
     });
-  }, [subjects]);
+
+    setCurrentSubject(subjectForNow);
+  }, [subjects, isLoaded]);
 
   const handleNfcScan = () => {
     if (activeCheckIn) {

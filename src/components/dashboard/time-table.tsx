@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -17,28 +17,38 @@ const timeSlots = [
 
 export function Timetable() {
   const { subjects, attendance, isLoaded } = useAppContext();
+  const [attendanceStatusMap, setAttendanceStatusMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const today = new Date();
+    const newStatusMap: Record<string, string> = {};
+    
+    subjects.forEach(subject => {
+      const subjectAttendance = attendance[subject.id] || [];
+      const todayRecord = subjectAttendance.find(rec => new Date(rec.date).toDateString() === today.toDateString());
+
+      if (todayRecord) {
+        newStatusMap[subject.id] = todayRecord.isAnomaly ? "bg-status-red/20 border-status-red" : "bg-status-green/20 border-status-green";
+      } else {
+        const totalAttended = subjectAttendance.length;
+        const missedClasses = Math.max(0, subject.totalClasses - totalAttended);
+        const requiredAttendance = Math.ceil(0.75 * subject.totalClasses);
+        
+        if (totalAttended < requiredAttendance && (subject.totalClasses - missedClasses) < requiredAttendance) {
+            newStatusMap[subject.id] = "bg-status-red/20 border-status-red";
+        } else {
+            newStatusMap[subject.id] = 'bg-muted/50';
+        }
+      }
+    });
+
+    setAttendanceStatusMap(newStatusMap);
+  }, [subjects, attendance, isLoaded]);
 
   const getAttendanceStatus = (subjectId: string) => {
-    const today = new Date();
-    const subjectAttendance = attendance[subjectId] || [];
-    const todayRecord = subjectAttendance.find(rec => new Date(rec.date).toDateString() === today.toDateString());
-
-    if (todayRecord) {
-        return todayRecord.isAnomaly ? "bg-status-red/20 border-status-red" : "bg-status-green/20 border-status-green";
-    }
-
-    const totalAttended = subjectAttendance.length;
-    const subject = subjects.find(s => s.id === subjectId);
-    if (!subject) return 'bg-muted/50';
-
-    const missedClasses = Math.max(0, subject.totalClasses - totalAttended);
-    const requiredAttendance = Math.ceil(0.75 * subject.totalClasses);
-    
-    if (totalAttended < requiredAttendance && (subject.totalClasses - missedClasses) < requiredAttendance) {
-        return "bg-status-red/20 border-status-red";
-    }
-
-    return 'bg-muted/50';
+    return attendanceStatusMap[subjectId] || 'bg-muted/50';
   };
   
   const grid = useMemo(() => {

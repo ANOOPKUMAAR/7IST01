@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['PT Sans', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -65,6 +65,11 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        status: {
+          red: 'hsl(var(--status-red))',
+          orange: 'hsl(var(--status-orange))',
+          green: 'hsl(var(--status-green))',
+        }
       },
       borderRadius: {
         lg: 'var(--radius)',

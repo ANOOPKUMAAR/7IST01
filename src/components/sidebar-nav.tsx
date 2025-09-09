@@ -56,8 +56,11 @@ export function SidebarNav() {
         </SidebarBrand>
       </SidebarHeader>
       <SidebarContent>
+        {/* The main content area is now empty, as all items are in the footer */}
+      </SidebarContent>
+      <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
+           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={pathname === "/"}
@@ -81,10 +84,7 @@ export function SidebarNav() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
-        <SidebarSeparator />
-        <SidebarMenu>
-            <SidebarMenuItem>
+           <SidebarMenuItem>
                 <SidebarMenuButton 
                     onClick={() => setSubjectsOpen(!isSubjectsOpen)} 
                     className="justify-between"
@@ -123,8 +123,7 @@ export function SidebarNav() {
                 )}
             </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
+        <SidebarSeparator/>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton

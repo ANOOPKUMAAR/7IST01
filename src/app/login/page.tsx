@@ -43,7 +43,6 @@ export default function LoginPage() {
                             <Input
                                 id="rollNo"
                                 type="text"
-                                placeholder="e.g., 20221IST0001"
                                 value={rollNo}
                                 onChange={(e) => setRollNo(e.target.value)}
                                 required

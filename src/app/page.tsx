@@ -7,18 +7,14 @@ import { useAppContext } from '@/contexts/app-context';
 import { Icons } from '@/components/icons';
 
 export default function HomePage() {
-  const { isLoaded, isLoggedIn } = useAppContext();
+  const { isLoaded } = useAppContext();
   const router = useRouter();
 
   useEffect(() => {
     if (isLoaded) {
-      if (isLoggedIn) {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/login');
-      }
+      router.replace('/dashboard');
     }
-  }, [isLoaded, isLoggedIn, router]);
+  }, [isLoaded, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">

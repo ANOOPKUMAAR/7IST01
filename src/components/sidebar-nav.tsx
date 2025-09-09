@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { subjects, isLoaded, logout } = useAppContext();
+  const { subjects, isLoaded } = useAppContext();
   const [isSubjectsOpen, setSubjectsOpen] = React.useState(true);
   const { state: sidebarState } = useSidebar();
   const router = useRouter();
@@ -46,12 +46,6 @@ export function SidebarNav() {
   };
   
   const isSubjectsActive = isActive('/subjects');
-
-  const handleLogout = () => {
-    logout();
-    toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.replace('/login');
-  }
 
   return (
     <Sidebar>
@@ -154,15 +148,6 @@ export function SidebarNav() {
                 <Settings />
                 <span>Settings</span>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-           <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleLogout}
-              tooltip={{ children: "Logout" }}
-            >
-                <LogOut />
-                <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -10,7 +10,6 @@ import type {
   WifiZone,
   ActiveCheckIn,
   UserDetails,
-  UserCredentials,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 
@@ -21,8 +20,6 @@ interface AppContextType {
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
   isLoaded: boolean;
-  isLoggedIn: boolean;
-  userCredentials: UserCredentials[];
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -33,9 +30,6 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
-  registerUser: (credentials: UserCredentials) => boolean;
-  login: (rollNo: string, password: string) => boolean;
-  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -67,13 +61,11 @@ const initialUserDetails: UserDetails = {
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
-  const [userCredentials, setUserCredentials] = useState<UserCredentials[]>([]);
   
   useEffect(() => {
     try {
@@ -82,25 +74,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
-      const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
-      const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
-
-      if (storedIsLoggedIn) {
-        setIsLoggedIn(JSON.parse(storedIsLoggedIn));
-      }
-
+      
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
-      
-      const creds = storedUserCredentials ? JSON.parse(storedUserCredentials) : [];
-      if (Array.isArray(creds)) {
-        setUserCredentials(creds);
-      } else {
-        setUserCredentials([]);
-      }
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -110,8 +89,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
       setUserDetails(initialUserDetails);
-      setUserCredentials([]);
-      setIsLoggedIn(false);
     }
     setIsLoaded(true);
   }, []);
@@ -124,13 +101,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
         localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
         localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
-        localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
-        localStorage.setItem("witrack_isLoggedIn", JSON.stringify(isLoggedIn));
       } catch (error) {
           console.error("Failed to save data to localStorage", error);
       }
     }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoggedIn, isLoaded]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, isLoaded]);
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -235,45 +210,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
-  const registerUser = (credentials: Omit<UserCredentials, 'name'> & { name: string }) => {
-    if (userCredentials.some(user => user.rollNo === credentials.rollNo)) {
-      return false; // User already exists
-    }
-    const newUser = {
-        name: credentials.name,
-        rollNo: credentials.rollNo,
-        password: credentials.password
-    };
-
-    setUserCredentials(prev => [...prev, newUser]);
-    // Also update userDetails with the new name and rollNo
-    setUserDetails(prev => ({ ...prev, name: credentials.name, rollNo: credentials.rollNo }));
-    return true;
-  }
-
-  const login = (rollNo: string, password: string) => {
-    const user = userCredentials.find(u => u.rollNo === rollNo && u.password === password);
-    if (user) {
-      setIsLoggedIn(true);
-      // Update user details to match logged-in user
-      setUserDetails(prev => ({ ...prev, name: user.name, rollNo: user.rollNo }));
-      // Reset subjects and attendance for the new user
-      setSubjects(initialSubjects);
-      setAttendance(generateInitialAttendance());
-      setActiveCheckIn(null);
-      return true;
-    }
-    return false;
-  }
-
-  const logout = () => {
-    setIsLoggedIn(false);
-    setUserDetails(initialUserDetails);
-    setSubjects([]);
-    setAttendance({});
-    setActiveCheckIn(null);
-  }
-
   const value = {
     subjects,
     attendance,
@@ -281,21 +217,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeCheckIn,
     userDetails,
     isLoaded,
-    isLoggedIn,
-    userCredentials,
     addSubject,
     bulkAddSubjects,
     updateSubject,
     deleteSubject,
     addWifiZone,
     deleteWifiZone,
-checkIn,
+    checkIn,
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails,
-    registerUser,
-    login,
-    logout,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

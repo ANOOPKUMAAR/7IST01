@@ -1,8 +1,6 @@
 
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { AppProvider, useAppContext } from "@/contexts/app-context";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,15 +9,8 @@ import { SidebarNav } from "@/components/sidebar-nav";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
 
-function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isLoggedIn } = useAppContext();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoaded && !isLoggedIn) {
-      router.replace("/login");
-    }
-  }, [isLoaded, isLoggedIn, router]);
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const { isLoaded } = useAppContext();
 
   if (!isLoaded) {
     return (
@@ -50,5 +41,5 @@ export default function MainLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <ProtectedLayout>{children}</ProtectedLayout>;
+  return <AppLayout>{children}</AppLayout>;
 }

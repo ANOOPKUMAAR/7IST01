@@ -38,9 +38,3 @@ export interface UserDetails {
   parentName: string;
   address: string;
 }
-
-export interface UserCredentials {
-  name: string;
-  rollNo: string;
-  password: string;
-}

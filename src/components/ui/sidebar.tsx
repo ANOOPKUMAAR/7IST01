@@ -367,11 +367,11 @@ const SidebarHeader = React.forwardRef<
 SidebarHeader.displayName = "SidebarHeader"
 
 const SidebarBrand = React.forwardRef<
-  HTMLAnchorElement,
-  React.ComponentProps<"a">
+  HTMLDivElement,
+  React.ComponentProps<"div">
 >(({ className, children, ...props }, ref) => {
   return (
-    <a
+    <div
       ref={ref}
       data-sidebar="brand"
       className={cn("flex items-center gap-2", className)}
@@ -388,7 +388,7 @@ const SidebarBrand = React.forwardRef<
         }
         return child
       })}
-    </a>
+    </div>
   )
 })
 SidebarBrand.displayName = "SidebarBrand"

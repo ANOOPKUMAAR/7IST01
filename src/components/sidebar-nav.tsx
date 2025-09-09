@@ -69,10 +69,10 @@ export function SidebarNav() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/attendance")}
+              isActive={isActive("/attendance-visuals")}
               tooltip={{ children: "Attendance" }}
             >
-              <Link href="/attendance">
+              <Link href="/attendance-visuals">
                 <BarChart3 />
                 <span>Attendance</span>
               </Link>

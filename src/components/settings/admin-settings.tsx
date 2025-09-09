@@ -30,7 +30,7 @@ import { Lock, Unlock } from "lucide-react";
 type NewCodeForm = { currentCode: string, newCode: string };
 
 function ChangeCodeDialog() {
-    const { adminMode, updateAdminCode } = useAppContext();
+    const { adminMode, adminCode, updateAdminCode } = useAppContext();
     const { register, handleSubmit, reset, formState: { errors } } = useForm<NewCodeForm>();
     const [isChangeCodeOpen, setChangeCodeOpen] = useState(false);
 

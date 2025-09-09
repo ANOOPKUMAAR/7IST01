@@ -2,14 +2,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AppProvider, useAppContext } from "@/contexts/app-context";
-import { Toaster } from "@/components/ui/toaster";
+import { useAppContext } from "@/contexts/app-context";
 import { SidebarProvider, SidebarInset, SidebarRail } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
 
-function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded } = useAppContext();
 
   if (!isLoaded) {
@@ -33,13 +32,4 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarRail />
     </SidebarProvider>
   );
-}
-
-
-export default function MainLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return <AppLayout>{children}</AppLayout>;
 }

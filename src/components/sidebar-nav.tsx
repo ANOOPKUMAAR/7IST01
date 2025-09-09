@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { useAppContext } from "@/contexts/app-context";
-import { BookCopy, Home, Settings, LogOut, BarChart3, ChevronDown, User } from "lucide-react";
+import { BookCopy, Home, Settings, BarChart3, ChevronDown, User } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -41,11 +41,11 @@ export function SidebarNav() {
   }, [sidebarState]);
 
   const isActive = (path: string) => {
-    if (path === "/dashboard") return pathname === path;
+    if (path === "/") return pathname === path;
     return pathname.startsWith(path);
   };
   
-  const isSubjectsActive = isActive('/subjects');
+  const isSubjectsActive = pathname.startsWith('/subjects');
 
   return (
     <Sidebar>
@@ -60,10 +60,10 @@ export function SidebarNav() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/dashboard")}
+              isActive={pathname === "/"}
               tooltip={{ children: "Dashboard" }}
             >
-              <Link href="/dashboard">
+              <Link href="/">
                 <Home />
                 <span>Dashboard</span>
               </Link>

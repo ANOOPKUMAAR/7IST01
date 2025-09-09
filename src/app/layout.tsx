@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AppProvider } from "@/contexts/app-context";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
-
+import { AppContent } from "./app-content";
 
 export default function RootLayout({
   children,
@@ -23,7 +23,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         <AppProvider>
-          {children}
+          <AppContent>
+            {children}
+          </AppContent>
           <Toaster />
         </AppProvider>
       </body>

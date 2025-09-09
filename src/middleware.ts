@@ -2,8 +2,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// This file is intentionally left empty.
-// All routing is now handled by the page and layout components.
+// This middleware is intentionally left empty. 
+// All pages are publicly accessible.
 export function middleware(request: NextRequest) {
   return NextResponse.next();
 }

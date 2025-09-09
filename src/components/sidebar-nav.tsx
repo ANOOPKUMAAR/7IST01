@@ -38,7 +38,8 @@ export function SidebarNav() {
   }, [sidebarState]);
 
   const isActive = (path: string) => {
-    if (path === "/dashboard") return pathname === path;
+    // Exact match for the root path, otherwise startsWith for others.
+    if (path === "/") return pathname === path;
     return pathname.startsWith(path);
   };
   
@@ -57,10 +58,10 @@ export function SidebarNav() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/dashboard")}
+              isActive={isActive("/")}
               tooltip={{ children: "Dashboard" }}
             >
-              <Link href="/dashboard">
+              <Link href="/">
                 <Home />
                 <span>Dashboard</span>
               </Link>

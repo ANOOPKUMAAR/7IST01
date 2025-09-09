@@ -44,7 +44,7 @@ import type { OtpData } from "@/lib/types";
 type NewCodeForm = { currentCode: string, newCode: string, otp: string };
 
 function ChangeCodeDialog() {
-    const { adminCode, updateAdminCode, requestOtp, otpData, clearOtp } = useAppContext();
+    const { adminMode, adminCode, updateAdminCode, requestOtp, otpData, clearOtp } = useAppContext();
     const { toast } = useToast();
     const { register, handleSubmit, reset, formState: { errors } } = useForm<NewCodeForm>();
     const [isChangeCodeOpen, setChangeCodeOpen] = useState(false);

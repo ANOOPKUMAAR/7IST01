@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useAppContext } from "@/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-  } from "@/components/ui/alert-dialog";
-import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -35,8 +24,8 @@ import {
     DialogFooter,
     DialogClose
   } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { Lock, Unlock } from "lucide-react";
 
 type NewCodeForm = { currentCode: string, newCode: string };
 
@@ -104,21 +93,27 @@ export function AdminSettings() {
   const { adminMode, setAdminMode, adminCode } = useAppContext();
   const { toast } = useToast();
   const [enterCode, setEnterCode] = useState("");
+  const [error, setError] = useState("");
   
-  const handleAdminSwitch = (isEnteringAdmin: boolean) => {
-    if (isEnteringAdmin) {
+  useEffect(() => {
+    if (enterCode.length === 4) {
         if (enterCode === adminCode) {
             setAdminMode(true);
             toast({ title: "Admin Mode Enabled" });
-            return true; // close dialog
+            setError("");
+            setEnterCode("");
         } else {
-            toast({ title: "Incorrect Code", variant: "destructive" });
-            return false; // keep dialog open
+            setError("Incorrect code. Please try again.");
+            setEnterCode("");
         }
-    } else {
-        setAdminMode(false);
-        toast({ title: "Admin Mode Disabled" });
+    } else if (error && enterCode.length > 0) {
+        setError("");
     }
+  }, [enterCode, adminCode, setAdminMode, toast, error]);
+
+  const handleLockAdminMode = () => {
+    setAdminMode(false);
+    toast({ title: "Admin Mode Disabled" });
   };
 
   return (
@@ -127,65 +122,36 @@ export function AdminSettings() {
             <CardHeader>
                 <CardTitle>Admin Mode</CardTitle>
                 <CardDescription>
-                Enable admin mode to modify all data. Default code is 0000.
+                {adminMode ? "Admin mode is currently enabled." : "Enter the 4-digit code to enable admin mode."}
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex items-center space-x-2">
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Switch
-                                id="admin-mode"
-                                checked={adminMode}
-                                // onCheckedChange is handled by the dialog
-                                onClick={(e) => {
-                                    if (adminMode) {
-                                        e.preventDefault();
-                                        handleAdminSwitch(false);
-                                    }
-                                }}
-                            />
-                        </AlertDialogTrigger>
-                        <Label htmlFor="admin-mode">Enable Admin Mode</Label>
-
-                        {!adminMode && (
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Enter Security Code</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    To enable admin mode, please enter the 4-digit security code.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <Input
-                                type="password"
-                                maxLength={4}
-                                placeholder="****"
-                                value={enterCode}
-                                onChange={(e) => setEnterCode(e.target.value)}
-                            />
-                            <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setEnterCode("")}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={(e) => {
-                                    if (!handleAdminSwitch(true)) {
-                                        e.preventDefault(); // Prevent dialog from closing on failure
-                                    } else {
-                                        setEnterCode("");
-                                    }
-                                }}>
-                                    Unlock
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                        )}
-                    </AlertDialog>
-                </div>
+                {adminMode ? (
+                    <Button onClick={handleLockAdminMode} variant="destructive">
+                        <Lock className="mr-2 h-4 w-4" /> Lock Admin Mode
+                    </Button>
+                ) : (
+                    <div className="max-w-xs space-y-2">
+                        <Label htmlFor="admin-code-input">Security Code</Label>
+                        <Input
+                            id="admin-code-input"
+                            type="password"
+                            maxLength={4}
+                            placeholder="****"
+                            value={enterCode}
+                            onChange={(e) => setEnterCode(e.target.value)}
+                            className={error ? "border-destructive" : ""}
+                        />
+                         {error && <p className="text-sm text-destructive">{error}</p>}
+                    </div>
+                )}
             </CardContent>
         </Card>
         <Card>
             <CardHeader>
                 <CardTitle>Change Security Code</CardTitle>
                 <CardDescription>
-                Set a new 4-digit security code for admin mode.
+                Set a new 4-digit security code for admin mode. Default code is 0000.
                 </CardDescription>
             </CardHeader>
             <CardContent>

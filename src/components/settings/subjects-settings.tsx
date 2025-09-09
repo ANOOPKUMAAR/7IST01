@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,26 +37,39 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Trash, Edit, PlusCircle } from "lucide-react";
+import { Controller } from "react-hook-form";
 
 type Inputs = {
   name: string;
   expectedCheckIn: string;
   expectedCheckOut: string;
   totalClasses: number;
+  dayOfWeek: string;
 };
 
+const daysOfWeek = [
+    { value: "1", label: "Monday" },
+    { value: "2", label: "Tuesday" },
+    { value: "3", label: "Wednesday" },
+    { value: "4", label: "Thursday" },
+    { value: "5", label: "Friday" },
+    { value: "6", label: "Saturday" },
+    { value: "0", label: "Sunday" },
+];
+
 function SubjectForm({ subject, onSave, onDone }: { subject?: Subject, onSave: (data: any) => void, onDone: () => void }) {
-  const { register, handleSubmit, formState: { errors } } = useForm<Inputs>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<Inputs>({
     defaultValues: {
       name: subject?.name || "",
       expectedCheckIn: subject?.expectedCheckIn || "09:00",
       expectedCheckOut: subject?.expectedCheckOut || "17:00",
       totalClasses: subject?.totalClasses || 20,
+      dayOfWeek: subject?.dayOfWeek?.toString() || "1",
     }
   });
 
   const onSubmit: SubmitHandler<Inputs> = (data) => {
-    onSave({ ...subject, ...data, totalClasses: Number(data.totalClasses) });
+    onSave({ ...subject, ...data, totalClasses: Number(data.totalClasses), dayOfWeek: Number(data.dayOfWeek) });
     onDone();
   };
 
@@ -75,6 +89,25 @@ function SubjectForm({ subject, onSave, onDone }: { subject?: Subject, onSave: (
             <Label htmlFor="expectedCheckOut">Expected Check-out</Label>
             <Input id="expectedCheckOut" type="time" {...register("expectedCheckOut", { required: true })} />
         </div>
+      </div>
+       <div className="space-y-2">
+        <Label htmlFor="dayOfWeek">Day of Week</Label>
+        <Controller
+            name="dayOfWeek"
+            control={control}
+            render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {daysOfWeek.map(day => (
+                            <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            )}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="totalClasses">Total Classes</Label>
@@ -129,7 +162,7 @@ export function SubjectsSettings() {
               <div>
                 <p className="font-semibold">{subject.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {subject.expectedCheckIn} - {subject.expectedCheckOut} | {subject.totalClasses} classes
+                  {daysOfWeek.find(d => d.value === subject.dayOfWeek.toString())?.label} | {subject.expectedCheckIn} - {subject.expectedCheckOut} | {subject.totalClasses} classes
                 </p>
               </div>
               <div className="flex gap-2">

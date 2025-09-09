@@ -35,8 +35,11 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const initialSubjects: Subject[] = [
-    { id: 'cs101', name: 'Intro to Computer Science', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20 },
-    { id: 'ma201', name: 'Calculus II', expectedCheckIn: '11:00', expectedCheckOut: '12:30', totalClasses: 24 },
+    { id: 'cs101', name: 'Intro to Computer Science', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20, dayOfWeek: 1 },
+    { id: 'ma201', name: 'Calculus II', expectedCheckIn: '11:00', expectedCheckOut: '12:30', totalClasses: 24, dayOfWeek: 2 },
+    { id: 'py101', name: 'Physics I', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20, dayOfWeek: 3 },
+    { id: 'ch101', name: 'Chemistry I', expectedCheckIn: '11:00', expectedCheckOut: '12:30', totalClasses: 24, dayOfWeek: 4 },
+    { id: 'en101', name: 'English 101', expectedCheckIn: '13:00', expectedCheckOut: '14:30', totalClasses: 20, dayOfWeek: 5 },
 ];
 
 const initialWifiZones: WifiZone[] = [

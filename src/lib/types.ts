@@ -4,6 +4,7 @@ export interface Subject {
   expectedCheckIn: string;
   expectedCheckOut: string;
   totalClasses: number;
+  dayOfWeek: number; // 0 for Sunday, 1 for Monday, etc.
 }
 
 export interface AttendanceRecord {

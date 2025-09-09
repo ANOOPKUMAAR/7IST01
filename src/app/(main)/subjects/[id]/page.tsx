@@ -2,18 +2,20 @@
 
 import { useAppContext } from "@/contexts/app-context";
 import { AttendanceTable } from "@/components/subjects/attendance-table";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function SubjectDetailsPage({ params }: { params: { id: string } }) {
+export default function SubjectDetailsPage() {
+  const params = useParams();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { subjects, attendance, isLoaded } = useAppContext();
   
   if (!isLoaded) {
     return <Skeleton className="h-[400px] w-full" />
   }
   
-  const subject = subjects.find(s => s.id === params.id);
-  const subjectAttendance = attendance[params.id] || [];
+  const subject = subjects.find(s => s.id === id);
+  const subjectAttendance = attendance[id] || [];
 
   if (!subject) {
     notFound();

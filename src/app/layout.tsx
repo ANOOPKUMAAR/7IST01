@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NetAttend",
+  title: "WiTrack",
   description: "A class attendance app",
 };
 

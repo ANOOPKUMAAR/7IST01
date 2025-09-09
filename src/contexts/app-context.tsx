@@ -56,11 +56,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const storedSubjects = localStorage.getItem("netattend_subjects");
-      const storedAttendance = localStorage.getItem("netattend_attendance");
-      const storedWifiZones = localStorage.getItem("netattend_wifiZones");
-      const storedAdminCode = localStorage.getItem("netattend_adminCode");
-      const storedActiveCheckIn = localStorage.getItem("netattend_activeCheckIn");
+      const storedSubjects = localStorage.getItem("witrack_subjects");
+      const storedAttendance = localStorage.getItem("witrack_attendance");
+      const storedWifiZones = localStorage.getItem("witrack_wifiZones");
+      const storedAdminCode = localStorage.getItem("witrack_adminCode");
+      const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
 
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
@@ -77,11 +77,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("netattend_subjects", JSON.stringify(subjects));
-      localStorage.setItem("netattend_attendance", JSON.stringify(attendance));
-      localStorage.setItem("netattend_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("netattend_adminCode", JSON.stringify(adminCode));
-      localStorage.setItem("netattend_activeCheckIn", JSON.stringify(activeCheckIn));
+      localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
+      localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
+      localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
+      localStorage.setItem("witrack_adminCode", JSON.stringify(adminCode));
+      localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
     }
   }, [subjects, attendance, wifiZones, adminCode, activeCheckIn, isLoaded]);
 

@@ -46,6 +46,29 @@ const initialSubjects: Subject[] = [
     { id: 'en101', name: 'English 101', expectedCheckIn: '13:00', expectedCheckOut: '14:30', totalClasses: 20, dayOfWeek: 5 },
 ];
 
+const initialAttendance: Record<string, AttendanceRecord[]> = {
+  cs101: [
+    {
+      id: "att_1",
+      date: new Date().toISOString(),
+      checkIn: new Date(new Date().setHours(9, 5, 0)).toISOString(),
+      checkOut: new Date(new Date().setHours(10, 30, 0)).toISOString(),
+      isAnomaly: false,
+      anomalyReason: "",
+    }
+  ],
+  py101: [
+    {
+      id: "att_2",
+      date: new Date().toISOString(),
+      checkIn: new Date(new Date().setHours(9, 2, 0)).toISOString(),
+      checkOut: new Date(new Date().setHours(10, 28, 0)).toISOString(),
+      isAnomaly: false,
+      anomalyReason: "",
+    }
+  ]
+};
+
 const initialWifiZones: WifiZone[] = [
     { id: 'wifi1', ssid: 'Campus-WiFi' },
 ];
@@ -88,15 +111,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
 
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
-      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
+      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : initialAttendance);
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : initialUserCredentials);
       
+      const today = new Date().getDay();
+      if(storedAttendance === null && (today === 1 || today === 3)) { // Only set initial if no data and it's Mon or Wed
+        setAttendance(initialAttendance);
+      } else if (storedAttendance) {
+        setAttendance(JSON.parse(storedAttendance));
+      } else {
+        setAttendance({});
+      }
+
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       setSubjects(initialSubjects);
+      setAttendance(initialAttendance);
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
       setUserCredentials(initialUserCredentials);
@@ -270,3 +303,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

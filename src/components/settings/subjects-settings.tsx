@@ -41,7 +41,6 @@ import { Trash, Edit, PlusCircle, FileUp, Loader2 } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { extractTimetable } from "@/ai/flows/extract-timetable-flow";
-import { AdminActionPrompt } from "@/components/admin-action-prompt";
 
 type Inputs = {
   name: string;
@@ -122,9 +121,7 @@ function SubjectForm({ subject, onSave, onDone }: { subject?: Subject, onSave: (
         <DialogClose asChild>
             <Button type="button" variant="outline">Cancel</Button>
         </DialogClose>
-        <AdminActionPrompt onExecute={handleSubmit(onSubmit)}>
-            <Button type="button">Save</Button>
-        </AdminActionPrompt>
+        <Button type="submit">Save</Button>
       </DialogFooter>
     </form>
   )
@@ -190,18 +187,16 @@ function UploadDialog({ onDone }: { onDone: () => void }) {
                 <DialogClose asChild>
                     <Button type="button" variant="outline" disabled={isUploading}>Cancel</Button>
                 </DialogClose>
-                <AdminActionPrompt onExecute={handleUpload}>
-                    <Button disabled={isUploading}>
-                        {isUploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Analyzing...</> : "Upload and Save"}
-                    </Button>
-                </AdminActionPrompt>
+                <Button onClick={handleUpload} disabled={isUploading}>
+                    {isUploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Analyzing...</> : "Upload and Save"}
+                </Button>
             </DialogFooter>
         </>
     );
 }
 
 export function SubjectsSettings() {
-  const { subjects, addSubject, updateSubject, deleteSubject, adminMode } = useAppContext();
+  const { subjects, addSubject, updateSubject, deleteSubject } = useAppContext();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState<string | null>(null);
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -284,9 +279,7 @@ export function SubjectsSettings() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AdminActionPrompt onExecute={() => deleteSubject(subject.id)}>
-                        <AlertDialogAction>Delete</AlertDialogAction>
-                      </AdminActionPrompt>
+                      <AlertDialogAction onClick={() => deleteSubject(subject.id)}>Delete</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

@@ -1,10 +1,10 @@
+
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wifi, BookUser, ShieldCheck } from "lucide-react";
+import { Wifi, BookUser } from "lucide-react";
 import { SubjectsSettings } from "@/components/settings/subjects-settings";
 import { WifiSettings } from "@/components/settings/wifi-settings";
-import { AdminSettings } from "@/components/settings/admin-settings";
 
 export default function SettingsPage() {
   return (
@@ -12,20 +12,17 @@ export default function SettingsPage() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
         <p className="text-muted-foreground">
-          Manage your subjects, Wi-Fi zones, and application settings.
+          Manage your subjects and Wi-Fi zones.
         </p>
       </div>
 
       <Tabs defaultValue="subjects" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="subjects">
             <BookUser className="mr-2 h-4 w-4" /> Subjects
           </TabsTrigger>
           <TabsTrigger value="wifi">
             <Wifi className="mr-2 h-4 w-4" /> Wi-Fi Zones
-          </TabsTrigger>
-          <TabsTrigger value="security">
-            <ShieldCheck className="mr-2 h-4 w-4" /> Security
           </TabsTrigger>
         </TabsList>
 
@@ -35,10 +32,6 @@ export default function SettingsPage() {
 
         <TabsContent value="wifi" className="mt-4">
           <WifiSettings />
-        </TabsContent>
-        
-        <TabsContent value="security" className="mt-4">
-          <AdminSettings />
         </TabsContent>
       </Tabs>
     </div>

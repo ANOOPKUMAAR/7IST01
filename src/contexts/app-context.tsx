@@ -17,7 +17,6 @@ interface AppContextType {
   subjects: Subject[];
   attendance: Record<string, AttendanceRecord[]>;
   wifiZones: WifiZone[];
-  adminCode: string;
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
   isLoaded: boolean;
@@ -27,7 +26,6 @@ interface AppContextType {
   deleteSubject: (subjectId: string) => void;
   addWifiZone: (ssid: string) => void;
   deleteWifiZone: (zoneId: string) => void;
-  updateAdminCode: (currentCode: string, newCode: string) => boolean;
   checkIn: (subjectId: string) => void;
   checkOut: (subjectId: string) => Promise<void>;
   addManualEntry: (subjectId: string, entry: Omit<AttendanceRecord, "id" | 'isAnomaly' | 'anomalyReason' >) => void;
@@ -67,7 +65,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
-  const [adminCode, setAdminCode] = useState<string>("1234");
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
 
@@ -76,7 +73,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedSubjects = localStorage.getItem("witrack_subjects");
       const storedAttendance = localStorage.getItem("witrack_attendance");
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
-      const storedAdminCode = localStorage.getItem("witrack_adminCode");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
 
@@ -85,20 +81,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       
-      if (storedAdminCode) {
-        setAdminCode(storedAdminCode);
-      } else {
-        localStorage.setItem("witrack_adminCode", "1234");
-        setAdminCode("1234");
-      }
-
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       setSubjects(initialSubjects);
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
-      setAdminCode("1234");
     }
     setIsLoaded(true);
   }, []);
@@ -108,11 +96,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
       localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
       localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("witrack_adminCode", adminCode);
       localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
       localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
     }
-  }, [subjects, attendance, wifiZones, adminCode, activeCheckIn, userDetails, isLoaded]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, isLoaded]);
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -154,18 +141,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteWifiZone = (zoneId: string) => {
     setWifiZones(prev => prev.filter(z => z.id !== zoneId));
     toast({ title: "Wi-Fi Zone Removed", variant: "destructive" });
-  };
-  
-  const updateAdminCode = (currentCode: string, newCode: string) => {
-    if (currentCode !== adminCode) {
-        return false;
-    }
-
-    if (/^\d{4}$/.test(newCode)) {
-        setAdminCode(newCode);
-        return true;
-    }
-    return false;
   };
 
   const checkIn = (subjectId: string) => {
@@ -247,7 +222,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     subjects,
     attendance,
     wifiZones,
-    adminCode,
     activeCheckIn,
     userDetails,
     isLoaded,
@@ -257,7 +231,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteSubject,
     addWifiZone,
     deleteWifiZone,
-    updateAdminCode,
     checkIn,
     checkOut,
     addManualEntry,

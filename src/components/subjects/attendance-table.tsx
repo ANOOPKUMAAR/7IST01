@@ -47,7 +47,6 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Trash, PlusCircle } from "lucide-react";
 import type { Subject, AttendanceRecord } from "@/lib/types";
-import { AdminActionPrompt } from "@/components/admin-action-prompt";
 
 type ManualEntryInputs = {
     date: string;
@@ -109,9 +108,7 @@ export function AttendanceTable({ subject, records }: { subject: Subject; record
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                                <AdminActionPrompt onExecute={handleSubmit(onAddManualEntry)}>
-                                    <Button type="button">Save Record</Button>
-                                </AdminActionPrompt>
+                                <Button type="submit">Save Record</Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
@@ -177,9 +174,7 @@ export function AttendanceTable({ subject, records }: { subject: Subject; record
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AdminActionPrompt onExecute={() => deleteAttendanceRecord(subject.id, record.id)}>
-                                            <AlertDialogAction>Delete</AlertDialogAction>
-                                        </AdminActionPrompt>
+                                        <AlertDialogAction onClick={() => deleteAttendanceRecord(subject.id, record.id)}>Delete</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

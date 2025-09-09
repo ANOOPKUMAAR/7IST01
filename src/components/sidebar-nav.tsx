@@ -25,7 +25,7 @@ import * as React from "react";
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { subjects, isLoaded, adminMode, setAdminMode } = useAppContext();
+  const { subjects, isLoaded } = useAppContext();
   const [isSubjectsOpen, setSubjectsOpen] = React.useState(true);
   const { state: sidebarState } = useSidebar();
 
@@ -120,12 +120,6 @@ export function SidebarNav() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-         {adminMode && (
-          <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => setAdminMode(false)}>
-            <LogOut className="text-destructive" />
-            <span className="text-destructive">Exit Admin Mode</span>
-          </Button>
-         )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton

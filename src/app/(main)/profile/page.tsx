@@ -24,7 +24,6 @@ import type { UserDetails } from "@/lib/types";
 import { User, Edit } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AdminActionPrompt } from "@/components/admin-action-prompt";
 
 function InfoRow({ label, value }: { label: string, value: string }) {
     return (
@@ -90,9 +89,7 @@ function EditProfileDialog({ onDone }: { onDone: () => void }) {
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>
-                <AdminActionPrompt onExecute={handleSubmit(onSubmit)}>
-                    <Button type="button">Save Changes</Button>
-                </AdminActionPrompt>
+                <Button type="submit">Save Changes</Button>
             </DialogFooter>
         </form>
     )

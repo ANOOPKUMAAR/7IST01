@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +20,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const { login } = useAppContext();
+  const { login, isLoaded, isLoggedIn } = useAppContext();
   const { toast } = useToast();
   const router = useRouter();
   const [rollNo, setRollNo] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoaded && isLoggedIn) {
+      router.push("/dashboard");
+    }
+  }, [isLoaded, isLoggedIn, router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,18 +40,27 @@ export default function LoginPage() {
     if (success) {
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: "Welcome back! Redirecting...",
       });
-      router.push("/dashboard");
+      // The useEffect above will handle the redirect.
     } else {
       toast({
         title: "Login Failed",
         description: "Invalid roll number or password.",
         variant: "destructive",
       });
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
+  
+  if (!isLoaded || (isLoaded && isLoggedIn)) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Icons.logo className="h-24 w-24 animate-spin text-primary" />
+        </div>
+    );
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">

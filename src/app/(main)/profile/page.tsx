@@ -12,7 +12,7 @@ function StatCard({ title, value, description }: { title: string, value: string 
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="text-xl">{title}</CardTitle>
+                <CardTitle as="h3" className="text-xl">{title}</CardTitle>
                 {description && <CardDescription>{description}</CardDescription>}
             </CardHeader>
             <CardContent>
@@ -20,6 +20,27 @@ function StatCard({ title, value, description }: { title: string, value: string 
             </CardContent>
         </Card>
     )
+}
+
+function InfoRow({ label, value }: { label: string, value: string }) {
+    return (
+        <div className="flex justify-between py-2 border-b">
+            <p className="font-medium text-muted-foreground">{label}</p>
+            <p className="font-semibold text-right">{value}</p>
+        </div>
+    )
+}
+
+const userDetails = {
+    name: "Alex Doe",
+    rollNo: "ST2024001",
+    program: "Bachelor of Technology",
+    branch: "Computer Science",
+    department: "Engineering",
+    section: "A",
+    phone: "+1 (123) 456-7890",
+    parentName: "John Doe",
+    address: "123 University Lane, Tech City, 12345",
 }
 
 export default function ProfilePage() {
@@ -30,8 +51,10 @@ export default function ProfilePage() {
     let totalPossibleClasses = 0;
     
     subjects.forEach(subject => {
-        totalAttendance += attendance[subject.id]?.length || 0;
-        totalPossibleClasses += subject.totalClasses > 0 ? subject.totalClasses : (attendance[subject.id]?.length || 0);
+        const attended = attendance[subject.id]?.length || 0;
+        totalAttendance += attended;
+        // If total classes is not set, consider attended classes as total to avoid skewed percentages for new subjects.
+        totalPossibleClasses += subject.totalClasses > 0 ? subject.totalClasses : attended;
     });
 
     const overallPercentage = totalPossibleClasses > 0 
@@ -57,6 +80,7 @@ export default function ProfilePage() {
                 <Skeleton className="h-40 w-full" />
                 <Skeleton className="h-40 w-full" />
             </div>
+            <Skeleton className="h-96 w-full" />
         </div>
     )
   }
@@ -71,8 +95,8 @@ export default function ProfilePage() {
             </AvatarFallback>
         </Avatar>
         <div>
-            <h2 className="text-3xl font-bold">Student</h2>
-            <p className="text-muted-foreground">Welcome to your profile.</p>
+            <h2 className="text-3xl font-bold">{userDetails.name}</h2>
+            <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
@@ -80,6 +104,27 @@ export default function ProfilePage() {
         <StatCard title="Overall Attendance" value={`${overallPercentage}%`} description={`${totalAttendance} / ${totalPossibleClasses} classes attended`} />
         <StatCard title="Records Logged" value={totalAttendance} description="Total check-ins" />
       </div>
+
+      <Card>
+        <CardHeader>
+            <CardTitle>Student Information</CardTitle>
+            <CardDescription>Detailed student profile as per records.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="grid gap-y-2 gap-x-8 md:grid-cols-2">
+                <InfoRow label="Program" value={userDetails.program} />
+                <InfoRow label="Branch" value={userDetails.branch} />
+                <InfoRow label="Department" value={userDetails.department} />
+                <InfoRow label="Section" value={userDetails.section} />
+                <InfoRow label="Phone Number" value={userDetails.phone} />
+                <InfoRow label="Parent's Name" value={userDetails.parentName} />
+                <div className="md:col-span-2">
+                    <InfoRow label="Address" value={userDetails.address} />
+                </div>
+            </div>
+        </CardContent>
+      </Card>
+
     </div>
   );
 }

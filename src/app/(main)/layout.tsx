@@ -1,4 +1,4 @@
-import { SidebarProvider, SidebarInset, SidebarRail } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset, SidebarRail, Sidebar } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";

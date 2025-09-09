@@ -297,7 +297,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteWifiZone,
     setAdminMode,
     updateAdminCode,
-    checkIn,
+checkIn,
     checkOut,
     addManualEntry,
     deleteAttendanceRecord,

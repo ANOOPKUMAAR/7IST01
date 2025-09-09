@@ -16,8 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
 
 const securitySchema = z.object({
     currentPassword: z.string().min(1, "Current password is required."),
@@ -72,13 +70,6 @@ export function SecuritySettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert>
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Developer Note</AlertTitle>
-          <AlertDescription>
-            This is a prototype. User credentials are saved in your browser's local storage and are not managed by a backend authentication server.
-          </AlertDescription>
-        </Alert>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="newUserId">User ID</Label>

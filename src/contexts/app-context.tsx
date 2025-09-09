@@ -85,21 +85,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
       const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
 
-      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : []);
+      if (storedIsLoggedIn) {
+        setIsLoggedIn(JSON.parse(storedIsLoggedIn));
+      }
+
+      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       
       const creds = storedUserCredentials ? JSON.parse(storedUserCredentials) : [];
-      setUserCredentials(Array.isArray(creds) ? creds : []);
+      if (Array.isArray(creds)) {
+        setUserCredentials(creds);
+      } else {
+        setUserCredentials([]);
+      }
       
-      setIsLoggedIn(storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false);
-
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       // If loading fails, set default data to prevent crash
-      setSubjects([]);
+      setSubjects(initialSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
@@ -283,7 +289,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteSubject,
     addWifiZone,
     deleteWifiZone,
-    checkIn,
+checkIn,
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails,
@@ -302,5 +308,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    

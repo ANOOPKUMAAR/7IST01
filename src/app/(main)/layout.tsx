@@ -21,7 +21,7 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isLoaded, isLoggedIn, router]);
 
-  if (!isLoaded || !isLoggedIn) {
+  if (!isLoaded) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center justify-center space-y-6 text-center">

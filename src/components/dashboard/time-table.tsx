@@ -67,7 +67,7 @@ export function Timetable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Weekly Timetable</CardTitle>
+        <CardTitle>timetable</CardTitle>
         <CardDescription>Your class schedule for the week. Click on a subject to view details.</CardDescription>
       </CardHeader>
       <CardContent>

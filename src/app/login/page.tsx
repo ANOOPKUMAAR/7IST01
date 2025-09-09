@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const { login, userDetails } = useAppContext();
-    const [rollNo, setRollNo] = useState(userDetails.rollNo || "");
+    const [rollNo, setRollNo] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
                             <Input
                                 id="rollNo"
                                 type="text"
-                                placeholder="e.g., ST2024001"
+                                placeholder="e.g., 20221IST0001"
                                 value={rollNo}
                                 onChange={(e) => setRollNo(e.target.value)}
                                 required

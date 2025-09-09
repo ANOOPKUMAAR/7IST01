@@ -24,7 +24,7 @@ interface AppContextType {
   userCredentials: UserCredentials;
   isLoaded: boolean;
   isLoggedIn: boolean;
-  login: (creds: Omit<UserCredentials, 'userId'>) => boolean;
+  login: (creds: Omit<UserCredentials, 'userId'> & { userId: string }) => boolean;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
@@ -50,57 +50,60 @@ const initialSubjects: Subject[] = [
 ];
 
 const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => {
-  const getPastDate = (targetDay: number) => {
-    const date = new Date();
-    const currentDay = date.getDay();
-    let diff = currentDay - targetDay;
-    if (diff < 0) diff += 7;
-    date.setDate(date.getDate() - diff);
-    return date;
-  }
-
-  return {
-    cs101: [
-      {
-        id: "att_1",
-        date: getPastDate(1).toISOString(),
-        checkIn: new Date(new Date(getPastDate(1)).setHours(9, 5, 0)).toISOString(),
-        checkOut: new Date(new Date(getPastDate(1)).setHours(10, 30, 0)).toISOString(),
-        isAnomaly: false,
-        anomalyReason: "",
-      }
-    ],
-    ma201: [
-      {
-        id: "att_3",
-        date: getPastDate(2).toISOString(),
-        checkIn: new Date(new Date(getPastDate(2)).setHours(11, 2, 0)).toISOString(),
-        checkOut: new Date(new Date(getPastDate(2)).setHours(12, 25, 0)).toISOString(),
-        isAnomaly: false,
-        anomalyReason: "",
-      }
-    ],
-    py101: [
-      {
-        id: "att_2",
-        date: getPastDate(3).toISOString(),
-        checkIn: new Date(new Date(getPastDate(3)).setHours(9, 2, 0)).toISOString(),
-        checkOut: new Date(new Date(getPastDate(3)).setHours(10, 28, 0)).toISOString(),
-        isAnomaly: false,
-        anomalyReason: "",
-      }
-    ],
-    en101: [
-      {
-        id: "att_4",
-        date: getPastDate(5).toISOString(),
-        checkIn: new Date(new Date(getPastDate(5)).setHours(13, 5, 0)).toISOString(),
-        checkOut: new Date(new Date(getPastDate(5)).setHours(14, 30, 0)).toISOString(),
-        isAnomaly: false,
-        anomalyReason: "",
-      }
-    ]
-  };
+    const getPastDate = (targetDay: number) => {
+        const date = new Date();
+        const currentDay = date.getDay();
+        let diff = currentDay - targetDay;
+        if (diff < 0) diff += 7;
+        if (diff === 0 && new Date().getHours() < 9) { // If it's the same day but before class time, get last week's
+            diff += 7;
+        }
+        date.setDate(date.getDate() - diff);
+        return date;
+    }
+    
+      return {
+        cs101: [
+          {
+            id: "att_1",
+            date: getPastDate(1).toISOString(),
+            checkIn: new Date(new Date(getPastDate(1)).setHours(9, 5, 0)).toISOString(),
+            checkOut: new Date(new Date(getPastDate(1)).setHours(10, 30, 0)).toISOString(),
+            isAnomaly: false,
+            anomalyReason: "",
+          }
+        ],
+        ma201: [
+          {
+            id: "att_3",
+            date: getPastDate(2).toISOString(),
+            checkIn: new Date(new Date(getPastDate(2)).setHours(11, 2, 0)).toISOString(),
+            checkOut: new Date(new Date(getPastDate(2)).setHours(12, 25, 0)).toISOString(),
+            isAnomaly: false,
+            anomalyReason: "",
+          }
+        ],
+        py101: [
+          {
+            id: "att_2",
+            date: getPastDate(3).toISOString(),
+            checkIn: new Date(new Date(getPastDate(3)).setHours(9, 2, 0)).toISOString(),
+            checkOut: new Date(new Date(getPastDate(3)).setHours(10, 28, 0)).toISOString(),
+            isAnomaly: false,
+            anomalyReason: "",
+          }
+        ],
+        en101: [
+          {
+            id: "att_4",
+            date: getPastDate(5).toISOString(),
+            checkIn: new Date(new Date(getPastDate(5)).setHours(13, 5, 0)).toISOString(),
+            checkOut: new Date(new Date(getPastDate(5)).setHours(14, 30, 0)).toISOString(),
+            isAnomaly: false,
+            anomalyReason: "",
+          }
+        ]
+      };
 };
 
 const initialWifiZones: WifiZone[] = [
@@ -109,7 +112,7 @@ const initialWifiZones: WifiZone[] = [
 
 const initialUserDetails: UserDetails = {
     name: "Alex Doe",
-    rollNo: "ST2024001",
+    rollNo: "20221IST0001",
     program: "Bachelor of Technology",
     branch: "Computer Science",
     department: "Engineering",
@@ -120,7 +123,7 @@ const initialUserDetails: UserDetails = {
 };
 
 const initialUserCredentials: UserCredentials = {
-    userId: "ST2024001",
+    userId: "20221IST0001",
     password: "password123",
 };
 
@@ -134,7 +137,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
-  const [userCredentials, setUserCredentials] = useState<UserCredentials>(initialUserCredentials);
+  const [userCredentials, setUserCredentials] = useState<UserCredentials>({
+      userId: "20221IST0001",
+      password: "123456",
+  });
 
 
   useEffect(() => {
@@ -151,30 +157,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserDetails(userDetailsData);
 
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
-      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
-      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { ...initialUserCredentials, userId: userDetailsData.rollNo });
       
-      if(storedAttendance === null) {
-        setAttendance(generateInitialAttendance());
-      } else {
-        setAttendance(JSON.parse(storedAttendance));
+      const attendanceData = storedAttendance ? JSON.parse(storedAttendance) : null;
+      if (attendanceData) {
+        setAttendance(attendanceData);
       }
+      
+      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+      
+      const credentialsData = storedUserCredentials ? JSON.parse(storedUserCredentials) : { ...initialUserCredentials, userId: userDetailsData.rollNo, password: "123456" };
+      setUserCredentials(credentialsData);
 
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setIsLoggedIn(storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
+      // Set to defaults if local storage fails
       setSubjects(initialSubjects);
-      setAttendance(generateInitialAttendance());
+      setAttendance({});
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
-      setUserCredentials({ ...initialUserCredentials, userId: initialUserDetails.rollNo });
+      setUserCredentials({ ...initialUserCredentials, userId: initialUserDetails.rollNo, password: "123456" });
       setIsLoggedIn(false);
     }
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+      if (!isLoaded) return;
+      if(Object.keys(attendance).length === 0) {
+        setAttendance(generateInitialAttendance());
+      }
+  }, [isLoaded, attendance]);
   
   useEffect(() => {
     if (isLoaded) {
@@ -189,7 +204,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, userCredentials, isLoggedIn, isLoaded]);
 
   const login = (creds: Pick<UserCredentials, 'password' | 'userId'>) => {
-    if (creds.userId === userCredentials.userId && creds.password === userCredentials.password) {
+    if (creds.userId.toLowerCase() === userCredentials.userId.toLowerCase() && creds.password === userCredentials.password) {
       setIsLoggedIn(true);
       toast({ title: "Login Successful", description: "Welcome back!" });
       router.push("/dashboard");

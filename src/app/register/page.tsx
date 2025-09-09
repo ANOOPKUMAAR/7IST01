@@ -64,7 +64,6 @@ export default function RegisterPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. John Doe"
                 required
               />
             </div>
@@ -75,7 +74,6 @@ export default function RegisterPage() {
                 type="text"
                 value={rollNo}
                 onChange={(e) => setRollNo(e.target.value)}
-                placeholder="e.g. 20221IST0001"
                 required
               />
             </div>

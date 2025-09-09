@@ -93,13 +93,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+      
+      setAdminCode(storedAdminCode || "0000");
 
-      if (storedAdminCode) {
-        setAdminCode(storedAdminCode);
-      } else {
+      if (!storedAdminCode) {
         localStorage.setItem("witrack_adminCode", "0000");
-        setAdminCode("0000");
       }
+
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -315,3 +315,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

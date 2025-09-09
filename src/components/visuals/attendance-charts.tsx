@@ -59,11 +59,11 @@ export function AttendanceCharts() {
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle>Subject Attendance Overview</CardTitle>
+        <CardTitle>Subject Breakdown</CardTitle>
         <CardDescription>
-          A bar chart showing your attendance percentage for each subject.
+          Attendance percentage for each subject.
         </CardDescription>
       </CardHeader>
       <CardContent>

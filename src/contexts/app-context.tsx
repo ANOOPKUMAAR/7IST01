@@ -161,16 +161,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const updateAdminCode = (currentCode: string, newCode: string) => {
     if (currentCode !== adminCode) {
-        toast({ title: "Incorrect Current Code", description: "The current code you entered is wrong.", variant: "destructive"});
         return false;
     }
 
     if (/^\d{4}$/.test(newCode)) {
         setAdminCode(newCode);
-        toast({ title: "Admin Code Updated", description: "Your security code has been changed." });
         return true;
     }
-    toast({ title: "Invalid Code", description: "Admin code must be 4 digits.", variant: "destructive" });
     return false;
   };
 

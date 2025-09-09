@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -46,6 +47,7 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Trash, PlusCircle } from "lucide-react";
 import type { Subject, AttendanceRecord } from "@/lib/types";
+import { AdminActionPrompt } from "@/components/admin-action-prompt";
 
 type ManualEntryInputs = {
     date: string;
@@ -54,7 +56,7 @@ type ManualEntryInputs = {
 }
 
 export function AttendanceTable({ subject, records }: { subject: Subject; records: AttendanceRecord[] }) {
-  const { adminMode, addManualEntry, deleteAttendanceRecord } = useAppContext();
+  const { addManualEntry, deleteAttendanceRecord } = useAppContext();
   const { register, handleSubmit, reset } = useForm<ManualEntryInputs>();
   const [isDialogOpen, setDialogOpen] = useState(false);
 
@@ -82,37 +84,38 @@ export function AttendanceTable({ subject, records }: { subject: Subject; record
                     <CardTitle>Attendance Log</CardTitle>
                     <CardDescription>A detailed record of your check-ins and check-outs.</CardDescription>
                 </div>
-                {adminMode && (
-                    <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-                        <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4"/>Add Manual Entry</Button></DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add Manual Attendance</DialogTitle>
-                                <DialogDescription>Manually add an attendance record for {subject.name}.</DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleSubmit(onAddManualEntry)} className="space-y-4">
+                
+                <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4"/>Add Manual Entry</Button></DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add Manual Attendance</DialogTitle>
+                            <DialogDescription>Manually add an attendance record for {subject.name}.</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleSubmit(onAddManualEntry)} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Date</Label>
+                                <Input id="date" type="date" {...register("date", { required: true })} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="date">Date</Label>
-                                    <Input id="date" type="date" {...register("date", { required: true })} />
+                                    <Label htmlFor="checkIn">Check-in Time</Label>
+                                    <Input id="checkIn" type="time" {...register("checkIn", { required: true })} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="checkIn">Check-in Time</Label>
-                                        <Input id="checkIn" type="time" {...register("checkIn", { required: true })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="checkOut">Check-out Time</Label>
-                                        <Input id="checkOut" type="time" {...register("checkOut", { required: true })} />
-                                    </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="checkOut">Check-out Time</Label>
+                                    <Input id="checkOut" type="time" {...register("checkOut", { required: true })} />
                                 </div>
-                                <DialogFooter>
-                                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                                    <Button type="submit">Save Record</Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                )}
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                                <AdminActionPrompt onExecute={handleSubmit(onAddManualEntry)}>
+                                    <Button type="button">Save Record</Button>
+                                </AdminActionPrompt>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </CardHeader>
         <CardContent>
@@ -124,7 +127,7 @@ export function AttendanceTable({ subject, records }: { subject: Subject; record
                 <TableHead>Check-out</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
-                {adminMode && <TableHead className="text-right">Actions</TableHead>}
+                <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -158,35 +161,35 @@ export function AttendanceTable({ subject, records }: { subject: Subject; record
                             <Badge variant="secondary">Present</Badge>
                         )}
                         </TableCell>
-                        {adminMode && (
-                            <TableCell className="text-right">
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                            <Trash className="h-4 w-4" />
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                This will permanently delete this attendance record. This action cannot be undone.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => deleteAttendanceRecord(subject.id, record.id)}>Delete</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </TableCell>
-                        )}
+                        <TableCell className="text-right">
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                        <Trash className="h-4 w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will permanently delete this attendance record. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AdminActionPrompt onExecute={() => deleteAttendanceRecord(subject.id, record.id)}>
+                                            <AlertDialogAction>Delete</AlertDialogAction>
+                                        </AdminActionPrompt>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </TableCell>
                     </TableRow>
                     )
                 })
                 ) : (
                 <TableRow>
-                    <TableCell colSpan={adminMode ? 6 : 5} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                     No attendance records found.
                     </TableCell>
                 </TableRow>

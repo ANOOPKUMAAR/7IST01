@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useAppContext } from "@/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -14,148 +13,91 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-    DialogClose
-  } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Unlock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
-type NewCodeForm = { currentCode: string, newCode: string };
-
-function ChangeCodeDialog() {
-    const { adminMode, adminCode, updateAdminCode } = useAppContext();
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<NewCodeForm>();
-    const [isChangeCodeOpen, setChangeCodeOpen] = useState(false);
-
-    const onSubmitNewCode: SubmitHandler<NewCodeForm> = (data) => {
-        const success = updateAdminCode(data.currentCode, data.newCode);
-        if(success) {
-            reset();
-            setChangeCodeOpen(false);
-        }
-    };
-
-    return (
-        <Dialog open={isChangeCodeOpen} onOpenChange={setChangeCodeOpen}>
-            <DialogTrigger asChild>
-                <Button disabled={!adminMode}>
-                    {adminMode ? 'Change Code' : 'Unlock to Change'}
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Change Security Code</DialogTitle>
-                    <DialogDescription>
-                        Enter your current and new 4-digit security codes.
-                    </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit(onSubmitNewCode)} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="currentCode">Current Code</Label>
-                        <Input 
-                            id="currentCode" 
-                            type="password" 
-                            placeholder="Enter current code"
-                            {...register("currentCode", { required: true, pattern: /^\d{4}$/ })}
-                        />
-                        {errors.currentCode && <p className="text-sm text-destructive">Current code must be 4 digits.</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="newCode">New Code</Label>
-                        <Input 
-                            id="newCode" 
-                            type="password" 
-                            placeholder="Enter new 4-digit code"
-                            {...register("newCode", { required: true, pattern: /^\d{4}$/ })}
-                        />
-                        {errors.newCode && <p className="text-sm text-destructive">New code must be 4 digits.</p>}
-                    </div>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="button" variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit">Set New Code</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
-}
+type ChangeCodeForm = {
+    currentCode: string;
+    newCode: string;
+};
 
 export function AdminSettings() {
-  const { adminMode, setAdminMode, adminCode } = useAppContext();
+  const { adminMode, setAdminMode, updateAdminCode } = useAppContext();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ChangeCodeForm>();
   const { toast } = useToast();
-  const [enterCode, setEnterCode] = useState("");
-  const [error, setError] = useState("");
-  
-  useEffect(() => {
-    if (enterCode.length === 4) {
-        if (enterCode === adminCode) {
-            setAdminMode(true);
-            toast({ title: "Admin Mode Enabled" });
-            setError("");
-            setEnterCode("");
-        } else {
-            setError("Incorrect code. Please try again.");
-            setEnterCode("");
-        }
-    } else if (error && enterCode.length > 0) {
-        setError("");
-    }
-  }, [enterCode, adminCode, setAdminMode, toast, error]);
 
-  const handleLockAdminMode = () => {
-    setAdminMode(false);
-    toast({ title: "Admin Mode Disabled" });
+  const onSubmitChangeCode: SubmitHandler<ChangeCodeForm> = (data) => {
+    const success = updateAdminCode(data.currentCode, data.newCode);
+    if (success) {
+      toast({
+        title: "Security Code Changed",
+        description: "Your new security code has been set.",
+      });
+      reset();
+    } else {
+      toast({
+        title: "Incorrect Current Code",
+        description: "The current security code you entered is incorrect.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle>Admin Mode</CardTitle>
+                <CardTitle>Admin Mode Toggle</CardTitle>
                 <CardDescription>
-                {adminMode ? "Admin mode is currently enabled." : "Enter the 4-digit code to enable admin mode."}
+                Enable admin mode to make changes to subjects, profiles, and other settings. You will be prompted for the security code when performing admin actions.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {adminMode ? (
-                    <Button onClick={handleLockAdminMode} variant="destructive">
-                        <Lock className="mr-2 h-4 w-4" /> Lock Admin Mode
-                    </Button>
-                ) : (
-                    <div className="max-w-xs space-y-2">
-                        <Label htmlFor="admin-code-input">Security Code</Label>
-                        <Input
-                            id="admin-code-input"
-                            type="password"
-                            maxLength={4}
-                            placeholder="****"
-                            value={enterCode}
-                            onChange={(e) => setEnterCode(e.target.value)}
-                            className={error ? "border-destructive" : ""}
-                        />
-                         {error && <p className="text-sm text-destructive">{error}</p>}
-                    </div>
-                )}
+                <div className="flex items-center space-x-2">
+                    <Switch
+                        id="admin-mode-switch"
+                        checked={adminMode}
+                        onCheckedChange={setAdminMode}
+                    />
+                    <Label htmlFor="admin-mode-switch">{adminMode ? "Admin Mode is ON" : "Admin Mode is OFF"}</Label>
+                    {adminMode ? <Unlock className="h-4 w-4 text-status-green" /> : <Lock className="h-4 w-4 text-status-red" />}
+                </div>
             </CardContent>
         </Card>
         <Card>
             <CardHeader>
                 <CardTitle>Change Security Code</CardTitle>
                 <CardDescription>
-                Set a new 4-digit security code for admin mode. Default code is 0000.
+                Set a new 4-digit security code. The default code is 0000.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <ChangeCodeDialog />
+                <form onSubmit={handleSubmit(onSubmitChangeCode)} className="space-y-4 max-w-sm">
+                    <div className="space-y-2">
+                        <Label htmlFor="currentCode">Current Code</Label>
+                        <Input 
+                            id="currentCode" 
+                            type="password" 
+                            maxLength={4}
+                            placeholder="Enter current 4-digit code"
+                            {...register("currentCode", { required: "Current code is required.", pattern: { value: /^\d{4}$/, message: "Code must be 4 digits." } })}
+                        />
+                        {errors.currentCode && <p className="text-sm text-destructive">{errors.currentCode.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="newCode">New Code</Label>
+                        <Input 
+                            id="newCode" 
+                            type="password" 
+                            maxLength={4}
+                            placeholder="Enter new 4-digit code"
+                            {...register("newCode", { required: "New code is required.", pattern: { value: /^\d{4}$/, message: "Code must be 4 digits." } })}
+                        />
+                        {errors.newCode && <p className="text-sm text-destructive">{errors.newCode.message}</p>}
+                    </div>
+                    <Button type="submit">Set New Code</Button>
+                </form>
             </CardContent>
         </Card>
     </div>

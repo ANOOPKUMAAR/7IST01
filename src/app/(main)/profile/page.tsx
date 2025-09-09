@@ -24,6 +24,7 @@ import type { UserDetails } from "@/lib/types";
 import { User, Edit } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminActionPrompt } from "@/components/admin-action-prompt";
 
 function InfoRow({ label, value }: { label: string, value: string }) {
     return (
@@ -89,7 +90,9 @@ function EditProfileDialog({ onDone }: { onDone: () => void }) {
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button type="submit">Save Changes</Button>
+                <AdminActionPrompt onExecute={handleSubmit(onSubmit)}>
+                    <Button type="button">Save Changes</Button>
+                </AdminActionPrompt>
             </DialogFooter>
         </form>
     )
@@ -97,7 +100,7 @@ function EditProfileDialog({ onDone }: { onDone: () => void }) {
 
 
 export default function ProfilePage() {
-  const { subjects, attendance, isLoaded, userDetails, adminMode } = useAppContext();
+  const { subjects, attendance, isLoaded, userDetails } = useAppContext();
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
 
   const { totalAttended, totalMissed, pieData } = useMemo(() => {
@@ -153,20 +156,19 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
             </div>
         </div>
-        {adminMode && (
-            <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Edit Profile</DialogTitle>
-                        <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
-                    </DialogHeader>
-                    <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
-                </DialogContent>
-            </Dialog>
-        )}
+        
+        <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Edit Profile</DialogTitle>
+                    <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
+                </DialogHeader>
+                <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
+            </DialogContent>
+        </Dialog>
       </div>
 
       <Card>

@@ -30,8 +30,7 @@ interface AppContextType {
   userCredentials: UserCredentials;
   isLoaded: boolean;
   isLoggedIn: boolean;
-  registerUser: (data: RegistrationData) => boolean;
-  login: (rollNo: string, password?: string) => boolean;
+  registerUser: (data: RegistrationData) => void;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
@@ -156,7 +155,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
       const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
 
-      const isLoggedInStatus = storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false;
+      // By default, we are now logged in. We only check if a user has explicitly logged out.
+      const isLoggedInStatus = storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : true;
       
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
@@ -164,14 +164,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { userId: '20221IST0001', password: '123' });
       
+      setIsLoggedIn(isLoggedInStatus);
       if(isLoggedInStatus) {
-        setIsLoggedIn(true);
         setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       }
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      setIsLoggedIn(false);
+      setIsLoggedIn(true); // Default to logged in
     }
     setIsLoaded(true);
   }, []);
@@ -209,22 +209,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setAttendance(generateInitialAttendance());
     setWifiZones(initialWifiZones);
     setActiveCheckIn(null);
-    return true;
+    setIsLoggedIn(true);
   };
   
-  const login = (rollNo: string, password?: string) => {
-    if (rollNo === userCredentials.userId && password === userCredentials.password) {
-        setIsLoggedIn(true);
-        return true;
-    }
-    return false;
-  };
-
   const logout = () => {
     setIsLoggedIn(false);
     setActiveCheckIn(null);
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push("/login");
+    router.push("/register");
   };
 
   const addSubject = (subject: Omit<Subject, "id">) => {
@@ -347,7 +339,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isLoaded,
     isLoggedIn,
     registerUser,
-    login,
     logout,
     addSubject,
     bulkAddSubjects,

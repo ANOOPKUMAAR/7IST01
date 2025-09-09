@@ -19,11 +19,11 @@ export default function MainLayout({
 
   useEffect(() => {
     if (isLoaded && !isLoggedIn) {
-      router.replace("/login");
+      router.replace("/register");
     }
   }, [isLoaded, isLoggedIn, router]);
 
-  if (!isLoaded || !isLoggedIn) {
+  if (!isLoaded) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Icons.logo className="h-24 w-24 animate-spin text-primary" />

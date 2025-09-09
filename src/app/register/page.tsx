@@ -49,7 +49,7 @@ export default function RegisterPage() {
 
     setTimeout(() => {
         setIsLoading(false);
-        router.push("/login");
+        router.push("/dashboard");
     }, 500);
   };
 
@@ -103,12 +103,6 @@ export default function RegisterPage() {
               Create Account
             </Button>
           </form>
-           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="underline">
-              Login
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

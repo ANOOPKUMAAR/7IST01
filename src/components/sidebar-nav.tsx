@@ -147,15 +147,6 @@ export function SidebarNav() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-           <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={logout}
-              tooltip={{ children: "Logout" }}
-            >
-                <LogOut />
-                <span>Logout</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

@@ -75,7 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [adminMode, setAdminMode] = useState<boolean>(false);
-  const [adminCode, setAdminCode] = useState<string>("0000");
+  const [adminCode, setAdminCode] = useState<string>("1111");
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
   const [otpData, setOtpData] = useState<OtpData | null>(null);
@@ -94,10 +94,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       
-      setAdminCode(storedAdminCode || "0000");
+      setAdminCode(storedAdminCode || "1111");
 
       if (!storedAdminCode) {
-        localStorage.setItem("witrack_adminCode", "0000");
+        localStorage.setItem("witrack_adminCode", "1111");
       }
 
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
@@ -106,7 +106,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubjects(initialSubjects);
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
-      setAdminCode("0000");
+      setAdminCode("1111");
     }
     setIsLoaded(true);
   }, []);

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useAppContext } from "@/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -37,67 +37,16 @@ import {
   } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, ShieldQuestion } from "lucide-react";
-import type { OtpData } from "@/lib/types";
 
-type NewCodeForm = { currentCode: string, newCode: string, otp: string };
+type NewCodeForm = { currentCode: string, newCode: string };
 
 function ChangeCodeDialog() {
-    const { adminMode, adminCode, updateAdminCode, requestOtp, otpData, clearOtp } = useAppContext();
-    const { toast } = useToast();
+    const { adminMode, updateAdminCode } = useAppContext();
     const { register, handleSubmit, reset, formState: { errors } } = useForm<NewCodeForm>();
     const [isChangeCodeOpen, setChangeCodeOpen] = useState(false);
-    const [isRequestingOtp, setIsRequestingOtp] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(0);
-
-    useEffect(() => {
-        if (!otpData) {
-            setTimeLeft(0);
-            return;
-        }
-
-        const expiryTime = new Date(otpData.expiry).getTime();
-        const now = new Date().getTime();
-        const remaining = Math.round((expiryTime - now) / 1000);
-        setTimeLeft(remaining > 0 ? remaining : 0);
-
-        const timer = setInterval(() => {
-            setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
-        }, 1000);
-
-        return () => {
-            clearInterval(timer);
-        };
-
-    }, [otpData]);
-    
-    useEffect(() => {
-        if (!isChangeCodeOpen) {
-            // Cleanup when dialog closes
-            clearOtp();
-            reset();
-            setIsRequestingOtp(false);
-        }
-    }, [isChangeCodeOpen, clearOtp, reset]);
-
-    const handleRequestOtp = async () => {
-        setIsRequestingOtp(true);
-        try {
-            await requestOtp();
-        } catch (error) {
-            toast({ title: "OTP Request Failed", description: "Could not generate an OTP. Please try again.", variant: "destructive" });
-        } finally {
-            setIsRequestingOtp(false);
-        }
-    };
 
     const onSubmitNewCode: SubmitHandler<NewCodeForm> = (data) => {
-        if (data.currentCode !== adminCode) {
-            toast({ title: "Incorrect Current Code", description: "The current code you entered is wrong.", variant: "destructive"});
-            return;
-        }
-        const success = updateAdminCode(data.newCode, data.otp);
+        const success = updateAdminCode(data.currentCode, data.newCode);
         if(success) {
             reset();
             setChangeCodeOpen(false);
@@ -115,70 +64,35 @@ function ChangeCodeDialog() {
                 <DialogHeader>
                     <DialogTitle>Change Security Code</DialogTitle>
                     <DialogDescription>
-                        For security, please verify your identity with an OTP.
+                        Enter your current and new 4-digit security codes.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmitNewCode)} className="space-y-4">
-                    {!otpData ? (
-                        <Button onClick={handleRequestOtp} disabled={isRequestingOtp} className="w-full">
-                            {isRequestingOtp ? <Loader2 className="animate-spin" /> : "Send OTP"}
-                        </Button>
-                    ) : (
-                        <div className="space-y-4">
-                            <Alert>
-                                <ShieldQuestion className="h-4 w-4" />
-                                <AlertTitle>OTP Sent (Simulated)</AlertTitle>
-                                <AlertDescription>
-                                    <p className="font-mono text-sm">{otpData.message}</p>
-                                    {timeLeft > 0 ? (
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            Expires in: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                                        </p>
-                                    ) : (
-                                        <p className="text-xs text-status-red mt-2">OTP has expired. Please request a new one.</p>
-                                    )}
-                                </AlertDescription>
-                            </Alert>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="otp">Enter OTP</Label>
-                                <Input
-                                    id="otp"
-                                    type="text"
-                                    placeholder="6-digit code"
-                                    {...register("otp", { required: true, pattern: /^\d{6}$/ })}
-                                />
-                                {errors.otp && <p className="text-sm text-destructive">OTP must be 6 digits.</p>}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="currentCode">Current Code</Label>
-                                <Input 
-                                    id="currentCode" 
-                                    type="password" 
-                                    placeholder="Enter current code"
-                                    {...register("currentCode", { required: true, pattern: /^\d{4}$/ })}
-                                />
-                                {errors.currentCode && <p className="text-sm text-destructive">Current code must be 4 digits.</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="newCode">New Code</Label>
-                                <Input 
-                                    id="newCode" 
-                                    type="password" 
-                                    placeholder="Enter new 4-digit code"
-                                    {...register("newCode", { required: true, pattern: /^\d{4}$/ })}
-                                />
-                                {errors.newCode && <p className="text-sm text-destructive">New code must be 4 digits.</p>}
-                            </div>
-                        </div>
-                    )}
-                    
+                    <div className="space-y-2">
+                        <Label htmlFor="currentCode">Current Code</Label>
+                        <Input 
+                            id="currentCode" 
+                            type="password" 
+                            placeholder="Enter current code"
+                            {...register("currentCode", { required: true, pattern: /^\d{4}$/ })}
+                        />
+                        {errors.currentCode && <p className="text-sm text-destructive">Current code must be 4 digits.</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="newCode">New Code</Label>
+                        <Input 
+                            id="newCode" 
+                            type="password" 
+                            placeholder="Enter new 4-digit code"
+                            {...register("newCode", { required: true, pattern: /^\d{4}$/ })}
+                        />
+                        {errors.newCode && <p className="text-sm text-destructive">New code must be 4 digits.</p>}
+                    </div>
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button type="button" variant="outline">Cancel</Button>
                         </DialogClose>
-                        <Button type="submit" disabled={!otpData || timeLeft <= 0}>Set New Code</Button>
+                        <Button type="submit">Set New Code</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -271,7 +185,7 @@ export function AdminSettings() {
             <CardHeader>
                 <CardTitle>Change Security Code</CardTitle>
                 <CardDescription>
-                Set a new 4-digit security code for admin mode after OTP verification.
+                Set a new 4-digit security code for admin mode.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -281,5 +195,3 @@ export function AdminSettings() {
     </div>
   );
 }
-
-    

@@ -46,48 +46,62 @@ const initialSubjects: Subject[] = [
     { id: 'en101', name: 'English 101', expectedCheckIn: '13:00', expectedCheckOut: '14:30', totalClasses: 20, dayOfWeek: 5 },
 ];
 
-const initialAttendance: Record<string, AttendanceRecord[]> = {
-  cs101: [
-    {
-      id: "att_1",
-      date: new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 1))).toISOString(),
-      checkIn: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 1))).setHours(9, 5, 0)).toISOString(),
-      checkOut: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 1))).setHours(10, 30, 0)).toISOString(),
-      isAnomaly: false,
-      anomalyReason: "",
-    }
-  ],
-  ma201: [
-    {
-      id: "att_3",
-      date: new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 2))).toISOString(),
-      checkIn: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 2))).setHours(11, 2, 0)).toISOString(),
-      checkOut: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 2))).setHours(12, 25, 0)).toISOString(),
-      isAnomaly: false,
-      anomalyReason: "",
-    }
-  ],
-  py101: [
-    {
-      id: "att_2",
-      date: new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 3))).toISOString(),
-      checkIn: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 3))).setHours(9, 2, 0)).toISOString(),
-      checkOut: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 3))).setHours(10, 28, 0)).toISOString(),
-      isAnomaly: false,
-      anomalyReason: "",
-    }
-  ],
-  en101: [
-    {
-      id: "att_4",
-      date: new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 5))).toISOString(),
-      checkIn: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 5))).setHours(13, 5, 0)).toISOString(),
-      checkOut: new Date(new Date(new Date().setDate(new Date().getDate() - (new Date().getDay() - 5))).setHours(14, 30, 0)).toISOString(),
-      isAnomaly: false,
-      anomalyReason: "",
-    }
-  ]
+const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // Sunday - 0, Monday - 1, etc.
+  
+  const getPastDate = (targetDay: number) => {
+    const date = new Date();
+    const currentDay = date.getDay();
+    const diff = currentDay - targetDay;
+    date.setDate(date.getDate() - (diff >= 0 ? diff : diff + 7));
+    return date;
+  }
+
+  return {
+    cs101: [
+      {
+        id: "att_1",
+        date: getPastDate(1).toISOString(),
+        checkIn: new Date(new Date(getPastDate(1)).setHours(9, 5, 0)).toISOString(),
+        checkOut: new Date(new Date(getPastDate(1)).setHours(10, 30, 0)).toISOString(),
+        isAnomaly: false,
+        anomalyReason: "",
+      }
+    ],
+    ma201: [
+      {
+        id: "att_3",
+        date: getPastDate(2).toISOString(),
+        checkIn: new Date(new Date(getPastDate(2)).setHours(11, 2, 0)).toISOString(),
+        checkOut: new Date(new Date(getPastDate(2)).setHours(12, 25, 0)).toISOString(),
+        isAnomaly: false,
+        anomalyReason: "",
+      }
+    ],
+    py101: [
+      {
+        id: "att_2",
+        date: getPastDate(3).toISOString(),
+        checkIn: new Date(new Date(getPastDate(3)).setHours(9, 2, 0)).toISOString(),
+        checkOut: new Date(new Date(getPastDate(3)).setHours(10, 28, 0)).toISOString(),
+        isAnomaly: false,
+        anomalyReason: "",
+      }
+    ],
+    en101: [
+      {
+        id: "att_4",
+        date: getPastDate(5).toISOString(),
+        checkIn: new Date(new Date(getPastDate(5)).setHours(13, 5, 0)).toISOString(),
+        checkOut: new Date(new Date(getPastDate(5)).setHours(14, 30, 0)).toISOString(),
+        isAnomaly: false,
+        anomalyReason: "",
+      }
+    ]
+  };
 };
+
 
 const initialWifiZones: WifiZone[] = [
     { id: 'wifi1', ssid: 'Campus-WiFi' },
@@ -131,14 +145,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
 
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
-      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : initialAttendance);
+      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : initialUserCredentials);
       
       const today = new Date().getDay();
       if(storedAttendance === null) {
-        setAttendance(initialAttendance);
+        setAttendance(generateInitialAttendance());
       } else {
         setAttendance(JSON.parse(storedAttendance));
       }
@@ -147,7 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       setSubjects(initialSubjects);
-      setAttendance(initialAttendance);
+      setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
       setUserDetails(initialUserDetails);
       setUserCredentials(initialUserCredentials);
@@ -321,6 +335,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    
-    

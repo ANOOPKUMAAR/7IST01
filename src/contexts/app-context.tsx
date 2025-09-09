@@ -13,7 +13,7 @@ import type {
   OtpData,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
-import { generateOtp } from "@/ai/flows/otp-flow";
+import { generateOtp } from "@/ai/flows/otp-flow.ts";
 
 interface AppContextType {
   subjects: Subject[];
@@ -94,10 +94,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       
-      setAdminCode(storedAdminCode || "1111");
-
-      if (!storedAdminCode) {
+      if (storedAdminCode) {
+        setAdminCode(storedAdminCode);
+      } else {
         localStorage.setItem("witrack_adminCode", "1111");
+        setAdminCode("1111");
       }
 
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);

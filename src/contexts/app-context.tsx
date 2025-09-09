@@ -10,7 +10,6 @@ import type {
   WifiZone,
   ActiveCheckIn,
   UserDetails,
-  UserCredentials,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 
@@ -31,7 +30,6 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
-  updateUserCredentials: (credentials: Omit<UserCredentials, 'userId'>) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -260,12 +258,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
-  // This function is now a no-op but kept for type consistency if needed later.
-  const updateUserCredentials = (newCredentials: Omit<UserCredentials, 'userId'>) => {
-    toast({ title: "Credentials Updated", description: "This feature is currently disabled." });
-    return false;
-  };
-
   const value = {
     subjects,
     attendance,
@@ -283,7 +275,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails,
-    updateUserCredentials,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -70,7 +70,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      setAdminCode(storedAdminCode || "1234");
+      if (storedAdminCode) {
+        setAdminCode(storedAdminCode);
+      }
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
       console.error("Failed to load data from localStorage", error);

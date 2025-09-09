@@ -95,9 +95,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
 
       if (storedAdminCode) {
-        setAdminCode(JSON.parse(storedAdminCode));
+        setAdminCode(storedAdminCode);
       } else {
-        localStorage.setItem("witrack_adminCode", JSON.stringify("0000"));
+        localStorage.setItem("witrack_adminCode", "0000");
         setAdminCode("0000");
       }
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
@@ -116,7 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
       localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
       localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("witrack_adminCode", JSON.stringify(adminCode));
+      localStorage.setItem("witrack_adminCode", adminCode);
       localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
       localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
     }

@@ -4,27 +4,48 @@
 import { AttendanceCharts } from "@/components/visuals/attendance-charts";
 import { AttendanceByDay } from "@/components/visuals/attendance-by-day";
 import { OverallAttendanceSummary } from "@/components/visuals/overall-attendance-summary";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart, PieChart, LineChart } from "lucide-react";
 
 export default function AttendanceVisualsPage() {
   return (
     <div className="flex flex-col gap-6">
-       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Attendance Visuals</h2>
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Attendance Visuals
+        </h2>
         <p className="text-muted-foreground">
           Explore your attendance data with these charts.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-            <AttendanceCharts />
-        </div>
-        <div className="lg:col-span-1">
-            <OverallAttendanceSummary />
-        </div>
-      </div>
-      <div>
-        <AttendanceByDay />
-      </div>
+
+      <Tabs defaultValue="breakdown" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="breakdown">
+            <BarChart className="mr-2 h-4 w-4" /> Subject Breakdown
+          </TabsTrigger>
+          <TabsTrigger value="summary">
+            <PieChart className="mr-2 h-4 w-4" /> Overall Summary
+          </TabsTrigger>
+          <TabsTrigger value="daily">
+            <LineChart className="mr-2 h-4 w-4" /> Daily Trend
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="breakdown" className="mt-4">
+          <AttendanceCharts />
+        </TabsContent>
+
+        <TabsContent value="summary" className="mt-4">
+            <div className="max-w-md mx-auto">
+                <OverallAttendanceSummary />
+            </div>
+        </TabsContent>
+
+        <TabsContent value="daily" className="mt-4">
+          <AttendanceByDay />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

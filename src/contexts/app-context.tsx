@@ -70,7 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      setAdminCode(storedAdminCode ? JSON.parse(storedAdminCode) : "1234");
+      setAdminCode(storedAdminCode || "1234");
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -85,7 +85,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
       localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
       localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("witrack_adminCode", JSON.stringify(adminCode));
+      localStorage.setItem("witrack_adminCode", adminCode);
       localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
     }
   }, [subjects, attendance, wifiZones, adminCode, activeCheckIn, isLoaded]);

@@ -71,46 +71,48 @@ export function Timetable() {
         <CardDescription>Your class schedule for the week. Click on a subject to view details.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="w-24 font-bold text-center">Time</TableHead>
-                    {daysOfWeek.map((day, index) => (
-                        <TableHead key={day} className={cn("text-center font-bold", index === currentDay && "text-primary")}>{day}</TableHead>
-                    ))}
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {timeSlots.length > 0 ? timeSlots.map(time => (
-                    <TableRow key={time}>
-                        <TableCell className="font-semibold text-center">{time}</TableCell>
-                        {daysOfWeek.map((day, index) => {
-                           const daySubjects = subjectsByTimeAndDay[time]?.[index] || [];
-                           return (
-                                <TableCell key={`${time}-${day}`} className={cn("h-24 align-top", index === currentDay && "bg-muted/50")}>
-                                    <div className="space-y-1">
-                                        {daySubjects.map(subject => (
-                                            <Link href={`/subjects/${subject.id}`} key={subject.id}>
-                                                <div className="p-2 rounded-md bg-background hover:bg-card-foreground/10 transition-colors shadow-sm border">
-                                                    <p className="font-semibold text-sm">{subject.name}</p>
-                                                    <p className="text-xs text-muted-foreground mt-1">{subject.expectedCheckIn} - {subject.expectedCheckOut}</p>
-                                                </div>
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </TableCell>
-                           )
-                        })}
-                    </TableRow>
-                )) : (
+        <div className="border rounded-lg overflow-hidden">
+            <Table>
+                <TableHeader>
                     <TableRow>
-                        <TableCell colSpan={8} className="h-48 text-center text-muted-foreground">
-                            No subjects scheduled in your timetable. Add some in the settings.
-                        </TableCell>
+                        <TableHead className="w-24 font-bold text-center border-r">Time</TableHead>
+                        {daysOfWeek.map((day, index) => (
+                            <TableHead key={day} className={cn("text-center font-bold", index === currentDay && "text-primary bg-muted/30")}>{day}</TableHead>
+                        ))}
                     </TableRow>
-                )}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {timeSlots.length > 0 ? timeSlots.map(time => (
+                        <TableRow key={time}>
+                            <TableCell className="font-semibold text-center align-middle border-r">{time}</TableCell>
+                            {daysOfWeek.map((_, index) => {
+                               const daySubjects = subjectsByTimeAndDay[time]?.[index] || [];
+                               return (
+                                    <TableCell key={`${time}-${index}`} className={cn("h-24 align-top p-1", index === currentDay && "bg-muted/30")}>
+                                        <div className="space-y-1">
+                                            {daySubjects.map(subject => (
+                                                <Link href={`/subjects/${subject.id}`} key={subject.id} className="block">
+                                                    <div className="p-2 rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors shadow-sm border">
+                                                        <p className="font-semibold text-sm leading-tight">{subject.name}</p>
+                                                        <p className="text-xs text-muted-foreground mt-1">{subject.expectedCheckIn} - {subject.expectedCheckOut}</p>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                               )
+                            })}
+                        </TableRow>
+                    )) : (
+                        <TableRow>
+                            <TableCell colSpan={8} className="h-48 text-center text-muted-foreground">
+                                No subjects scheduled in your timetable. Add some in the settings.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </div>
       </CardContent>
     </Card>
   );

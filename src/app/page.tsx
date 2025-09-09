@@ -2,9 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { Timetable } from "@/components/dashboard/time-table";
 import { Button } from "@/components/ui/button";
-import { FileUp } from "lucide-react";
+import { FileUp, List, LayoutGrid } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +13,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { UploadTimetableDialog } from "@/components/dashboard/upload-timetable-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Timetable } from "@/components/dashboard/time-table";
+import { SubjectCardsView } from "@/components/dashboard/subject-cards-view";
+
 
 export default function DashboardPage() {
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -46,7 +49,21 @@ export default function DashboardPage() {
           </DialogContent>
         </Dialog>
       </div>
-      <Timetable />
+
+      <Tabs defaultValue="table" className="w-full">
+        <div className="flex justify-end">
+            <TabsList>
+                <TabsTrigger value="table"><List className="mr-2"/> Table View</TabsTrigger>
+                <TabsTrigger value="cards"><LayoutGrid className="mr-2"/> Card View</TabsTrigger>
+            </TabsList>
+        </div>
+        <TabsContent value="table" className="mt-4">
+          <Timetable />
+        </TabsContent>
+        <TabsContent value="cards" className="mt-4">
+            <SubjectCardsView />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import type {
   AttendanceRecord,
   WifiZone,
   ActiveCheckIn,
+  UserDetails,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 
@@ -19,6 +20,7 @@ interface AppContextType {
   adminMode: boolean;
   adminCode: string;
   activeCheckIn: ActiveCheckIn | null;
+  userDetails: UserDetails;
   isLoaded: boolean;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
@@ -32,6 +34,7 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   addManualEntry: (subjectId: string, entry: Omit<AttendanceRecord, "id" | 'isAnomaly' | 'anomalyReason' >) => void;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
+  updateUserDetails: (details: UserDetails) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -48,6 +51,17 @@ const initialWifiZones: WifiZone[] = [
     { id: 'wifi1', ssid: 'Campus-WiFi' },
 ];
 
+const initialUserDetails: UserDetails = {
+    name: "Alex Doe",
+    rollNo: "ST2024001",
+    program: "Bachelor of Technology",
+    branch: "Computer Science",
+    department: "Engineering",
+    section: "A",
+    phone: "+1 (123) 456-7890",
+    parentName: "John Doe",
+    address: "123 University Lane, Tech City, 12345",
+};
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -58,6 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [adminMode, setAdminMode] = useState<boolean>(false);
   const [adminCode, setAdminCode] = useState<string>("0000");
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
 
   useEffect(() => {
     try {
@@ -66,26 +81,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
       const storedAdminCode = localStorage.getItem("witrack_adminCode");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
+      const storedUserDetails = localStorage.getItem("witrack_userDetails");
 
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : {});
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+      setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+
       if (storedAdminCode) {
-        // Handle cases where code might be stored with quotes
-        try {
-          const parsedCode = JSON.parse(storedAdminCode);
-          setAdminCode(parsedCode);
-        } catch {
-          setAdminCode(storedAdminCode);
-        }
+        setAdminCode(storedAdminCode);
       } else {
         setAdminCode("0000");
+        localStorage.setItem("witrack_adminCode", "0000");
       }
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       setSubjects(initialSubjects);
       setWifiZones(initialWifiZones);
+      setUserDetails(initialUserDetails);
     }
     setIsLoaded(true);
   }, []);
@@ -97,8 +111,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
       localStorage.setItem("witrack_adminCode", adminCode);
       localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
+      localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
     }
-  }, [subjects, attendance, wifiZones, adminCode, activeCheckIn, isLoaded]);
+  }, [subjects, attendance, wifiZones, adminCode, activeCheckIn, userDetails, isLoaded]);
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -222,6 +237,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Record Deleted", variant: "destructive" });
   };
 
+  const updateUserDetails = (details: UserDetails) => {
+    setUserDetails(details);
+    toast({ title: "Profile Updated", description: "Your details have been saved." });
+  };
+
   const value = {
     subjects,
     attendance,
@@ -229,6 +249,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     adminMode,
     adminCode,
     activeCheckIn,
+    userDetails,
     isLoaded,
     addSubject,
     bulkAddSubjects,
@@ -242,6 +263,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkOut,
     addManualEntry,
     deleteAttendanceRecord,
+    updateUserDetails,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -254,5 +276,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    

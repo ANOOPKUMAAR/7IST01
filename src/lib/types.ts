@@ -1,3 +1,4 @@
+
 export interface Subject {
   id: string;
   name: string;
@@ -24,4 +25,16 @@ export interface WifiZone {
 export interface ActiveCheckIn {
   subjectId: string;
   checkInTime: string;
+}
+
+export interface UserDetails {
+  name: string;
+  rollNo: string;
+  program: string;
+  branch: string;
+  department: string;
+  section: string;
+  phone: string;
+  parentName: string;
+  address: string;
 }

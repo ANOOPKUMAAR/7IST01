@@ -4,9 +4,24 @@
 import { useAppContext } from "@/contexts/app-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo } from "react";
-import { User } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import type { UserDetails } from "@/lib/types";
+import { User, Edit } from "lucide-react";
 
 function StatCard({ title, value, description }: { title: string, value: string | number, description?: string }) {
     return (
@@ -31,20 +46,71 @@ function InfoRow({ label, value }: { label: string, value: string }) {
     )
 }
 
-const userDetails = {
-    name: "Alex Doe",
-    rollNo: "ST2024001",
-    program: "Bachelor of Technology",
-    branch: "Computer Science",
-    department: "Engineering",
-    section: "A",
-    phone: "+1 (123) 456-7890",
-    parentName: "John Doe",
-    address: "123 University Lane, Tech City, 12345",
+function EditProfileDialog({ onDone }: { onDone: () => void }) {
+    const { userDetails, updateUserDetails } = useAppContext();
+    const { register, handleSubmit } = useForm<UserDetails>({
+        defaultValues: userDetails
+    });
+
+    const onSubmit: SubmitHandler<UserDetails> = (data) => {
+        updateUserDetails(data);
+        onDone();
+    };
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" {...register("name")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="rollNo">Roll No.</Label>
+                    <Input id="rollNo" {...register("rollNo")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="program">Program</Label>
+                    <Input id="program" {...register("program")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="branch">Branch</Label>
+                    <Input id="branch" {...register("branch")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="department">Department</Label>
+                    <Input id="department" {...register("department")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="section">Section</Label>
+                    <Input id="section" {...register("section")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" {...register("phone")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="parentName">Parent's Name</Label>
+                    <Input id="parentName" {...register("parentName")} />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                    <Label htmlFor="address">Address</Label>
+                    <Input id="address" {...register("address")} />
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+        </form>
+    )
 }
 
+
 export default function ProfilePage() {
-  const { subjects, attendance, isLoaded } = useAppContext();
+  const { subjects, attendance, isLoaded, userDetails, adminMode } = useAppContext();
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
 
   const { totalAttendance, overallPercentage, totalPossibleClasses } = useMemo(() => {
     let totalAttendance = 0;
@@ -53,7 +119,6 @@ export default function ProfilePage() {
     subjects.forEach(subject => {
         const attended = attendance[subject.id]?.length || 0;
         totalAttendance += attended;
-        // If total classes is not set, consider attended classes as total to avoid skewed percentages for new subjects.
         totalPossibleClasses += subject.totalClasses > 0 ? subject.totalClasses : attended;
     });
 
@@ -87,18 +152,35 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <Avatar className="h-24 w-24 border">
-            <AvatarImage src="https://picsum.photos/200" data-ai-hint="student avatar" />
-            <AvatarFallback>
-                <User className="h-12 w-12 text-muted-foreground" />
-            </AvatarFallback>
-        </Avatar>
-        <div>
-            <h2 className="text-3xl font-bold">{userDetails.name}</h2>
-            <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+            <Avatar className="h-24 w-24 border">
+                <AvatarImage src="https://picsum.photos/200" data-ai-hint="student avatar" />
+                <AvatarFallback>
+                    <User className="h-12 w-12 text-muted-foreground" />
+                </AvatarFallback>
+            </Avatar>
+            <div>
+                <h2 className="text-3xl font-bold">{userDetails.name}</h2>
+                <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
+            </div>
         </div>
+        {adminMode && (
+            <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Profile</DialogTitle>
+                        <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
+                    </DialogHeader>
+                    <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
+                </DialogContent>
+            </Dialog>
+        )}
       </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard title="Total Subjects" value={subjects.length} />
         <StatCard title="Overall Attendance" value={`${overallPercentage}%`} description={`${totalAttendance} / ${totalPossibleClasses} classes attended`} />

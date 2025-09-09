@@ -3,21 +3,23 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const isLoggedIn = !!request.cookies.get('witrack_isLoggedIn')?.value;
+  const isLoggedInCookie = request.cookies.get('witrack_isLoggedIn');
+  const isLoggedIn = isLoggedInCookie ? JSON.parse(isLoggedInCookie.value) : false;
   const { pathname } = request.nextUrl;
 
-  const publicRoutes = ['/login', '/register'];
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoute = pathname === '/login' || pathname === '/register';
 
-  // If user is logged in and trying to access a public route (login/register), redirect to dashboard
+  // If the user is logged in and trying to access a public route, redirect to the dashboard.
   if (isLoggedIn && isPublicRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // If user is not logged in and trying to access a protected route, redirect to login
+  // If the user is not logged in and trying to access a protected route, redirect to the login page.
+  // The root path '/' should also be protected and redirect to login if not authenticated.
   if (!isLoggedIn && !isPublicRoute && pathname !== '/') {
-    return NextResponse.redirect(new URL('/login', request.url));
+     return NextResponse.redirect(new URL('/login', request.url));
   }
+
 
   return NextResponse.next();
 }

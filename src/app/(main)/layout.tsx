@@ -19,7 +19,7 @@ export default function MainLayout({
 
   useEffect(() => {
     if (isLoaded && !isLoggedIn) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [isLoaded, isLoggedIn, router]);
 

@@ -23,7 +23,7 @@ export default function MainLayout({
     }
   }, [isLoaded, isLoggedIn, router]);
 
-  if (!isLoaded) {
+  if (!isLoaded || !isLoggedIn) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Icons.logo className="h-24 w-24 animate-spin text-primary" />

@@ -31,7 +31,6 @@ interface AppContextType {
   isLoaded: boolean;
   isLoggedIn: boolean;
   registerUser: (data: RegistrationData) => void;
-  logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -155,23 +154,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserCredentials = localStorage.getItem("witrack_userCredentials");
       const storedIsLoggedIn = localStorage.getItem("witrack_isLoggedIn");
 
-      // By default, we are now logged in. We only check if a user has explicitly logged out.
-      const isLoggedInStatus = storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : true;
+      const isLoggedInStatus = storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false;
       
-      setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
-      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
-      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
-      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { userId: '20221IST0001', password: '123' });
-      
-      setIsLoggedIn(isLoggedInStatus);
-      if(isLoggedInStatus) {
+      if (isLoggedInStatus) {
+        setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+        setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
+        setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
+        setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+        setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : { userId: '20221IST0001', password: '123' });
         setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       }
+      setIsLoggedIn(isLoggedInStatus);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      setIsLoggedIn(true); // Default to logged in
+      setIsLoggedIn(false);
     }
     setIsLoaded(true);
   }, []);
@@ -179,13 +176,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem("witrack_isLoggedIn", JSON.stringify(isLoggedIn));
-      localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
-      localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
-      localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-      localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
-      localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
-      localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
-      if (!isLoggedIn) {
+      if (isLoggedIn) {
+        localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
+        localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
+        localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
+        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
+        localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
+        localStorage.setItem("witrack_userCredentials", JSON.stringify(userCredentials));
+      } else {
         localStorage.removeItem("witrack_activeCheckIn");
       }
     }
@@ -210,13 +208,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setWifiZones(initialWifiZones);
     setActiveCheckIn(null);
     setIsLoggedIn(true);
-  };
-  
-  const logout = () => {
-    setIsLoggedIn(false);
-    setActiveCheckIn(null);
-    toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push("/register");
   };
 
   const addSubject = (subject: Omit<Subject, "id">) => {
@@ -339,7 +330,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isLoaded,
     isLoggedIn,
     registerUser,
-    logout,
     addSubject,
     bulkAddSubjects,
     updateSubject,

@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { subjects, isLoaded, logout } = useAppContext();
+  const { subjects, isLoaded } = useAppContext();
   const [isSubjectsOpen, setSubjectsOpen] = React.useState(true);
   const { state: sidebarState } = useSidebar();
 

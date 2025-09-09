@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const isLoggedInCookie = request.cookies.get('witrack_isLoggedIn');
-  const isLoggedIn = isLoggedInCookie ? JSON.parse(isLoggedInCookie.value) : true;
+  const isLoggedIn = isLoggedInCookie ? JSON.parse(isLoggedInCookie.value) : false;
   const { pathname } = request.nextUrl;
 
   const isPublicRoute = pathname === '/register';

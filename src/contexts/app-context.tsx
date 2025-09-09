@@ -90,7 +90,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
-      setUserCredentials(storedUserCredentials ? JSON.parse(storedUserCredentials) : []);
+      
+      const creds = storedUserCredentials ? JSON.parse(storedUserCredentials) : [];
+      setUserCredentials(Array.isArray(creds) ? creds : []);
+      
       setIsLoggedIn(storedIsLoggedIn ? JSON.parse(storedIsLoggedIn) : false);
 
     } catch (error) {
@@ -271,7 +274,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     wifiZones,
     activeCheckIn,
     userDetails,
-isLoaded,
+    isLoaded,
     isLoggedIn,
     userCredentials,
     addSubject,

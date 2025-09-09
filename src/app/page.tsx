@@ -11,11 +11,13 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Wait until the app context is loaded before redirecting.
     if (isLoaded) {
       router.replace('/dashboard');
     }
   }, [isLoaded, router]);
 
+  // Show a loading indicator while the context is loading and we're waiting to redirect.
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <div className="flex flex-col items-center justify-center space-y-6 text-center">

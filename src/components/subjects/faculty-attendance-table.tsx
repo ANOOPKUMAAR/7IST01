@@ -99,6 +99,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
             toast({
                 title: "Headcount Matched",
                 description: `The automatic headcount of ${autoHeadcount} matches the number of students marked present.`,
+                variant: "success",
             });
         } else {
             toast({

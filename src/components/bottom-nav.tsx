@@ -3,22 +3,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BarChart3, User, Settings } from "lucide-react";
+import { Home, BarChart3, User, Settings, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/contexts/app-context";
 
-const navItems = [
+const studentNavItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+const facultyNavItems = [
+  { href: "/", label: "Dashboard", icon: Briefcase },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/profile", label: "Mode", icon: User },
+];
+
 export function BottomNav() {
   const pathname = usePathname();
+  const { mode } = useAppContext();
+
+  const navItems = mode === 'faculty' ? facultyNavItems : studentNavItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm">
-      <div className="grid h-16 grid-cols-4 items-center justify-items-center">
+      <div className={cn("grid items-center justify-items-center h-16")} style={{gridTemplateColumns: `repeat(${navItems.length}, 1fr)`}}>
         {navItems.map((item) => {
           const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
@@ -39,3 +49,5 @@ export function BottomNav() {
     </nav>
   );
 }
+
+    

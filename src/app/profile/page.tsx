@@ -5,6 +5,7 @@ import { useAppContext } from "@/contexts/app-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import type { UserDetails } from "@/lib/types";
-import { User, Edit } from "lucide-react";
+import { User, Edit, Briefcase, GraduationCap } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -97,7 +98,7 @@ function EditProfileDialog({ onDone }: { onDone: () => void }) {
 
 
 export default function ProfilePage() {
-  const { subjects, attendance, isLoaded, userDetails } = useAppContext();
+  const { subjects, attendance, isLoaded, userDetails, mode, setMode } = useAppContext();
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
 
   const { totalAttended, totalMissed, pieData } = useMemo(() => {
@@ -140,98 +141,128 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-            <Avatar className="h-24 w-24 border">
-                <AvatarImage src="https://picsum.photos/200" data-ai-hint="student avatar" />
-                <AvatarFallback>
-                    <User className="h-12 w-12 text-muted-foreground" />
-                </AvatarFallback>
-            </Avatar>
-            <div>
-                <h2 className="text-3xl font-bold">{userDetails.name}</h2>
-                <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
-            </div>
-        </div>
-        
-        <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-3xl">
-                <DialogHeader>
-                    <DialogTitle>Edit Profile</DialogTitle>
-                    <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
-                </DialogHeader>
-                <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
-            </DialogContent>
-        </Dialog>
-      </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>User Mode</CardTitle>
+                <CardDescription>Switch between student and faculty views.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center space-x-4 rounded-md border p-4">
+                    <div className="flex items-center space-x-2">
+                        <GraduationCap />
+                        <Label htmlFor="mode-switch">Student</Label>
+                    </div>
+                    <Switch 
+                        id="mode-switch"
+                        checked={mode === 'faculty'}
+                        onCheckedChange={(checked) => setMode(checked ? 'faculty' : 'student')}
+                    />
+                    <div className="flex items-center space-x-2">
+                        <Briefcase />
+                        <Label htmlFor="mode-switch">Faculty</Label>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-            <CardTitle>Student Information</CardTitle>
-            <CardDescription>Detailed student profile as per records.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <div className="grid gap-y-2 gap-x-8 md:grid-cols-2">
-                <InfoRow label="Program" value={userDetails.program} />
-                <InfoRow label="Branch" value={userDetails.branch} />
-                <InfoRow label="Department" value={userDetails.department} />
-                <InfoRow label="Section" value={userDetails.section} />
-                <InfoRow label="Phone Number" value={userDetails.phone} />
-                <InfoRow label="Parent's Name" value={userDetails.parentName} />
-                <div className="md:col-span-2">
-                    <InfoRow label="Address" value={userDetails.address} />
+      {mode === 'student' && (
+        <>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Avatar className="h-24 w-24 border">
+                        <AvatarImage src="https://picsum.photos/200" data-ai-hint="student avatar" />
+                        <AvatarFallback>
+                            <User className="h-12 w-12 text-muted-foreground" />
+                        </AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <h2 className="text-3xl font-bold">{userDetails.name}</h2>
+                        <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
+                    </div>
                 </div>
-            </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-            <CardTitle>Attendance Overview</CardTitle>
-            <CardDescription>A visual summary of your attendance.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center">
-            <div className="h-64 w-full max-w-sm">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                            {pieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                        </Pie>
-                        <Tooltip formatter={(value, name) => [`${value} classes`, name]}/>
-                    </PieChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="mt-4 flex gap-x-6 text-center">
-                <div>
-                    <p className="text-2xl font-bold text-status-green">{totalAttended}</p>
-                    <p className="text-sm text-muted-foreground">Classes Attended</p>
-                </div>
-                <div>
-                    <p className="text-2xl font-bold text-status-red">{totalMissed}</p>
-                    <p className="text-sm text-muted-foreground">Classes Missed</p>
-                </div>
+                
+                <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-3xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit Profile</DialogTitle>
+                            <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
+                        </DialogHeader>
+                        <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
+                    </DialogContent>
+                </Dialog>
             </div>
 
-            <Tabs defaultValue="breakdown" className="w-full mt-6">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="breakdown">Course Breakdown</TabsTrigger>
-                    <TabsTrigger value="day-hour">Day/Hour View</TabsTrigger>
-                </TabsList>
-                <TabsContent value="breakdown">
-                    <p className="p-4 text-center text-muted-foreground">Course breakdown visuals will be shown here.</p>
-                </TabsContent>
-                <TabsContent value="day-hour">
-                    <p className="p-4 text-center text-muted-foreground">Day and hour attendance patterns will be shown here.</p>
-                </TabsContent>
-            </Tabs>
-        </CardContent>
-      </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Student Information</CardTitle>
+                    <CardDescription>Detailed student profile as per records.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-y-2 gap-x-8 md:grid-cols-2">
+                        <InfoRow label="Program" value={userDetails.program} />
+                        <InfoRow label="Branch" value={userDetails.branch} />
+                        <InfoRow label="Department" value={userDetails.department} />
+                        <InfoRow label="Section" value={userDetails.section} />
+                        <InfoRow label="Phone Number" value={userDetails.phone} />
+                        <InfoRow label="Parent's Name" value={userDetails.parentName} />
+                        <div className="md:col-span-2">
+                            <InfoRow label="Address" value={userDetails.address} />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Attendance Overview</CardTitle>
+                    <CardDescription>A visual summary of your attendance.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center">
+                    <div className="h-64 w-full max-w-sm">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                    {pieData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value, name) => [`${value} classes`, name]}/>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 flex gap-x-6 text-center">
+                        <div>
+                            <p className="text-2xl font-bold text-status-green">{totalAttended}</p>
+                            <p className="text-sm text-muted-foreground">Classes Attended</p>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-status-red">{totalMissed}</p>
+                            <p className="text-sm text-muted-foreground">Classes Missed</p>
+                        </div>
+                    </div>
+
+                    <Tabs defaultValue="breakdown" className="w-full mt-6">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="breakdown">Course Breakdown</TabsTrigger>
+                            <TabsTrigger value="day-hour">Day/Hour View</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="breakdown">
+                            <p className="p-4 text-center text-muted-foreground">Course breakdown visuals will be shown here.</p>
+                        </TabsContent>
+                        <TabsContent value="day-hour">
+                            <p className="p-4 text-center text-muted-foreground">Day and hour attendance patterns will be shown here.</p>
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
+        </>
+      )}
 
     </div>
   );
 }
+
+    

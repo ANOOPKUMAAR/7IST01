@@ -13,6 +13,8 @@ import type {
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 
+type UserMode = 'student' | 'faculty';
+
 interface AppContextType {
   subjects: Subject[];
   attendance: Record<string, AttendanceRecord[]>;
@@ -20,6 +22,8 @@ interface AppContextType {
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
   isLoaded: boolean;
+  mode: UserMode;
+  setMode: (mode: UserMode) => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -66,6 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
+  const [mode, setModeState] = useState<UserMode>('student');
   
   useEffect(() => {
     try {
@@ -74,12 +79,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
+      const storedMode = localStorage.getItem("witrack_mode");
       
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+      setModeState(storedMode ? JSON.parse(storedMode) : 'student');
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -89,6 +96,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
       setUserDetails(initialUserDetails);
+      setModeState('student');
     }
     setIsLoaded(true);
   }, []);
@@ -101,11 +109,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
         localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
         localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
+        localStorage.setItem("witrack_mode", JSON.stringify(mode));
       } catch (error) {
           console.error("Failed to save data to localStorage", error);
       }
     }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, isLoaded]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, isLoaded]);
+
+  const setMode = (newMode: UserMode) => {
+    setModeState(newMode);
+    toast({ title: `Switched to ${newMode === 'faculty' ? 'Faculty' : 'Student'} Mode`});
+  }
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -240,6 +254,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeCheckIn,
     userDetails,
     isLoaded,
+    mode,
+    setMode,
     addSubject,
     bulkAddSubjects,
     updateSubject,
@@ -262,3 +278,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

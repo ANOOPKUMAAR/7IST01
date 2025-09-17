@@ -23,7 +23,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
     const getStatusBadge = () => {
         switch (status) {
             case "present":
-                return <Badge variant="secondary" className="bg-status-green text-primary-foreground">Present</Badge>;
+                return <Badge variant="secondary" className="bg-white/20 text-primary-foreground">Present</Badge>;
             case "absent":
                 return <Badge variant="destructive">Absent</Badge>;
             default:
@@ -32,11 +32,19 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
     }
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className={cn(
+            "transition-colors",
+            status === 'present' && 'bg-status-green text-primary-foreground',
+        )}>
+            <CardHeader className={cn(
+                "flex flex-row items-center justify-between pb-2",
+                 status === 'present' && 'text-primary-foreground'
+            )}>
                 <div className="flex-1">
                     <CardTitle className="text-lg">{student.name}</CardTitle>
-                    <CardDescription>{student.rollNo}</CardDescription>
+                    <CardDescription className={cn(status === 'present' && 'text-green-100')}>
+                        {student.rollNo}
+                    </CardDescription>
                 </div>
                 {getStatusBadge()}
             </CardHeader>
@@ -44,7 +52,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status === 'present' ? 'default' : 'outline'} 
+                    variant={status === 'present' ? 'secondary' : 'outline'} 
                     onClick={() => onStatusChange(student.id, "present")}
                 >
                     Present
@@ -101,4 +109,5 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
     </Card>
   );
 }
+
 

@@ -3,12 +3,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BarChart3, User, Settings, Briefcase, ClipboardList } from "lucide-react";
+import { BarChart3, User, Settings, Briefcase, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppContext } from "@/contexts/app-context";
+import { Icons } from "./icons";
 
 const studentNavItems = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/", label: "Home", icon: Icons.logo },
   { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },

@@ -255,14 +255,12 @@ export default function ProfilePage() {
         </>
       ) : (
         <Card>
-            <CardHeader>
-                <CardTitle>Faculty Dashboard</CardTitle>
+            <CardHeader className="items-center text-center">
+                <Briefcase className="h-12 w-12 text-muted-foreground mb-2"/>
+                <CardTitle>Faculty Mode</CardTitle>
                 <CardDescription>This is the faculty dashboard view. More features coming soon!</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex items-center justify-center p-8">
-                    <Briefcase className="h-24 w-24 text-muted-foreground"/>
-                </div>
                  <p className="text-center text-muted-foreground">You can manage your courses and view student attendance from the main dashboard.</p>
             </CardContent>
         </Card>

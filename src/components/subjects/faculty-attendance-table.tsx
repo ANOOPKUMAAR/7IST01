@@ -56,7 +56,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status === 'present' ? 'secondary' : 'outline'} 
+                    variant={status !== 'unmarked' ? 'secondary' : 'outline'} 
                     onClick={() => onStatusChange(student.id, "present")}
                 >
                     Present
@@ -64,7 +64,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status === 'absent' ? 'secondary' : 'outline'}
+                    variant={status !== 'unmarked' ? 'secondary' : 'outline'}
                     onClick={() => onStatusChange(student.id, "absent")}
                 >
                     Absent
@@ -113,6 +113,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
     </Card>
   );
 }
+
 
 
 

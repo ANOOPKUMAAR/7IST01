@@ -68,6 +68,10 @@ const initialStudents: Student[] = [
     { id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003' },
     { id: 's3', name: 'Diana Prince', rollNo: '20221IST0004' },
     { id: 's4', name: 'Ethan Hunt', rollNo: '20221IST0005' },
+    { id: 's5', name: 'Fiona Glenanne', rollNo: '20221IST0006' },
+    { id: 's6', name: 'George Costanza', rollNo: '20221IST0007' },
+    { id: 's7', name: 'Hannah Montana', rollNo: '20221IST0008' },
+    { id: 's8', name: 'Indiana Jones', rollNo: '20221IST0009' },
 ];
 
 

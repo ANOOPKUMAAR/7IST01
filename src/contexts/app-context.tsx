@@ -25,7 +25,9 @@ interface AppContextType {
   students: Student[];
   isLoaded: boolean;
   mode: UserMode;
+  maintenanceMode: boolean;
   setMode: (mode: UserMode) => void;
+  setMaintenanceMode: (enabled: boolean) => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -72,6 +74,10 @@ const initialStudents: Student[] = [
     { id: 's6', name: 'George Costanza', rollNo: '20221IST0007' },
     { id: 's7', name: 'Hannah Montana', rollNo: '20221IST0008' },
     { id: 's8', name: 'Indiana Jones', rollNo: '20221IST0009' },
+    { id: 's9', name: 'Jack Sparrow', rollNo: '20221IST0010' },
+    { id: 's10', name: 'Lara Croft', rollNo: '20221IST0011' },
+    { id: 's11', name: 'Michael Scott', rollNo: '20221IST0012' },
+    { id: 's12', name: 'Neo', rollNo: '20221IST0013' },
 ];
 
 
@@ -85,6 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [mode, setModeState] = useState<UserMode>('student');
+  const [maintenanceMode, setMaintenanceModeState] = useState(false);
   
   useEffect(() => {
     try {
@@ -95,6 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
       const storedMode = localStorage.getItem("witrack_mode");
       const storedStudents = localStorage.getItem("witrack_students");
+      const storedMaintenance = localStorage.getItem("witrack_maintenance");
       
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
@@ -103,6 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       setStudents(storedStudents ? JSON.parse(storedStudents) : initialStudents);
       setModeState(storedMode ? JSON.parse(storedMode) : 'student');
+      setMaintenanceModeState(storedMaintenance ? JSON.parse(storedMaintenance) : false);
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -114,6 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserDetails(initialUserDetails);
       setStudents(initialStudents);
       setModeState('student');
+      setMaintenanceModeState(false);
     }
     setIsLoaded(true);
   }, []);
@@ -128,15 +138,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
         localStorage.setItem("witrack_mode", JSON.stringify(mode));
         localStorage.setItem("witrack_students", JSON.stringify(students));
+        localStorage.setItem("witrack_maintenance", JSON.stringify(maintenanceMode));
       } catch (error) {
           console.error("Failed to save data to localStorage", error);
       }
     }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students, isLoaded]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students, maintenanceMode, isLoaded]);
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
     toast({ title: `Switched to ${newMode === 'faculty' ? 'Faculty' : 'Student'} Mode`});
+  }
+
+  const setMaintenanceMode = (enabled: boolean) => {
+    setMaintenanceModeState(enabled);
+    toast({ title: `Maintenance Mode ${enabled ? 'Enabled' : 'Disabled'}` });
   }
 
   const addSubject = (subject: Omit<Subject, "id">) => {
@@ -274,7 +290,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     students,
     isLoaded,
     mode,
+    maintenanceMode,
     setMode,
+    setMaintenanceMode,
     addSubject,
     bulkAddSubjects,
     updateSubject,

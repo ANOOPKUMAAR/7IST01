@@ -3,13 +3,14 @@
 
 import { useAppContext } from "@/contexts/app-context";
 import { AttendanceTable } from "@/components/subjects/attendance-table";
+import { FacultyAttendanceTable } from "@/components/subjects/faculty-attendance-table";
 import { notFound, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { subjects, attendance, isLoaded } = useAppContext();
+  const { subjects, attendance, isLoaded, mode } = useAppContext();
   
   if (!isLoaded) {
     return (
@@ -36,10 +37,18 @@ export default function SubjectDetailsPage() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">{subject.name}</h2>
         <p className="text-muted-foreground">
-          Detailed attendance log. Total classes: {subject.totalClasses}.
+          {mode === 'faculty' 
+            ? `Class attendance for ${new Date().toLocaleDateString()}` 
+            : `Detailed attendance log. Total classes: ${subject.totalClasses}.`
+          }
         </p>
       </div>
-      <AttendanceTable subject={subject} records={subjectAttendance} />
+
+      {mode === 'faculty' ? (
+        <FacultyAttendanceTable subject={subject} />
+      ) : (
+        <AttendanceTable subject={subject} records={subjectAttendance} />
+      )}
     </div>
   );
 }

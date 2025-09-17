@@ -38,3 +38,9 @@ export interface UserDetails {
   parentName: string;
   address: string;
 }
+
+export interface Student {
+    id: string;
+    name: string;
+    rollNo: string;
+}

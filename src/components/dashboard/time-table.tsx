@@ -13,7 +13,7 @@ import type { Subject } from "@/lib/types";
 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function Timetable() {
-  const { subjects, isLoaded, mode } = useAppContext();
+  const { subjects, isLoaded } = useAppContext();
   const [currentDay, setCurrentDay] = useState<number>(-1);
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export function Timetable() {
                                     <TableCell key={`${time}-${index}`} className={cn("h-24 align-top p-1", index === currentDay && "bg-muted/30")}>
                                         <div className="space-y-1">
                                             {daySubjects.map(subject => {
-                                                const linkHref = mode === 'faculty' ? `/attendance-visuals` : `/subjects/${subject.id}`;
+                                                const linkHref = `/subjects/${subject.id}`;
                                                 return (
                                                 <Link href={linkHref} key={subject.id} className="block">
                                                     <div className="p-2 rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors shadow-sm border">

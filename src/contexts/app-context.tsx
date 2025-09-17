@@ -10,6 +10,7 @@ import type {
   WifiZone,
   ActiveCheckIn,
   UserDetails,
+  Student,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 
@@ -21,6 +22,7 @@ interface AppContextType {
   wifiZones: WifiZone[];
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
+  students: Student[];
   isLoaded: boolean;
   mode: UserMode;
   setMode: (mode: UserMode) => void;
@@ -61,6 +63,13 @@ const initialUserDetails: UserDetails = {
     address: "123 University Lane, Tech City, 12345",
 };
 
+const initialStudents: Student[] = [
+    { id: 's1', name: 'Bob Johnson', rollNo: '20221IST0002' },
+    { id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003' },
+    { id: 's3', name: 'Diana Prince', rollNo: '20221IST0004' },
+    { id: 's4', name: 'Ethan Hunt', rollNo: '20221IST0005' },
+];
+
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -70,6 +79,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
+  const [students, setStudents] = useState<Student[]>(initialStudents);
   const [mode, setModeState] = useState<UserMode>('student');
   
   useEffect(() => {
@@ -80,12 +90,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
       const storedMode = localStorage.getItem("witrack_mode");
+      const storedStudents = localStorage.getItem("witrack_students");
       
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
+      setStudents(storedStudents ? JSON.parse(storedStudents) : initialStudents);
       setModeState(storedMode ? JSON.parse(storedMode) : 'student');
       
     } catch (error) {
@@ -96,6 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
       setUserDetails(initialUserDetails);
+      setStudents(initialStudents);
       setModeState('student');
     }
     setIsLoaded(true);
@@ -110,11 +123,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
         localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
         localStorage.setItem("witrack_mode", JSON.stringify(mode));
+        localStorage.setItem("witrack_students", JSON.stringify(students));
       } catch (error) {
           console.error("Failed to save data to localStorage", error);
       }
     }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, isLoaded]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students, isLoaded]);
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
@@ -253,6 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     wifiZones,
     activeCheckIn,
     userDetails,
+    students,
     isLoaded,
     mode,
     setMode,
@@ -278,5 +293,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    

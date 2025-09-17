@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileUp, List, LayoutGrid } from "lucide-react";
+import { FileUp, List, LayoutGrid, Briefcase } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,9 +16,29 @@ import { UploadTimetableDialog } from "@/components/dashboard/upload-timetable-d
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Timetable } from "@/components/dashboard/time-table";
 import { SubjectCardsView } from "@/components/dashboard/subject-cards-view";
+import { useAppContext } from "@/contexts/app-context";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 
-export default function DashboardPage() {
+function FacultyDashboard() {
+    return (
+        <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+                <div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                    Faculty Timetable
+                </h2>
+                <p className="text-muted-foreground">
+                    Here is your teaching schedule for the week.
+                </p>
+                </div>
+            </div>
+            <Timetable />
+        </div>
+    )
+}
+
+function StudentDashboard() {
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   return (
@@ -67,3 +87,15 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+export default function DashboardPage() {
+    const { mode } = useAppContext();
+
+    if (mode === 'faculty') {
+        return <FacultyDashboard />;
+    }
+
+    return <StudentDashboard />;
+}
+

@@ -124,13 +124,7 @@ export default function ProfilePage() {
   if (!isLoaded) {
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Skeleton className="h-24 w-24 rounded-full" />
-                <div className="space-y-2">
-                    <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-5 w-32" />
-                </div>
-            </div>
+             <Skeleton className="h-40 w-full" />
             <div className="grid gap-4 md:grid-cols-2">
                 <Skeleton className="h-96 w-full" />
                 <Skeleton className="h-96 w-full" />
@@ -165,7 +159,7 @@ export default function ProfilePage() {
             </CardContent>
         </Card>
 
-      {mode === 'student' && (
+      {mode === 'student' ? (
         <>
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -259,10 +253,21 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
         </>
+      ) : (
+        <Card>
+            <CardHeader>
+                <CardTitle>Faculty Dashboard</CardTitle>
+                <CardDescription>This is the faculty dashboard view. More features coming soon!</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center justify-center p-8">
+                    <Briefcase className="h-24 w-24 text-muted-foreground"/>
+                </div>
+                 <p className="text-center text-muted-foreground">You can manage your courses and view student attendance from the main dashboard.</p>
+            </CardContent>
+        </Card>
       )}
 
     </div>
   );
 }
-
-    

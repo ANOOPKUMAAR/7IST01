@@ -15,20 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Subject, Student } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, AlertTriangle } from 'lucide-react';
+import { Check, Wifi, Loader2 } from 'lucide-react';
+import { getAutomaticHeadcount } from "@/actions/attendance-actions";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
 
@@ -70,7 +59,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status !== 'unmarked' ? 'secondary' : 'outline'} 
+                    variant={status !== 'unmarked' ? 'secondary' : 'default'}
                     onClick={() => onStatusChange(student.id, "present")}
                 >
                     Present
@@ -78,7 +67,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status !== 'unmarked' ? 'secondary' : 'outline'}
+                    variant={status !== 'unmarked' ? 'secondary' : 'default'}
                     onClick={() => onStatusChange(student.id, "absent")}
                 >
                     Absent
@@ -88,72 +77,45 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
     )
 }
 
-function HeadcountDialog({ onVerify }: { onVerify: (count: number) => void }) {
-    const [headcount, setHeadcount] = useState("");
-
-    const handleVerify = () => {
-        const count = parseInt(headcount, 10);
-        if (!isNaN(count) && count >= 0) {
-            onVerify(count);
-        }
-    };
-
-    return (
-        <>
-            <DialogHeader>
-                <DialogTitle>Verify Headcount</DialogTitle>
-                <DialogDescription>
-                    Enter the number of students physically present in the class.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="headcount">Number of Students Present</Label>
-                    <Input
-                        id="headcount"
-                        type="number"
-                        value={headcount}
-                        onChange={(e) => setHeadcount(e.target.value)}
-                        placeholder="e.g., 15"
-                    />
-                </div>
-            </div>
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
-                </DialogClose>
-                <DialogClose asChild>
-                    <Button onClick={handleVerify}>Verify</Button>
-                </DialogClose>
-            </DialogFooter>
-        </>
-    );
-}
-
 export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
   const { students } = useAppContext();
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
-  const [isHeadcountDialogOpen, setHeadcountDialogOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendance(prev => ({ ...prev, [studentId]: status }));
   };
 
-  const handleVerifyHeadcount = (headcount: number) => {
+  const handleGetHeadcount = async () => {
+    setIsVerifying(true);
     const presentCount = Object.values(attendance).filter(s => s === 'present').length;
-    if (headcount === presentCount) {
+    
+    try {
+        const result = await getAutomaticHeadcount(subject.id, students.length);
+        const autoHeadcount = result.headcount;
+
+        if (autoHeadcount === presentCount) {
+            toast({
+                title: "Headcount Matched",
+                description: `The automatic headcount of ${autoHeadcount} matches the number of students marked present.`,
+            });
+        } else {
+            toast({
+                title: "Headcount Mismatch",
+                description: `Automatic headcount (${autoHeadcount}) does not match marked present (${presentCount}). Please review attendance.`,
+                variant: "destructive",
+                duration: 8000,
+            });
+        }
+    } catch (error) {
         toast({
-            title: "Headcount Matched",
-            description: `The headcount of ${headcount} matches the number of students marked present.`,
-        });
-    } else {
-        toast({
-            title: "Headcount Mismatch",
-            description: `Headcount (${headcount}) does not match marked present (${presentCount}). Please review attendance.`,
+            title: "Error Verifying Headcount",
+            description: "Could not get automatic headcount. Please try again.",
             variant: "destructive",
-            duration: 5000,
         });
+    } finally {
+        setIsVerifying(false);
     }
   };
   
@@ -174,14 +136,14 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
                         <CardTitle>Mark Attendance</CardTitle>
                         <CardDescription>Mark attendance for each student for today's class.</CardDescription>
                     </div>
-                    <Dialog open={isHeadcountDialogOpen} onOpenChange={setHeadcountDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline">Verify Attendance</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <HeadcountDialog onVerify={handleVerifyHeadcount} />
-                        </DialogContent>
-                    </Dialog>
+                     <Button variant="outline" onClick={handleGetHeadcount} disabled={isVerifying}>
+                        {isVerifying ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Wifi className="mr-2"/>
+                        )}
+                        Get Automatic Headcount
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent>

@@ -4,25 +4,63 @@
 import { useState } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Subject, Student } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
+
+function StudentAttendanceCard({ student, status, onStatusChange }: { student: Student, status: AttendanceStatus, onStatusChange: (studentId: string, status: AttendanceStatus) => void }) {
+    
+    const getStatusBadge = () => {
+        switch (status) {
+            case "present":
+                return <Badge variant="secondary" className="bg-status-green text-primary-foreground">Present</Badge>;
+            case "absent":
+                return <Badge variant="destructive">Absent</Badge>;
+            default:
+                return <Badge variant="outline">Unmarked</Badge>;
+        }
+    }
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="flex-1">
+                    <CardTitle className="text-lg">{student.name}</CardTitle>
+                    <CardDescription>{student.rollNo}</CardDescription>
+                </div>
+                {getStatusBadge()}
+            </CardHeader>
+            <CardFooter className="gap-2">
+                <Button 
+                    className="w-full"
+                    size="sm" 
+                    variant={status === 'present' ? 'default' : 'outline'} 
+                    onClick={() => onStatusChange(student.id, "present")}
+                >
+                    Present
+                </Button>
+                <Button 
+                    className="w-full"
+                    size="sm" 
+                    variant={status === 'absent' ? 'destructive' : 'outline'} 
+                    onClick={() => onStatusChange(student.id, "absent")}
+                >
+                    Absent
+                </Button>
+            </CardFooter>
+        </Card>
+    )
+}
 
 export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
   const { students } = useAppContext();
@@ -43,37 +81,24 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
             </div>
         </CardHeader>
         <CardContent>
-            <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Roll No.</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {students.map((student) => {
-                    const status = attendance[student.id] || "unmarked";
-                    return (
-                        <TableRow key={student.id}>
-                            <TableCell>{student.rollNo}</TableCell>
-                            <TableCell className="font-medium">{student.name}</TableCell>
-                            <TableCell>
-                                {status === "present" && <Badge variant="secondary" className="bg-status-green text-primary-foreground">Present</Badge>}
-                                {status === "absent" && <Badge variant="destructive">Absent</Badge>}
-                                {status === "unmarked" && <Badge variant="outline">Unmarked</Badge>}
-                            </TableCell>
-                            <TableCell className="text-right space-x-2">
-                                <Button size="sm" variant={status === 'present' ? 'default' : 'outline'} onClick={() => handleStatusChange(student.id, "present")}>Present</Button>
-                                <Button size="sm" variant={status === 'absent' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(student.id, "absent")}>Absent</Button>
-                            </TableCell>
-                        </TableRow>
-                    )
-                })}
-            </TableBody>
-            </Table>
+            {students.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {students.map((student) => (
+                        <StudentAttendanceCard
+                            key={student.id}
+                            student={student}
+                            status={attendance[student.id] || "unmarked"}
+                            onStatusChange={handleStatusChange}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <p className="text-center text-muted-foreground py-12">
+                    No students have been added to this class yet.
+                </p>
+            )}
         </CardContent>
     </Card>
   );
 }
+

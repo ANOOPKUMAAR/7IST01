@@ -13,7 +13,7 @@ import type { Subject } from "@/lib/types";
 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function Timetable() {
-  const { subjects, isLoaded } = useAppContext();
+  const { subjects, isLoaded, mode } = useAppContext();
   const [currentDay, setCurrentDay] = useState<number>(-1);
 
   useEffect(() => {
@@ -90,14 +90,16 @@ export function Timetable() {
                                return (
                                     <TableCell key={`${time}-${index}`} className={cn("h-24 align-top p-1", index === currentDay && "bg-muted/30")}>
                                         <div className="space-y-1">
-                                            {daySubjects.map(subject => (
-                                                <Link href={`/subjects/${subject.id}`} key={subject.id} className="block">
+                                            {daySubjects.map(subject => {
+                                                const linkHref = mode === 'faculty' ? `/attendance-visuals` : `/subjects/${subject.id}`;
+                                                return (
+                                                <Link href={linkHref} key={subject.id} className="block">
                                                     <div className="p-2 rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors shadow-sm border">
                                                         <p className="font-semibold text-sm leading-tight">{subject.name}</p>
                                                         <p className="text-xs text-muted-foreground mt-1">{subject.expectedCheckIn} - {subject.expectedCheckOut}</p>
                                                     </div>
                                                 </Link>
-                                            ))}
+                                            )})}
                                         </div>
                                     </TableCell>
                                )

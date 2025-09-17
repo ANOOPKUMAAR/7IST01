@@ -25,7 +25,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
             case "present":
                 return <Badge variant="secondary" className="bg-white/20 text-primary-foreground">Present</Badge>;
             case "absent":
-                return <Badge variant="destructive">Absent</Badge>;
+                return <Badge variant="secondary" className="bg-white/20 text-primary-foreground">Absent</Badge>;
             default:
                 return <Badge variant="outline">Unmarked</Badge>;
         }
@@ -35,14 +35,18 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
         <Card className={cn(
             "transition-colors",
             status === 'present' && 'bg-status-green text-primary-foreground',
+            status === 'absent' && 'bg-status-red text-destructive-foreground',
         )}>
             <CardHeader className={cn(
                 "flex flex-row items-center justify-between pb-2",
-                 status === 'present' && 'text-primary-foreground'
+                 (status === 'present' || status === 'absent') && 'text-primary-foreground'
             )}>
                 <div className="flex-1">
                     <CardTitle className="text-lg">{student.name}</CardTitle>
-                    <CardDescription className={cn(status === 'present' && 'text-green-100')}>
+                    <CardDescription className={cn(
+                        status === 'present' && 'text-green-100',
+                        status === 'absent' && 'text-red-100'
+                    )}>
                         {student.rollNo}
                     </CardDescription>
                 </div>
@@ -60,7 +64,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status === 'absent' ? 'destructive' : 'outline'} 
+                    variant={status === 'absent' ? 'secondary' : 'outline'}
                     onClick={() => onStatusChange(student.id, "absent")}
                 >
                     Absent
@@ -109,5 +113,6 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
     </Card>
   );
 }
+
 
 

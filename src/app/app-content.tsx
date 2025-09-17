@@ -6,10 +6,9 @@ import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
 import { BottomNav } from "@/components/bottom-nav";
-import MaintenancePage from "./maintenance/page";
 
 export function AppContent({ children }: { children: ReactNode }) {
-  const { isLoaded, maintenanceMode } = useAppContext();
+  const { isLoaded } = useAppContext();
 
   if (!isLoaded) {
     return (
@@ -20,10 +19,6 @@ export function AppContent({ children }: { children: ReactNode }) {
         </div>
       </div>
     );
-  }
-
-  if (maintenanceMode) {
-    return <MaintenancePage />;
   }
 
   return (

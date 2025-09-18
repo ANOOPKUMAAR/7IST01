@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import {
   Card,
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Subject, Student } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Wifi, Loader2 } from 'lucide-react';
+import { Check, Wifi, Loader2, Users } from 'lucide-react';
 import { getAutomaticHeadcount } from "@/actions/attendance-actions";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
@@ -82,49 +82,52 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isVerifying, setIsVerifying] = useState(false);
+  const [autoHeadcount, setAutoHeadcount] = useState<number | null>(null);
 
-  const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
-    setAttendance(prev => ({ ...prev, [studentId]: status }));
-  };
+  const presentCount = useMemo(() => {
+    return Object.values(attendance).filter(s => s === 'present').length;
+  }, [attendance]);
 
-  const handleGetHeadcount = async () => {
+  const fetchHeadcount = async () => {
     setIsVerifying(true);
-    const presentCount = Object.values(attendance).filter(s => s === 'present').length;
-    
     try {
         const result = await getAutomaticHeadcount(subject.id, students.length);
-        const autoHeadcount = result.headcount;
-
-        if (autoHeadcount === presentCount) {
-            toast({
-                title: "Headcount Matched",
-                description: `The automatic headcount of ${autoHeadcount} matches the number of students marked present.`,
-                variant: "success",
-            });
-        } else {
-            toast({
-                title: "Headcount Mismatch",
-                description: `Automatic headcount (${autoHeadcount}) does not match marked present (${presentCount}). Please review attendance.`,
-                variant: "destructive",
-                duration: 8000,
-            });
-        }
+        setAutoHeadcount(result.headcount);
     } catch (error) {
         toast({
-            title: "Error Verifying Headcount",
+            title: "Error Getting Headcount",
             description: "Could not get automatic headcount. Please try again.",
             variant: "destructive",
         });
+        setAutoHeadcount(null);
     } finally {
         setIsVerifying(false);
     }
   };
+
+  useEffect(() => {
+    fetchHeadcount();
+  }, []);
+
+  const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
+    setAttendance(prev => ({ ...prev, [studentId]: status }));
+  };
   
   const handleSaveAttendance = () => {
-    // In a real application, you would save this data to a backend.
+    if (autoHeadcount !== null && autoHeadcount !== presentCount) {
+        toast({
+            title: "Headcount Mismatch",
+            description: `Automatic headcount (${autoHeadcount}) does not match marked present (${presentCount}). Please review attendance before saving.`,
+            variant: "destructive",
+            duration: 8000,
+        });
+        return;
+    }
+
     toast({
       title: "Attendance Saved",
       description: "The attendance record for today's class has been saved.",
+      variant: autoHeadcount === presentCount ? "success" : "default"
     });
   }
 
@@ -132,19 +135,33 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
     <>
         <Card>
             <CardHeader>
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
                         <CardTitle>Mark Attendance</CardTitle>
                         <CardDescription>Mark attendance for each student for today's class.</CardDescription>
                     </div>
-                     <Button variant="outline" onClick={handleGetHeadcount} disabled={isVerifying}>
-                        {isVerifying ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Wifi className="mr-2"/>
-                        )}
-                        Get Automatic Headcount
-                    </Button>
+                    <div className="flex items-center gap-4">
+                         <Card className="p-3">
+                            <div className="flex items-center gap-4">
+                                <div className="text-center">
+                                    <p className="text-2xl font-bold">{isVerifying ? <Loader2 className="h-6 w-6 animate-spin mx-auto"/> : autoHeadcount ?? '-'}</p>
+                                    <p className="text-xs text-muted-foreground">Auto Headcount</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-2xl font-bold">{presentCount}</p>
+                                    <p className="text-xs text-muted-foreground">Marked Present</p>
+                                </div>
+                            </div>
+                        </Card>
+                         <Button variant="outline" onClick={fetchHeadcount} disabled={isVerifying}>
+                            {isVerifying ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Wifi className="mr-2"/>
+                            )}
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>

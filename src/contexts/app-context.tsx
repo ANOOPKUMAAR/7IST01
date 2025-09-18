@@ -2,7 +2,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type {
   Subject,
@@ -90,6 +90,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [mode, setModeState] = useState<UserMode>('student');
   
+  // Ref to hold the latest state to be saved
+  const stateToSave = useRef({ subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode });
+
+  // Update ref whenever state changes
+  useEffect(() => {
+    stateToSave.current = { subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode };
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode]);
+
+  // Load from localStorage on mount
   useEffect(() => {
     try {
       const storedSubjects = localStorage.getItem("witrack_subjects");
@@ -110,7 +119,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      // If loading fails, set default data to prevent crash
       setSubjects(initialSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
@@ -122,9 +130,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  useEffect(() => {
-    if (isLoaded) {
+  // Save to localStorage on unload
+  const saveState = useCallback(() => {
+      if (!isLoaded) return;
       try {
+        const { subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students } = stateToSave.current;
         localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
         localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
         localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
@@ -135,8 +145,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } catch (error) {
           console.error("Failed to save data to localStorage", error);
       }
-    }
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students, isLoaded]);
+  }, [isLoaded]);
+
+  useEffect(() => {
+      window.addEventListener('beforeunload', saveState);
+      return () => {
+          window.removeEventListener('beforeunload', saveState);
+      };
+  }, [saveState]);
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);

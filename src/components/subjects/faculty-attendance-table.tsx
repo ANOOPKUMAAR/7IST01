@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Subject, Student } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Wifi, Loader2, Users } from 'lucide-react';
+import { Check, Wifi, Loader2, Users, AlertTriangle } from 'lucide-react';
 import { getAutomaticHeadcount } from "@/actions/attendance-actions";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
@@ -28,7 +28,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
             case "present":
                 return <Badge variant="secondary" className="bg-white/20 text-primary-foreground">Present</Badge>;
             case "absent":
-                return <Badge variant="secondary" className="bg-white/20 text-primary-foreground">Absent</Badge>;
+                return <Badge variant="destructive" className="bg-white/20 text-primary-foreground">Absent</Badge>;
             default:
                 return <Badge variant="outline">Unmarked</Badge>;
         }
@@ -87,6 +87,8 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
   const presentCount = useMemo(() => {
     return Object.values(attendance).filter(s => s === 'present').length;
   }, [attendance]);
+  
+  const isMismatch = autoHeadcount !== null && autoHeadcount !== presentCount;
 
   const fetchHeadcount = async () => {
     setIsVerifying(true);
@@ -114,7 +116,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
   };
   
   const handleSaveAttendance = () => {
-    if (autoHeadcount !== null && autoHeadcount !== presentCount) {
+    if (isMismatch) {
         toast({
             title: "Headcount Mismatch",
             description: `Automatic headcount (${autoHeadcount}) does not match marked present (${presentCount}). Please review attendance before saving.`,
@@ -127,42 +129,57 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
     toast({
       title: "Attendance Saved",
       description: "The attendance record for today's class has been saved.",
-      variant: autoHeadcount === presentCount ? "success" : "default"
+      variant: (autoHeadcount !== null && autoHeadcount === presentCount) ? "success" : "default"
     });
   }
 
   return (
-    <>
-        <Card>
+    <div className="space-y-6">
+        <Card className={cn(isMismatch && "border-destructive")}>
             <CardHeader>
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
-                        <CardTitle>Mark Attendance</CardTitle>
-                        <CardDescription>Mark attendance for each student for today's class.</CardDescription>
+                        <CardTitle>Attendance Verification</CardTitle>
+                        <CardDescription>Automatic vs. manual headcount for today's class.</CardDescription>
                     </div>
-                    <div className="flex items-center gap-4">
-                         <Card className="p-3">
-                            <div className="flex items-center gap-4">
-                                <div className="text-center">
-                                    <p className="text-2xl font-bold">{isVerifying ? <Loader2 className="h-6 w-6 animate-spin mx-auto"/> : autoHeadcount ?? '-'}</p>
-                                    <p className="text-xs text-muted-foreground">Auto Headcount</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-2xl font-bold">{presentCount}</p>
-                                    <p className="text-xs text-muted-foreground">Marked Present</p>
-                                </div>
-                            </div>
-                        </Card>
-                         <Button variant="outline" onClick={fetchHeadcount} disabled={isVerifying}>
-                            {isVerifying ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <Wifi className="mr-2"/>
-                            )}
-                            Refresh
-                        </Button>
+                     <Button variant="outline" onClick={fetchHeadcount} disabled={isVerifying}>
+                        {isVerifying ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Wifi className="mr-2"/>
+                        )}
+                        Refresh
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center justify-around gap-4 rounded-lg bg-muted p-4">
+                    <div className="text-center">
+                        <p className="text-3xl font-bold flex items-center gap-2">
+                           <Users/> {isVerifying ? <Loader2 className="h-8 w-8 animate-spin"/> : autoHeadcount ?? '-'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Auto Headcount (Wi-Fi)</p>
+                    </div>
+                     <div className="text-center">
+                        <p className="text-3xl font-bold flex items-center gap-2">
+                           <Check/> {presentCount}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Marked as Present</p>
                     </div>
                 </div>
+                {isMismatch && (
+                    <div className="mt-4 text-center text-destructive flex items-center justify-center gap-2">
+                       <AlertTriangle className="h-4 w-4" />
+                       <p>Headcount does not match. Please review.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Class Roster</CardTitle>
+                <CardDescription>Mark attendance for each student below.</CardDescription>
             </CardHeader>
             <CardContent>
                 {students.length > 0 ? (
@@ -183,11 +200,11 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
                 )}
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-                <Button onClick={handleSaveAttendance} className="w-full sm:w-auto ml-auto">
+                <Button onClick={handleSaveAttendance} className="w-full sm:w-auto ml-auto" disabled={isVerifying}>
                     <Check className="mr-2"/> Save Attendance
                 </Button>
             </CardFooter>
         </Card>
-    </>
+    </div>
   );
 }

@@ -8,15 +8,21 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
+import { countPeopleInImage } from "@/ai/flows/count-people-in-image-flow";
+import { Camera, Users, Loader2 } from "lucide-react";
 
 export function CameraSettings() {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isCounting, setIsCounting] = useState(false);
+  const [headcount, setHeadcount] = useState<number | null>(null);
 
   useEffect(() => {
     const getCameraPermission = async () => {
@@ -41,7 +47,6 @@ export function CameraSettings() {
 
     getCameraPermission();
     
-    // Cleanup function to stop the video stream when the component unmounts
     return () => {
         if (videoRef.current && videoRef.current.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
@@ -50,16 +55,46 @@ export function CameraSettings() {
     }
   }, [toast]);
 
+  const handleHeadcount = async () => {
+    if (!videoRef.current) return;
+
+    setIsCounting(true);
+    setHeadcount(null);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const context = canvas.getContext("2d");
+    if (context) {
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const imageDataUri = canvas.toDataURL("image/jpeg");
+        
+        try {
+            const result = await countPeopleInImage({ imageDataUri });
+            setHeadcount(result.count);
+        } catch (error) {
+            console.error("Error counting people: ", error);
+            toast({
+                title: "Headcount Failed",
+                description: "The AI could not process the image. Please try again.",
+                variant: "destructive"
+            });
+        }
+    }
+    
+    setIsCounting(false);
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Camera Access</CardTitle>
+        <CardTitle>Camera Headcount</CardTitle>
         <CardDescription>
-          Preview and test your device's camera. Grant permission when prompted by your browser.
+          Use your device's camera for an automatic headcount. Grant permission when prompted.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="w-full aspect-video bg-muted rounded-md flex items-center justify-center border">
+        <div className="w-full aspect-video bg-muted rounded-md flex items-center justify-center border relative">
             {hasCameraPermission === null && <Skeleton className="h-full w-full" />}
             
             <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
@@ -73,7 +108,30 @@ export function CameraSettings() {
                 </AlertDescription>
             </Alert>
         )}
+
+        {headcount !== null && (
+            <Alert className="mt-4">
+                <Users className="h-4 w-4" />
+                <AlertTitle>Headcount Result</AlertTitle>
+                <AlertDescription>
+                    The AI detected <span className="font-bold">{headcount}</span> {headcount === 1 ? 'person' : 'people'}.
+                </AlertDescription>
+            </Alert>
+        )}
       </CardContent>
+      <CardFooter>
+          <Button onClick={handleHeadcount} disabled={!hasCameraPermission || isCounting} className="w-full">
+              {isCounting ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Counting...
+                </>
+              ) : (
+                <>
+                    <Camera className="mr-2" /> Take Snapshot & Count
+                </>
+              )}
+          </Button>
+      </CardFooter>
     </Card>
   );
 }

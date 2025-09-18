@@ -6,6 +6,7 @@ import { AttendanceTable } from "@/components/subjects/attendance-table";
 import { FacultyAttendanceTable } from "@/components/subjects/faculty-attendance-table";
 import { notFound, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
@@ -34,14 +35,19 @@ export default function SubjectDetailsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">{subject.name}</h2>
-        <p className="text-muted-foreground">
-          {mode === 'faculty' 
-            ? `Class attendance for ${new Date().toLocaleDateString()}` 
-            : `Detailed attendance log. Total classes: ${subject.totalClasses}.`
-          }
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">{subject.name}</h2>
+          <p className="text-muted-foreground">
+            {mode === 'faculty' 
+              ? `Class attendance for ${new Date().toLocaleDateString()}` 
+              : `Detailed attendance log. Total classes: ${subject.totalClasses}.`
+            }
+          </p>
+        </div>
+        {mode === 'faculty' && (
+            <Button>Start Attendance</Button>
+        )}
       </div>
 
       {mode === 'faculty' ? (

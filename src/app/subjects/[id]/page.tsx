@@ -7,11 +7,14 @@ import { FacultyAttendanceTable } from "@/components/subjects/faculty-attendance
 import { notFound, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Play, Pause } from "lucide-react";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { subjects, attendance, isLoaded, mode } = useAppContext();
+  const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   if (!isLoaded) {
     return (
@@ -46,12 +49,15 @@ export default function SubjectDetailsPage() {
           </p>
         </div>
         {mode === 'faculty' && (
-            <Button>Start Attendance</Button>
+            <Button onClick={() => setIsAttendanceActive(!isAttendanceActive)} variant={isAttendanceActive ? "destructive" : "default"}>
+                {isAttendanceActive ? <Pause className="mr-2"/> : <Play className="mr-2"/>}
+                {isAttendanceActive ? "Stop Attendance" : "Start Attendance"}
+            </Button>
         )}
       </div>
 
       {mode === 'faculty' ? (
-        <FacultyAttendanceTable subject={subject} />
+        <FacultyAttendanceTable subject={subject} isAttendanceActive={isAttendanceActive} />
       ) : (
         <AttendanceTable subject={subject} records={subjectAttendance} />
       )}

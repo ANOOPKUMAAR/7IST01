@@ -102,13 +102,11 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
         setWifiHeadcount(result.headcount);
     } catch (error) {
         console.error("Error getting Wi-Fi headcount:", error);
-        if (isInitialCall) {
-             toast({
-                title: "Error Getting Wi-Fi Headcount",
-                description: "Could not get simulated Wi-Fi headcount. Please try again.",
-                variant: "destructive",
-            });
-        }
+        toast({
+            title: "Error Getting Wi-Fi Headcount",
+            description: "Could not get simulated Wi-Fi headcount. Please try again.",
+            variant: "destructive",
+        });
         setWifiHeadcount(null);
     } finally {
         if (!isInitialCall) {
@@ -313,3 +311,5 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+    

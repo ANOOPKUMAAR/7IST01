@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useAppContext } from "@/contexts/app-context";
 import {
   Card,
@@ -79,13 +79,16 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
 }
 
 export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subject: Subject; isAttendanceActive: boolean }) {
-  const { students, videoRef, requestCameraPermission, hasCameraPermission } = useAppContext();
+  const { students, requestCameraPermission, hasCameraPermission, stopCameraStream } = useAppContext();
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isVerifyingWifi, setIsVerifyingWifi] = useState(false);
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
   const [wifiHeadcount, setWifiHeadcount] = useState<number | null>(null);
   const [cameraHeadcount, setCameraHeadcount] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
 
   const presentCount = useMemo(() => {
     return Object.values(attendance).filter(s => s === 'present').length;
@@ -116,24 +119,14 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   }, [subject.id, students.length, toast]);
 
   const fetchCameraHeadcount = useCallback(async () => {
-    const permissionGranted = await requestCameraPermission();
-    if (!permissionGranted) {
+    if (!videoRef.current) {
       toast({
-        title: "Camera Permission Denied",
-        description: "Cannot perform camera headcount without camera access. Please grant permission in your browser settings.",
+        title: "Camera not ready",
+        description: "The camera element is not yet available.",
         variant: "destructive",
       });
       return;
     }
-
-    if (!videoRef.current) {
-      toast({
-        title: "Camera not ready",
-        description: "The camera is not yet initialized. Please wait a moment and try again.",
-        variant: "destructive",
-      });
-      return;
-    };
     
     setIsVerifyingCamera(true);
 
@@ -181,23 +174,36 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
         });
         setIsVerifyingCamera(false);
     }
-  }, [requestCameraPermission, toast, videoRef]);
+  }, [toast]);
 
   useEffect(() => {
     let wifiInterval: NodeJS.Timeout;
-    if (isAttendanceActive) {
+    
+    const startAttendanceSystems = async () => {
+      streamRef.current = await requestCameraPermission(videoRef.current, true);
+      if(streamRef.current){
         fetchWifiHeadcount(true); 
         fetchCameraHeadcount();
         wifiInterval = setInterval(() => fetchWifiHeadcount(false), 10000); 
+      }
+    };
+    
+    if (isAttendanceActive) {
+      startAttendanceSystems();
     } else {
-        setWifiHeadcount(null);
-        setCameraHeadcount(null);
+      setWifiHeadcount(null);
+      setCameraHeadcount(null);
+      stopCameraStream(streamRef.current, videoRef.current);
+      streamRef.current = null;
     }
 
     return () => {
-        if(wifiInterval) clearInterval(wifiInterval)
+      if(wifiInterval) clearInterval(wifiInterval);
+      stopCameraStream(streamRef.current, videoRef.current);
+      streamRef.current = null;
     };
-  }, [isAttendanceActive, fetchWifiHeadcount, fetchCameraHeadcount]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAttendanceActive]);
 
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
@@ -245,6 +251,8 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 
   return (
     <div className="space-y-6">
+        <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
+
         <Card className={cn(isMismatch && "border-destructive")}>
             <CardHeader>
                 <div className="flex justify-between items-start flex-wrap gap-4">
@@ -332,5 +340,3 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
-
-    

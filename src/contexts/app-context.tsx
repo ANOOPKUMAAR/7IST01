@@ -39,7 +39,8 @@ interface AppContextType {
   updateUserDetails: (details: UserDetails) => void;
   hasCameraPermission: boolean | null;
   setHasCameraPermission: (hasPermission: boolean | null) => void;
-  requestCameraPermission: (showToast?: boolean) => Promise<boolean>;
+  requestCameraPermission: (videoEl: HTMLVideoElement | null, showToast?: boolean) => Promise<MediaStream | null>;
+  stopCameraStream: (stream: MediaStream | null, videoEl: HTMLVideoElement | null) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
@@ -105,15 +106,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     stateToSave.current = { subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode };
   }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode]);
 
-  const requestCameraPermission = useCallback(async (showToast = true): Promise<boolean> => {
+  const requestCameraPermission = useCallback(async (videoEl: HTMLVideoElement | null, showToast = true): Promise<MediaStream | null> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setHasCameraPermission(true);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      if (videoEl) {
+        videoEl.srcObject = stream;
       }
-      return true;
+      return stream;
     } catch (error) {
       console.error("Error accessing camera:", error);
       setHasCameraPermission(false);
@@ -125,9 +126,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
             "Please enable camera permissions in your browser settings to use this app.",
         });
       }
-      return false;
+      return null;
     }
-  }, [toast, videoRef]);
+  }, [toast]);
+
+  const stopCameraStream = useCallback((stream: MediaStream | null, videoEl: HTMLVideoElement | null) => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    if (videoEl) {
+      videoEl.srcObject = null;
+    }
+  }, []);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -232,8 +242,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Wi-Fi Zone Removed", variant: "destructive" });
   };
 
-  const handleHeadcount = async () => {
-    if (!videoRef.current || hasCameraPermission !== true) {
+  const handleHeadcount = async (videoEl: HTMLVideoElement | null) => {
+    if (!videoEl || hasCameraPermission !== true) {
       toast({
         title: "Camera not ready",
         description: "Camera permission is not granted or the camera is not yet initialized.",
@@ -244,7 +254,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const canvas = document.createElement("canvas");
     // Ensure video is playing and has dimensions
-    if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+    if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
       toast({
         title: "Camera Error",
         description: "Could not capture image from camera. Please try again.",
@@ -252,12 +262,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    canvas.width = videoEl.videoWidth;
+    canvas.height = videoEl.videoHeight;
     const context = canvas.getContext("2d");
 
     if (context) {
-        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        context.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
         const imageDataUri = canvas.toDataURL("image/jpeg");
         
         try {
@@ -316,9 +326,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Checked In", description: `You have checked in for ${subject?.name}.` });
     
     // AI headcount
-    await requestCameraPermission(false);
+    const stream = await requestCameraPermission(videoRef.current, false);
     // Give camera time to initialize
-    setTimeout(handleHeadcount, 1000);
+    setTimeout(() => {
+      handleHeadcount(videoRef.current)
+      stopCameraStream(stream, videoRef.current);
+    }, 1000);
   };
 
   const checkOut = async (subjectId: string) => {
@@ -394,6 +407,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     hasCameraPermission,
     setHasCameraPermission,
     requestCameraPermission,
+    stopCameraStream,
     videoRef,
   };
 

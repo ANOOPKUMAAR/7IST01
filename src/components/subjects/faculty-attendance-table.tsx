@@ -116,7 +116,6 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   }, [subject.id, students.length, toast]);
 
   const fetchCameraHeadcount = useCallback(async () => {
-    // Ensure permission is granted before proceeding
     const permissionGranted = await requestCameraPermission();
     if (!permissionGranted) {
       toast({
@@ -138,19 +137,20 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     
     setIsVerifyingCamera(true);
 
-    // Give camera time to initialize
+    // Give camera time to initialize and ensure it has dimensions
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const canvas = document.createElement("canvas");
     if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
       toast({
         title: "Camera Error",
-        description: "Could not capture image from camera. Please try again.",
+        description: "Could not capture image from camera. The video stream may not be ready. Please try again.",
         variant: "destructive",
       });
       setIsVerifyingCamera(false);
       return;
     }
+
+    const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const context = canvas.getContext("2d");
@@ -332,3 +332,5 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+    

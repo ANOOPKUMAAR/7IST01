@@ -59,7 +59,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status !== 'unmarked' ? 'secondary' : 'default'}
+                    variant={'secondary'}
                     onClick={() => onStatusChange(student.id, "present")}
                 >
                     Present
@@ -67,7 +67,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 <Button 
                     className="w-full"
                     size="sm" 
-                    variant={status !== 'unmarked' ? 'secondary' : 'default'}
+                    variant={'secondary'}
                     onClick={() => onStatusChange(student.id, "absent")}
                 >
                     Absent
@@ -129,6 +129,12 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
     toast({
       title: "Attendance Saved",
       description: "The attendance record for today's class has been saved.",
+      action: (isMismatch || autoHeadcount === null) ? undefined : (
+        <div className="flex items-center text-primary-foreground">
+          <Check className="mr-2"/>
+          <span>Verified</span>
+        </div>
+      ),
       variant: (autoHeadcount !== null && autoHeadcount === presentCount) ? "success" : "default"
     });
   }
@@ -140,7 +146,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
                         <CardTitle>Attendance Verification</CardTitle>
-                        <CardDescription>Automatic vs. manual headcount for today's class.</CardDescription>
+                        <CardDescription>Compare the simulated Wi-Fi headcount with your manual count.</CardDescription>
                     </div>
                      <Button variant="outline" onClick={fetchHeadcount} disabled={isVerifying}>
                         {isVerifying ? (
@@ -148,7 +154,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
                         ) : (
                             <Wifi className="mr-2"/>
                         )}
-                        Refresh
+                        Refresh Wi-Fi Count
                     </Button>
                 </div>
             </CardHeader>
@@ -158,7 +164,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
                         <p className="text-3xl font-bold flex items-center gap-2">
                            <Users/> {isVerifying ? <Loader2 className="h-8 w-8 animate-spin"/> : autoHeadcount ?? '-'}
                         </p>
-                        <p className="text-sm text-muted-foreground">Auto Headcount (Wi-Fi)</p>
+                        <p className="text-sm text-muted-foreground">Simulated Wi-Fi Headcount</p>
                     </div>
                      <div className="text-center">
                         <p className="text-3xl font-bold flex items-center gap-2">

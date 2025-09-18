@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Subject, Student } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Wifi, Loader2, Users, AlertTriangle, Camera } from 'lucide-react';
+import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX } from 'lucide-react';
 import { getAutomaticHeadcount } from "@/actions/attendance-actions";
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
 
@@ -209,6 +209,14 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendance(prev => ({ ...prev, [studentId]: status }));
   };
+
+  const handleMarkAll = (status: "present" | "absent") => {
+    const newAttendance: Record<string, AttendanceStatus> = {};
+    students.forEach(student => {
+      newAttendance[student.id] = status;
+    });
+    setAttendance(newAttendance);
+  };
   
   const handleSaveAttendance = () => {
     if (isMismatch) {
@@ -310,8 +318,20 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 
         <Card>
             <CardHeader>
-                <CardTitle>Class Roster</CardTitle>
-                <CardDescription>Mark attendance for each student below.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Class</CardTitle>
+                        <CardDescription>Mark attendance for each student below.</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleMarkAll('present')}>
+                            <UserCheck className="mr-2 h-4 w-4" /> Mark All Present
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleMarkAll('absent')}>
+                            <UserX className="mr-2 h-4 w-4" /> Mark All Absent
+                        </Button>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 {students.length > 0 ? (
@@ -340,3 +360,5 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+    

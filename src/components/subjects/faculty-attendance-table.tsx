@@ -94,7 +94,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     return Object.values(attendance).filter(s => s === 'present').length;
   }, [attendance]);
   
-  const isMismatch = (wifiHeadcount !== null && wifiHeadcount !== presentCount) || (cameraHeadcount !== null && cameraHeadcount !== presentCount);
+  const isMismatch = cameraHeadcount !== null && cameraHeadcount !== presentCount;
 
   const fetchWifiHeadcount = useCallback(async (isInitialCall = false) => {
     if (!isInitialCall) {
@@ -214,7 +214,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     if (isMismatch) {
         toast({
             title: "Headcount Mismatch",
-            description: `One of the automated headcounts does not match the number of students marked as present. Please review attendance before saving.`,
+            description: `The AI camera headcount does not match the number of students marked as present. Please review attendance before saving.`,
             variant: "destructive",
             duration: 8000,
         });
@@ -224,13 +224,13 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     toast({
       title: "Attendance Saved",
       description: "The attendance record for today's class has been saved.",
-      action: (isMismatch || wifiHeadcount === null) ? undefined : (
+      action: (isMismatch || cameraHeadcount === null) ? undefined : (
         <div className="flex items-center text-primary-foreground">
           <Check className="mr-2"/>
-          <span>Verified</span>
+          <span>Verified by AI Camera</span>
         </div>
       ),
-      variant: (wifiHeadcount !== null && wifiHeadcount === presentCount) ? "success" : "default"
+      variant: (cameraHeadcount !== null && cameraHeadcount === presentCount) ? "success" : "default"
     });
   }
 
@@ -296,7 +296,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                 {isMismatch && (
                     <div className="mt-4 text-center text-destructive flex items-center justify-center gap-2">
                        <AlertTriangle className="h-4 w-4" />
-                       <p>Headcount does not match. Please review.</p>
+                       <p>Camera headcount does not match. Please review.</p>
                     </div>
                 )}
                  {hasCameraPermission === false && (

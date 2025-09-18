@@ -116,11 +116,21 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   }, [subject.id, students.length, toast]);
 
   const fetchCameraHeadcount = useCallback(async () => {
-    await requestCameraPermission(false);
-    if (!videoRef.current || hasCameraPermission === false) {
+    // Ensure permission is granted before proceeding
+    const permissionGranted = await requestCameraPermission();
+    if (!permissionGranted) {
+      toast({
+        title: "Camera Permission Denied",
+        description: "Cannot perform camera headcount without camera access. Please grant permission in your browser settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!videoRef.current) {
       toast({
         title: "Camera not ready",
-        description: "Camera permission is not granted or the camera is not yet initialized.",
+        description: "The camera is not yet initialized. Please wait a moment and try again.",
         variant: "destructive",
       });
       return;
@@ -164,9 +174,14 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
             setIsVerifyingCamera(false);
         }
     } else {
+        toast({
+            title: "Canvas Error",
+            description: "Could not process the camera image. Your browser may not support this feature.",
+            variant: "destructive"
+        });
         setIsVerifyingCamera(false);
     }
-  }, [hasCameraPermission, requestCameraPermission, toast, videoRef]);
+  }, [requestCameraPermission, toast, videoRef]);
 
   useEffect(() => {
     let wifiInterval: NodeJS.Timeout;
@@ -276,6 +291,12 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                        <p>Headcount does not match. Please review.</p>
                     </div>
                 )}
+                 {hasCameraPermission === false && (
+                    <div className="mt-4 text-center text-destructive flex items-center justify-center gap-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        <p>Camera permission denied. Camera headcount is unavailable.</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
 
@@ -311,5 +332,3 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
-
-    

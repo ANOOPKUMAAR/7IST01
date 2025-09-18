@@ -38,7 +38,7 @@ interface AppContextType {
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
   hasCameraPermission: boolean | null;
-  requestCameraPermission: () => void;
+  requestCameraPermission: (showToast?: boolean) => Promise<boolean>;
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
@@ -104,7 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     stateToSave.current = { subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode };
   }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode]);
 
-  const requestCameraPermission = useCallback(async (showToast = true) => {
+  const requestCameraPermission = useCallback(async (showToast = true): Promise<boolean> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setHasCameraPermission(true);
@@ -112,6 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
+      return true;
     } catch (error) {
       console.error("Error accessing camera:", error);
       setHasCameraPermission(false);
@@ -123,6 +124,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             "Please enable camera permissions in your browser settings to use this app.",
         });
       }
+      return false;
     }
   }, [toast]);
 
@@ -407,5 +409,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    

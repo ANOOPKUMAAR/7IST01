@@ -13,6 +13,7 @@ import type {
   Student,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
+import { countPeopleInImage } from "@/ai/flows/count-people-in-image-flow";
 
 type UserMode = 'student' | 'faculty';
 
@@ -36,6 +37,9 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
+  hasCameraPermission: boolean | null;
+  requestCameraPermission: () => void;
+  videoRef: React.RefObject<HTMLVideoElement>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -89,6 +93,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [mode, setModeState] = useState<UserMode>('student');
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   // Ref to hold the latest state to be saved
   const stateToSave = useRef({ subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode });
@@ -97,6 +103,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     stateToSave.current = { subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode };
   }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode]);
+
+  const requestCameraPermission = useCallback(async (showToast = true) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      setHasCameraPermission(false);
+      if (showToast) {
+        toast({
+          variant: "destructive",
+          title: "Camera Access Denied",
+          description:
+            "Please enable camera permissions in your browser settings to use this app.",
+        });
+      }
+    }
+  }, [toast]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -201,7 +229,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Wi-Fi Zone Removed", variant: "destructive" });
   };
 
-  const checkIn = (subjectId: string) => {
+  const handleHeadcount = async () => {
+    if (!videoRef.current || hasCameraPermission !== true) {
+      toast({
+        title: "Camera not ready",
+        description: "Camera permission is not granted or the camera is not yet initialized.",
+        variant: "destructive",
+      });
+      return;
+    };
+
+    const canvas = document.createElement("canvas");
+    // Ensure video is playing and has dimensions
+    if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+      toast({
+        title: "Camera Error",
+        description: "Could not capture image from camera. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const context = canvas.getContext("2d");
+
+    if (context) {
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const imageDataUri = canvas.toDataURL("image/jpeg");
+        
+        try {
+            toast({
+              title: "Analyzing classroom...",
+              description: "The AI is counting the number of students.",
+            });
+            const result = await countPeopleInImage({ imageDataUri });
+            toast({
+                title: "AI Headcount Complete",
+                description: `The AI detected ${result.count} ${result.count === 1 ? 'person' : 'people'}.`,
+                variant: 'success',
+            });
+        } catch (error) {
+            console.error("Error counting people: ", error);
+            toast({
+                title: "Headcount Failed",
+                description: "The AI could not process the image. Please try again.",
+                variant: "destructive"
+            });
+        }
+    }
+  }
+
+  const checkIn = async (subjectId: string) => {
     if (activeCheckIn) {
       toast({ title: "Already Checked In", description: "You must check out from your current session first.", variant: "destructive" });
       return;
@@ -233,6 +311,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setActiveCheckIn(newActiveCheckIn);
     const subject = subjects.find(s => s.id === subjectId);
     toast({ title: "Checked In", description: `You have checked in for ${subject?.name}.` });
+    
+    // AI headcount
+    await requestCameraPermission(false);
+    // Give camera time to initialize
+    setTimeout(handleHeadcount, 1000);
   };
 
   const checkOut = async (subjectId: string) => {
@@ -305,9 +388,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails,
+    hasCameraPermission,
+    requestCameraPermission,
+    videoRef,
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return <AppContext.Provider value={value}>
+      {children}
+      {/* Hidden video element for camera access */}
+      <video ref={videoRef} className="hidden" autoPlay muted />
+    </AppContext.Provider>;
 }
 
 export function useAppContext() {
@@ -317,3 +407,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

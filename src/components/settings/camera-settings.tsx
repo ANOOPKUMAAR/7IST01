@@ -1,96 +1,44 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
-import { countPeopleInImage } from "@/ai/flows/count-people-in-image-flow";
-import { Camera, Users, Loader2 } from "lucide-react";
+import { useAppContext } from "@/contexts/app-context";
 
 export function CameraSettings() {
-  const { toast } = useToast();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const [isCounting, setIsCounting] = useState(false);
-  const [headcount, setHeadcount] = useState<number | null>(null);
+  const { hasCameraPermission, requestCameraPermission, videoRef } = useAppContext();
 
   useEffect(() => {
-    const getCameraPermission = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error("Error accessing camera:", error);
-        setHasCameraPermission(false);
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description:
-            "Please enable camera permissions in your browser settings to use this app.",
-        });
-      }
-    };
-
-    getCameraPermission();
-    
+    if (hasCameraPermission === null) {
+      requestCameraPermission();
+    }
+  }, [hasCameraPermission, requestCameraPermission]);
+  
+  // Cleanup camera stream on component unmount
+  useEffect(() => {
     return () => {
         if (videoRef.current && videoRef.current.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
         }
     }
-  }, [toast]);
-
-  const handleHeadcount = async () => {
-    if (!videoRef.current) return;
-
-    setIsCounting(true);
-    setHeadcount(null);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const context = canvas.getContext("2d");
-    if (context) {
-        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const imageDataUri = canvas.toDataURL("image/jpeg");
-        
-        try {
-            const result = await countPeopleInImage({ imageDataUri });
-            setHeadcount(result.count);
-        } catch (error) {
-            console.error("Error counting people: ", error);
-            toast({
-                title: "Headcount Failed",
-                description: "The AI could not process the image. Please try again.",
-                variant: "destructive"
-            });
-        }
-    }
-    
-    setIsCounting(false);
-  }
+  }, [videoRef]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Camera Headcount</CardTitle>
+        <CardTitle>Camera Preview</CardTitle>
         <CardDescription>
-          Use your device's camera for an automatic headcount. Grant permission when prompted.
+          This screen is used to grant camera permissions to the app. The AI headcount feature will activate automatically upon check-in.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -104,34 +52,13 @@ export function CameraSettings() {
             <Alert variant="destructive" className="mt-4">
                 <AlertTitle>Camera Access Required</AlertTitle>
                 <AlertDescription>
-                Please allow camera access in your browser settings to use this feature.
-                </AlertDescription>
-            </Alert>
-        )}
-
-        {headcount !== null && (
-            <Alert className="mt-4">
-                <Users className="h-4 w-4" />
-                <AlertTitle>Headcount Result</AlertTitle>
-                <AlertDescription>
-                    The AI detected <span className="font-bold">{headcount}</span> {headcount === 1 ? 'person' : 'people'}.
+                Please allow camera access in your browser settings to use this feature. The automatic headcount will not work without it.
                 </AlertDescription>
             </Alert>
         )}
       </CardContent>
-      <CardFooter>
-          <Button onClick={handleHeadcount} disabled={!hasCameraPermission || isCounting} className="w-full">
-              {isCounting ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Counting...
-                </>
-              ) : (
-                <>
-                    <Camera className="mr-2" /> Take Snapshot & Count
-                </>
-              )}
-          </Button>
-      </CardFooter>
     </Card>
   );
 }
+
+    

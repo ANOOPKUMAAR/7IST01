@@ -90,26 +90,42 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
   
   const isMismatch = autoHeadcount !== null && autoHeadcount !== presentCount;
 
-  const fetchHeadcount = async () => {
-    setIsVerifying(true);
+  const fetchHeadcount = async (isInitialCall = false) => {
+    if (!isInitialCall) {
+        // Don't show loader for background refreshes
+        setIsVerifying(true);
+    }
     try {
         const result = await getAutomaticHeadcount(subject.id, students.length);
         setAutoHeadcount(result.headcount);
     } catch (error) {
-        toast({
-            title: "Error Getting Headcount",
-            description: "Could not get automatic headcount. Please try again.",
-            variant: "destructive",
-        });
+        console.error("Error getting headcount:", error);
+        // Don't show toast for background refreshes
+        if (isInitialCall) {
+             toast({
+                title: "Error Getting Headcount",
+                description: "Could not get automatic headcount. Please try again.",
+                variant: "destructive",
+            });
+        }
         setAutoHeadcount(null);
     } finally {
-        setIsVerifying(false);
+        if (!isInitialCall) {
+            setIsVerifying(false);
+        }
     }
   };
 
   useEffect(() => {
-    fetchHeadcount();
-  }, []);
+    fetchHeadcount(true); // Initial fetch
+
+    const intervalId = setInterval(() => {
+        fetchHeadcount(false); // Subsequent background fetches
+    }, 10000); // Refresh every 10 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [subject.id, students.length]);
+
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendance(prev => ({ ...prev, [studentId]: status }));
@@ -119,7 +135,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
     if (isMismatch) {
         toast({
             title: "Headcount Mismatch",
-            description: `Automatic headcount (${autoHeadcount}) does not match marked present (${presentCount}). Please review attendance before saving.`,
+            description: `Simulated headcount (${autoHeadcount}) does not match marked present (${presentCount}). Please review attendance before saving.`,
             variant: "destructive",
             duration: 8000,
         });
@@ -148,7 +164,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
                         <CardTitle>Attendance Verification</CardTitle>
                         <CardDescription>Compare the simulated Wi-Fi headcount with your manual count.</CardDescription>
                     </div>
-                     <Button variant="outline" onClick={fetchHeadcount} disabled={isVerifying}>
+                     <Button variant="outline" onClick={() => fetchHeadcount(true)} disabled={isVerifying}>
                         {isVerifying ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
@@ -162,7 +178,7 @@ export function FacultyAttendanceTable({ subject }: { subject: Subject; }) {
                 <div className="flex items-center justify-around gap-4 rounded-lg bg-muted p-4">
                     <div className="text-center">
                         <p className="text-3xl font-bold flex items-center gap-2">
-                           <Users/> {isVerifying ? <Loader2 className="h-8 w-8 animate-spin"/> : autoHeadcount ?? '-'}
+                           <Users/> {autoHeadcount ?? '-'}
                         </p>
                         <p className="text-sm text-muted-foreground">Simulated Wi-Fi Headcount</p>
                     </div>

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -57,12 +58,9 @@ const getHeadcountFlow = ai.defineFlow(
     outputSchema: GetHeadcountOutputSchema,
   },
   async input => {
-    // To make the simulation more realistic, instead of calling an LLM,
-    // we will generate a random number directly.
-    // This simulates a hardware integration that returns a number.
-    const min = Math.ceil(input.totalStudentsInClass * 0.7);
-    const max = Math.floor(input.totalStudentsInClass);
-    const headcount = Math.floor(Math.random() * (max - min + 1)) + min;
+    // To make the simulation more predictable for testing,
+    // we will return 95% of the total students.
+    const headcount = Math.floor(input.totalStudentsInClass * 0.95);
     
     return { headcount };
   }

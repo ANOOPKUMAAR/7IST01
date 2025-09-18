@@ -43,7 +43,7 @@ const prompt = ai.definePrompt({
 
 You will receive the subject ID and the total number of students in the class.
 
-Your task is to generate a realistic but random headcount of how many students are present. The number should be between 70% and 100% of the total students in the class, to simulate a typical attendance scenario.
+Your task is to generate a realistic headcount. The number should be exactly 90% of the total students in the class, rounded down.
 
 Subject ID: {{{subjectId}}}
 Total Students in Class: {{{totalStudentsInClass}}}

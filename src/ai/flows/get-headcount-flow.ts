@@ -58,10 +58,11 @@ const getHeadcountFlow = ai.defineFlow(
     outputSchema: GetHeadcountOutputSchema,
   },
   async input => {
-    // To make the simulation more predictable for testing,
-    // we will return 95% of the total students.
-    const headcount = Math.floor(input.totalStudentsInClass * 0.95);
-    
-    return { headcount };
+    const {output} = await prompt(input);
+    if (output) {
+      // Ensure the headcount doesn't exceed the total number of students.
+      output.headcount = Math.min(output.headcount, input.totalStudentsInClass);
+    }
+    return output!;
   }
 );

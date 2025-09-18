@@ -38,6 +38,7 @@ interface AppContextType {
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: UserDetails) => void;
   hasCameraPermission: boolean | null;
+  setHasCameraPermission: (hasPermission: boolean | null) => void;
   requestCameraPermission: (showToast?: boolean) => Promise<boolean>;
   videoRef: React.RefObject<HTMLVideoElement>;
 }
@@ -126,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return false;
     }
-  }, [toast]);
+  }, [toast, videoRef]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -391,6 +392,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteAttendanceRecord,
     updateUserDetails,
     hasCameraPermission,
+    setHasCameraPermission,
     requestCameraPermission,
     videoRef,
   };
@@ -398,7 +400,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return <AppContext.Provider value={value}>
       {children}
       {/* Hidden video element for camera access */}
-      <video ref={videoRef} className="hidden" autoPlay muted />
+      <video ref={videoRef} className="hidden" autoPlay muted playsInline />
     </AppContext.Provider>;
 }
 

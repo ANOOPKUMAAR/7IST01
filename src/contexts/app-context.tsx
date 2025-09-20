@@ -15,7 +15,6 @@ import type {
   UserMode,
   School,
   Program,
-  Department,
   Class,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
@@ -93,6 +92,23 @@ const initialUserDetails: UserDetails = {
     address: "123 University Lane, Tech City, 12345",
 };
 
+// Custom hook for debouncing
+function useDebounce(value: any, delay: number) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -108,47 +124,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [schools, setSchools] = useState<School[]>([]);
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
-  // Ref to hold the latest state to be saved
-  const stateToSave = useRef({ subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool });
+  // Combine all state into one object for easier debouncing
+  const appState = {
+    subjects,
+    attendance,
+    wifiZones,
+    activeCheckIn,
+    userDetails,
+    students,
+    mode,
+    schools,
+    programsBySchool,
+  };
 
-  // Update ref whenever state changes
-  useEffect(() => {
-    stateToSave.current = { subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool };
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool]);
-
-  const requestCameraPermission = useCallback(async (videoEl: HTMLVideoElement | null, showToast = true): Promise<MediaStream | null> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setHasCameraPermission(true);
-
-      if (videoEl) {
-        videoEl.srcObject = stream;
-      }
-      return stream;
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      setHasCameraPermission(false);
-      if (showToast) {
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description:
-            "Please enable camera permissions in your browser settings to use this app.",
-        });
-      }
-      return null;
-    }
-  }, [toast]);
-
-  const stopCameraStream = useCallback((stream: MediaStream | null, videoEl: HTMLVideoElement | null) => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    if (videoEl) {
-      videoEl.srcObject = null;
-    }
-  }, []);
-
+  const debouncedState = useDebounce(appState, 500);
+  
   // Load from localStorage on mount
   useEffect(() => {
     try {
@@ -187,31 +177,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  // Save to localStorage on unload
-  const saveState = useCallback(() => {
+  // Save to localStorage whenever debounced state changes
+  useEffect(() => {
       if (!isLoaded) return;
       try {
-        const { subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students, schools, programsBySchool } = stateToSave.current;
-        localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
-        localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
-        localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
-        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(activeCheckIn));
-        localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
-        localStorage.setItem("witrack_mode", JSON.stringify(mode));
-        localStorage.setItem("witrack_students", JSON.stringify(students));
-        localStorage.setItem("witrack_schools", JSON.stringify(schools));
-        localStorage.setItem("witrack_programsBySchool", JSON.stringify(programsBySchool));
+        localStorage.setItem("witrack_subjects", JSON.stringify(debouncedState.subjects));
+        localStorage.setItem("witrack_attendance", JSON.stringify(debouncedState.attendance));
+        localStorage.setItem("witrack_wifiZones", JSON.stringify(debouncedState.wifiZones));
+        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(debouncedState.activeCheckIn));
+        localStorage.setItem("witrack_userDetails", JSON.stringify(debouncedState.userDetails));
+        localStorage.setItem("witrack_mode", JSON.stringify(debouncedState.mode));
+        localStorage.setItem("witrack_students", JSON.stringify(debouncedState.students));
+        localStorage.setItem("witrack_schools", JSON.stringify(debouncedState.schools));
+        localStorage.setItem("witrack_programsBySchool", JSON.stringify(debouncedState.programsBySchool));
       } catch (error) {
-          console.error("Failed to save data to localStorage", error);
+          console.error("Failed to save debounced data to localStorage", error);
       }
-  }, [isLoaded]);
+  }, [debouncedState, isLoaded]);
 
-  useEffect(() => {
-      window.addEventListener('beforeunload', saveState);
-      return () => {
-          window.removeEventListener('beforeunload', saveState);
-      };
-  }, [saveState]);
+  const requestCameraPermission = useCallback(async (videoEl: HTMLVideoElement | null, showToast = true): Promise<MediaStream | null> => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+
+      if (videoEl) {
+        videoEl.srcObject = stream;
+      }
+      return stream;
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      setHasCameraPermission(false);
+      if (showToast) {
+        toast({
+          variant: "destructive",
+          title: "Camera Access Denied",
+          description:
+            "Please enable camera permissions in your browser settings to use this app.",
+        });
+      }
+      return null;
+    }
+  }, [toast]);
+
+  const stopCameraStream = useCallback((stream: MediaStream | null, videoEl: HTMLVideoElement | null) => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    if (videoEl) {
+      videoEl.srcObject = null;
+    }
+  }, []);
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);

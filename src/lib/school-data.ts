@@ -10,33 +10,34 @@ export const schools = [
 
 export const programsBySchool: Record<string, {name: string, description: string}[]> = {
     engineering: [
-        { name: 'Computer Science', description: 'Focuses on software development and theoretical computer science.' },
-        { name: 'Mechanical Engineering', description: 'Covers the design, construction, and use of machines.' },
-        { name: 'Electrical Engineering', description: 'Deals with electricity, electronics, and electromagnetism.' },
-        { name: 'Civil Engineering', description: 'Concerned with the design and construction of public works.' },
+        { name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.' },
+        { name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.' },
+        { name: 'B.Tech in Mechanical Engineering', description: 'Covers the design, construction, and use of machines.' },
+        { name: 'B.Tech in Electrical Engineering', description: 'Deals with electricity, electronics, and electromagnetism.' },
+        { name: 'B.Tech in Civil Engineering', description: 'Concerned with the design and construction of public works.' },
     ],
     business: [
-        { name: 'Finance', description: 'Prepares students for careers in financial management and analysis.' },
-        { name: 'Marketing', description: 'Focuses on branding, advertising, and consumer behavior.' },
-        { name: 'Management', description: 'Covers leadership, organizational behavior, and strategic planning.' },
+        { name: 'MBA in Finance', description: 'Prepares students for careers in financial management and analysis.' },
+        { name: 'BBA in Marketing', description: 'Focuses on branding, advertising, and consumer behavior.' },
+        { name: 'MBA in Management', description: 'Covers leadership, organizational behavior, and strategic planning.' },
     ],
     'arts-sciences': [
-        { name: 'Physics', description: 'Explores the fundamental principles of the universe.' },
-        { name: 'History', description: 'The study of past events, particularly in human affairs.' },
-        { name: 'English Literature', description: 'Analyzes literary works in the English language.' },
+        { name: 'B.Sc in Physics', description: 'Explores the fundamental principles of the universe.' },
+        { name: 'B.A. in History', description: 'The study of past events, particularly in human affairs.' },
+        { name: 'M.A. in English Literature', description: 'Analyzes literary works in the English language.' },
     ],
     medicine: [
-        { name: 'Pre-Medical Studies', description: 'Prepares students for medical school.' },
-        { name: 'Nursing', description: 'Focuses on patient care and health promotion.' },
-        { name: 'Public Health', description: 'Concerned with protecting and improving the health of communities.' },
+        { name: 'MBBS', description: 'Prepares students for medical school.' },
+        { name: 'B.Sc. in Nursing', description: 'Focuses on patient care and health promotion.' },
+        { name: 'Master of Public Health', description: 'Concerned with protecting and improving the health of communities.' },
     ],
     law: [
         { name: 'Juris Doctor (JD)', description: 'The primary professional degree for lawyers.' },
         { name: 'Paralegal Studies', description: 'Trains students to assist lawyers in their legal work.' },
     ],
     design: [
-        { name: 'Graphic Design', description: 'Focuses on visual communication and problem-solving.' },
-        { name: 'Industrial Design', description: 'The design of mass-produced products.' },
-        { name: 'Fashion Design', description: 'The art of applying design and aesthetics to clothing.' },
+        { name: 'B.Des in Graphic Design', description: 'Focuses on visual communication and problem-solving.' },
+        { name: 'B.Des in Industrial Design', description: 'The design of mass-produced products.' },
+        { name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.' },
     ],
 };

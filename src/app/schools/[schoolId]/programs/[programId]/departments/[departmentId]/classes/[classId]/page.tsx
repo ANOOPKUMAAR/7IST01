@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useParams, notFound } from "next/navigation";
@@ -15,7 +16,26 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowLeft, Users, CalendarClock, Briefcase } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Users, CalendarClock, Briefcase, PlusCircle, Trash } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +48,8 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppContext } from "@/contexts/app-context";
+import { useState } from "react";
+import type { Student } from "@/lib/types";
 
 function InfoRow({
   label,
@@ -44,14 +66,82 @@ function InfoRow({
   );
 }
 
+function AddStudentDialog({ onAdd, availableStudents, onDone }: { onAdd: (studentId: string) => void, availableStudents: Student[], onDone: () => void }) {
+    const [selectedStudent, setSelectedStudent] = useState('');
+
+    const handleAdd = () => {
+        if(selectedStudent) {
+            onAdd(selectedStudent);
+            onDone();
+        }
+    }
+
+    return (
+        <>
+            <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="student-select">Select Student</Label>
+                    <Select onValueChange={setSelectedStudent}>
+                        <SelectTrigger id="student-select">
+                            <SelectValue placeholder="Select a student to add" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableStudents.map(student => (
+                                <SelectItem key={student.id} value={student.id}>{student.name} ({student.rollNo})</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleAdd} disabled={!selectedStudent}>Add Student</Button>
+            </DialogFooter>
+        </>
+    )
+}
+
+function AddFacultyDialog({ onAdd, onDone }: { onAdd: (name: string) => void, onDone: () => void }) {
+    const [facultyName, setFacultyName] = useState('');
+
+    const handleAdd = () => {
+        if(facultyName.trim()) {
+            onAdd(facultyName.trim());
+            onDone();
+        }
+    }
+    
+    return (
+        <>
+            <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="faculty-name">Faculty Name</Label>
+                    <Input id="faculty-name" value={facultyName} onChange={(e) => setFacultyName(e.target.value)} placeholder="e.g., Dr. Alan Turing" />
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleAdd} disabled={!facultyName.trim()}>Add Faculty</Button>
+            </DialogFooter>
+        </>
+    )
+}
+
+
 export default function ClassDetailsPage() {
   const params = useParams();
   const schoolId = params.schoolId as string;
   const programId = params.programId as string;
   const departmentId = params.departmentId as string;
   const classId = params.classId as string;
+  const [isAddStudentOpen, setAddStudentOpen] = useState(false);
+  const [isAddFacultyOpen, setAddFacultyOpen] = useState(false);
 
-  const { schools, programsBySchool } = useAppContext();
+  const { schools, programsBySchool, mode, students: allStudents, addStudentToClass, removeStudentFromClass, addFacultyToClass, removeFacultyFromClass } = useAppContext();
 
   const school = schools.find((s) => s.id === schoolId);
   const program = programsBySchool[schoolId]?.find((p) => p.id === programId);
@@ -64,6 +154,8 @@ export default function ClassDetailsPage() {
 
   const students = cls.students || [];
   const faculties = cls.faculties || [];
+
+  const availableStudents = allStudents.filter(s => !students.some(es => es.id === s.id));
 
   return (
     <div className="flex flex-col gap-6">
@@ -106,13 +198,34 @@ export default function ClassDetailsPage() {
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                {students.length > 0 ? (
-                  <div className="pt-4 border-t">
+                <div className="pt-4 border-t">
+                  {mode === 'admin' && (
+                    <div className="flex justify-end mb-4">
+                       <Dialog open={isAddStudentOpen} onOpenChange={setAddStudentOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm"><PlusCircle/> Add Student</Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add Student to Roster</DialogTitle>
+                                <DialogDescription>Select a student to add to {cls.name}.</DialogDescription>
+                            </DialogHeader>
+                            <AddStudentDialog 
+                                onAdd={(studentId) => addStudentToClass(schoolId, programId, departmentId, classId, studentId)}
+                                availableStudents={availableStudents}
+                                onDone={() => setAddStudentOpen(false)}
+                            />
+                          </DialogContent>
+                       </Dialog>
+                    </div>
+                  )}
+                  {students.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Roll Number</TableHead>
                           <TableHead>Student Name</TableHead>
+                          {mode === 'admin' && <TableHead className="text-right">Actions</TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -122,17 +235,24 @@ export default function ClassDetailsPage() {
                               {student.rollNo}
                             </TableCell>
                             <TableCell>{student.name}</TableCell>
+                             {mode === 'admin' && (
+                                <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => removeStudentFromClass(schoolId, programId, departmentId, classId, student.id)}>
+                                        <Trash className="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
+                             )}
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
-                    <Users className="h-10 w-10" />
-                    <p>No students enrolled in this class.</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
+                      <Users className="h-10 w-10" />
+                      <p>No students enrolled in this class.</p>
+                    </div>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="timetable">
@@ -160,23 +280,48 @@ export default function ClassDetailsPage() {
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                {faculties.length > 0 ? (
-                  <div className="pt-4 border-t space-y-4">
-                    {faculties.map((faculty, index) => (
-                      <div key={index} className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarFallback>{faculty.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <p className="font-semibold">{faculty}</p>
+                <div className="pt-4 border-t">
+                  {mode === 'admin' && (
+                      <div className="flex justify-end mb-4">
+                        <Dialog open={isAddFacultyOpen} onOpenChange={setAddFacultyOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm"><PlusCircle/> Add Faculty</Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add Faculty</DialogTitle>
+                                <DialogDescription>Enter the name of the faculty member to assign to {cls.name}.</DialogDescription>
+                            </DialogHeader>
+                            <AddFacultyDialog onAdd={(name) => addFacultyToClass(schoolId, programId, departmentId, classId, name)} onDone={() => setAddFacultyOpen(false)} />
+                          </DialogContent>
+                        </Dialog>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
-                    <Briefcase className="h-10 w-10" />
-                    <p>No faculties assigned to this class.</p>
-                  </div>
-                )}
+                  )}
+                  {faculties.length > 0 ? (
+                    <div className="space-y-4">
+                      {faculties.map((faculty, index) => (
+                        <div key={index} className="flex items-center justify-between rounded-lg border p-3">
+                          <div className="flex items-center gap-4">
+                              <Avatar>
+                                <AvatarFallback>{faculty.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <p className="font-semibold">{faculty}</p>
+                          </div>
+                          {mode === 'admin' && (
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => removeFacultyFromClass(schoolId, programId, departmentId, classId, faculty)}>
+                                <Trash className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
+                      <Briefcase className="h-10 w-10" />
+                      <p>No faculties assigned to this class.</p>
+                    </div>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

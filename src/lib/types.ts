@@ -1,4 +1,5 @@
 
+
 export interface Subject {
   id: string;
   name: string;
@@ -49,11 +50,11 @@ export interface Class {
     id: string;
     name: string;
     coordinator: string;
-    students?: Student[];
+    students: Student[];
     day: string;
     startTime: string;
     endTime: string;
-    faculties?: string[];
+    faculties: string[];
 }
 
 export interface Department {
@@ -64,7 +65,7 @@ export interface Department {
 }
 
 export interface Program {
-    id: string;
+    id:string;
     name: string;
     description: string;
     departments: Department[];

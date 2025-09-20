@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -61,6 +62,10 @@ interface AppContextType {
   addClass: (schoolId: string, programId: string, departmentId: string, newClass: Omit<Class, 'id'>) => void;
   updateClass: (schoolId: string, programId: string, departmentId: string, updatedClass: Class) => void;
   deleteClass: (schoolId: string, programId: string, departmentId: string, classId: string) => void;
+  addStudentToClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
+  removeStudentFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
+  addFacultyToClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => void;
+  removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -392,6 +397,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
+  const findClassAndUpdate = (
+    schoolId: string,
+    programId: string,
+    departmentId: string,
+    classId: string,
+    updateFn: (cls: Class) => Class
+  ) => {
+    setProgramsBySchool(prev => {
+        const schoolPrograms = (prev[schoolId] || []).map(p => {
+            if (p.id === programId) {
+                const newDepartments = p.departments.map(d => {
+                    if (d.id === departmentId) {
+                        const newClasses = d.classes.map(c => {
+                            if (c.id === classId) {
+                                return updateFn(c);
+                            }
+                            return c;
+                        });
+                        return { ...d, classes: newClasses };
+                    }
+                    return d;
+                });
+                return { ...p, departments: newDepartments };
+            }
+            return p;
+        });
+        return { ...prev, [schoolId]: schoolPrograms };
+    });
+  }
+
   // Admin functions
   const addSchool = (school: Omit<School, 'id'>) => {
     const newSchool = { ...school, id: `school_${Date.now()}` };
@@ -445,7 +480,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProgramsBySchool(prev => {
         const schoolPrograms = (prev[schoolId] || []).map(p => {
             if (p.id === programId) {
-                return { ...p, departments: [...p.departments, newDepartment] };
+                return { ...p, departments: [...(p.departments || []), newDepartment] };
             }
             return p;
         });
@@ -458,7 +493,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
      setProgramsBySchool(prev => {
         const schoolPrograms = (prev[schoolId] || []).map(p => {
             if (p.id === programId) {
-                return { ...p, departments: p.departments.map(d => d.id === updatedDepartment.id ? updatedDepartment : d) };
+                return { ...p, departments: (p.departments || []).map(d => d.id === updatedDepartment.id ? updatedDepartment : d) };
             }
             return p;
         });
@@ -471,7 +506,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProgramsBySchool(prev => {
         const schoolPrograms = (prev[schoolId] || []).map(p => {
             if (p.id === programId) {
-                return { ...p, departments: p.departments.filter(d => d.id !== departmentId) };
+                return { ...p, departments: (p.departments || []).filter(d => d.id !== departmentId) };
             }
             return p;
         });
@@ -485,9 +520,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProgramsBySchool(prev => {
         const schoolPrograms = (prev[schoolId] || []).map(p => {
             if (p.id === programId) {
-                const newDepartments = p.departments.map(d => {
+                const newDepartments = (p.departments || []).map(d => {
                     if (d.id === departmentId) {
-                        return { ...d, classes: [...d.classes, finalNewClass] };
+                        return { ...d, classes: [...(d.classes || []), finalNewClass] };
                     }
                     return d;
                 });
@@ -501,21 +536,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   
   const updateClass = (schoolId: string, programId: string, departmentId: string, updatedClass: Class) => {
-    setProgramsBySchool(prev => {
-        const schoolPrograms = (prev[schoolId] || []).map(p => {
-            if (p.id === programId) {
-                const newDepartments = p.departments.map(d => {
-                    if (d.id === departmentId) {
-                        return { ...d, classes: d.classes.map(c => c.id === updatedClass.id ? updatedClass : c) };
-                    }
-                    return d;
-                });
-                return { ...p, departments: newDepartments };
-            }
-            return p;
-        });
-        return { ...prev, [schoolId]: schoolPrograms };
-    });
+    findClassAndUpdate(schoolId, programId, departmentId, updatedClass.id, () => updatedClass);
     toast({ title: 'Class Updated' });
   };
 
@@ -523,9 +544,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProgramsBySchool(prev => {
         const schoolPrograms = (prev[schoolId] || []).map(p => {
             if (p.id === programId) {
-                const newDepartments = p.departments.map(d => {
+                const newDepartments = (p.departments || []).map(d => {
                     if (d.id === departmentId) {
-                        return { ...d, classes: d.classes.filter(c => c.id !== classId) };
+                        return { ...d, classes: (d.classes || []).filter(c => c.id !== classId) };
                     }
                     return d;
                 });
@@ -536,6 +557,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return { ...prev, [schoolId]: schoolPrograms };
     });
     toast({ title: 'Class Deleted', variant: 'destructive' });
+  };
+
+  const addStudentToClass = (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => {
+    const studentToAdd = students.find(s => s.id === studentId);
+    if (!studentToAdd) return;
+
+    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
+        if (cls.students.some(s => s.id === studentId)) {
+            toast({ title: 'Student Already Enrolled', variant: 'destructive' });
+            return cls;
+        }
+        toast({ title: 'Student Added' });
+        return { ...cls, students: [...cls.students, studentToAdd] };
+    });
+  };
+
+  const removeStudentFromClass = (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => {
+    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
+        toast({ title: 'Student Removed', variant: 'destructive' });
+        return { ...cls, students: cls.students.filter(s => s.id !== studentId) };
+    });
+  };
+
+  const addFacultyToClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => {
+    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
+        if (cls.faculties.includes(facultyName)) {
+            toast({ title: 'Faculty Already Assigned', variant: 'destructive' });
+            return cls;
+        }
+        toast({ title: 'Faculty Added' });
+        return { ...cls, faculties: [...cls.faculties, facultyName] };
+    });
+  };
+
+  const removeFacultyFromClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => {
+    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
+        toast({ title: 'Faculty Removed', variant: 'destructive' });
+        return { ...cls, faculties: cls.faculties.filter(f => f !== facultyName) };
+    });
   };
 
   const value = {
@@ -578,6 +638,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addClass,
     updateClass,
     deleteClass,
+    addStudentToClass,
+    removeStudentFromClass,
+    addFacultyToClass,
+    removeFacultyFromClass,
   };
 
   return <AppContext.Provider value={value}>

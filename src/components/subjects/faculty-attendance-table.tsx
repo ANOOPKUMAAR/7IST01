@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX } from 'lucide-react';
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
-import { getHeadcount as getWifiHeadcount } from "@/ai/flows/get-headcount-flow";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
 
@@ -96,25 +95,27 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const isMismatch = cameraHeadcount !== null && cameraHeadcount !== presentCount;
 
   const handleWifiSync = async () => {
+    if (cameraHeadcount === null) {
+        toast({
+            title: "Camera Headcount Not Available",
+            description: "Please use the 'Refresh Camera' button to get a headcount before syncing.",
+            variant: "destructive"
+        });
+        return;
+    }
+
     setIsSyncingWifi(true);
     toast({
-        title: "Requesting Wi-Fi Headcount...",
-        description: "Simulating automatic attendance via Wi-Fi network."
+        title: "Syncing with Camera Headcount...",
+        description: `Marking ${cameraHeadcount} students as present based on the camera's count.`
     });
 
     try {
-        const result = await getWifiHeadcount({
-            subjectId: subject.id,
-            totalStudentsInClass: students.length
-        });
-        
-        const wifiPresentCount = result.headcount;
-        
         const newAttendance: Record<string, AttendanceStatus> = {};
         const shuffledStudents = [...students].sort(() => 0.5 - Math.random());
         
         shuffledStudents.forEach((student, index) => {
-            if(index < wifiPresentCount) {
+            if(index < cameraHeadcount) {
                 newAttendance[student.id] = 'present';
             } else {
                 newAttendance[student.id] = 'unmarked';
@@ -123,15 +124,16 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 
         setAttendance(newAttendance);
         toast({
-            title: "Wi-Fi Sync Complete",
-            description: `AI simulation marked ${wifiPresentCount} students as present.`
+            title: "Sync Complete",
+            description: `Attendance roster updated based on the camera's headcount of ${cameraHeadcount}.`,
+            variant: "success"
         });
 
     } catch (error) {
-        console.error("Error with Wi-Fi headcount sync:", error);
+        console.error("Error with camera headcount sync:", error);
         toast({
-            title: "Wi-Fi Sync Failed",
-            description: "Could not get the simulated headcount.",
+            title: "Sync Failed",
+            description: "An unexpected error occurred while updating the roster.",
             variant: "destructive"
         });
     } finally {
@@ -286,7 +288,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                      <div className="flex gap-2">
                          <Button variant="outline" onClick={handleWifiSync} disabled={isSyncingWifi}>
                             {isSyncingWifi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2"/>}
-                            Sync with Wi-Fi
+                            Sync with Camera
                         </Button>
                          <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>
                             {isVerifyingCamera ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2"/>}
@@ -369,3 +371,5 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+    

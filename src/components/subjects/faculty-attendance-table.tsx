@@ -17,7 +17,6 @@ import type { Subject, Student } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX } from 'lucide-react';
-import { getAutomaticHeadcount } from "@/actions/attendance-actions";
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
@@ -82,9 +81,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const { students, requestCameraPermission, hasCameraPermission, stopCameraStream } = useAppContext();
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
-  const [isVerifyingWifi, setIsVerifyingWifi] = useState(false);
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
-  const [wifiHeadcount, setWifiHeadcount] = useState<number | null>(null);
   const [cameraHeadcount, setCameraHeadcount] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -95,28 +92,6 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   }, [attendance]);
   
   const isMismatch = cameraHeadcount !== null && cameraHeadcount !== presentCount;
-
-  const fetchWifiHeadcount = useCallback(async (isInitialCall = false) => {
-    if (!isInitialCall) {
-        setIsVerifyingWifi(true);
-    }
-    try {
-        const result = await getAutomaticHeadcount(subject.id, students.length);
-        setWifiHeadcount(result.headcount);
-    } catch (error) {
-        console.error("Error getting Wi-Fi headcount:", error);
-        toast({
-            title: "Error Getting Wi-Fi Headcount",
-            description: "Could not get simulated Wi-Fi headcount. Please try again.",
-            variant: "destructive",
-        });
-        setWifiHeadcount(null);
-    } finally {
-        if (!isInitialCall) {
-            setIsVerifyingWifi(false);
-        }
-    }
-  }, [subject.id, students.length, toast]);
 
   const fetchCameraHeadcount = useCallback(async () => {
     if (!videoRef.current) {
@@ -177,28 +152,23 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   }, [toast]);
 
   useEffect(() => {
-    let wifiInterval: NodeJS.Timeout;
     
     const startAttendanceSystems = async () => {
       streamRef.current = await requestCameraPermission(videoRef.current, true);
       if(streamRef.current){
-        fetchWifiHeadcount(true); 
         fetchCameraHeadcount();
-        wifiInterval = setInterval(() => fetchWifiHeadcount(false), 10000); 
       }
     };
     
     if (isAttendanceActive) {
       startAttendanceSystems();
     } else {
-      setWifiHeadcount(null);
       setCameraHeadcount(null);
       stopCameraStream(streamRef.current, videoRef.current);
       streamRef.current = null;
     }
 
     return () => {
-      if(wifiInterval) clearInterval(wifiInterval);
       stopCameraStream(streamRef.current, videoRef.current);
       streamRef.current = null;
     };
@@ -269,10 +239,6 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                         <CardDescription>Compare automated headcounts with your manual count.</CardDescription>
                     </div>
                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => fetchWifiHeadcount(true)} disabled={isVerifyingWifi}>
-                            {isVerifyingWifi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2"/>}
-                            Refresh Wi-Fi
-                        </Button>
                          <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>
                             {isVerifyingCamera ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2"/>}
                             Refresh Camera
@@ -281,13 +247,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg bg-muted p-4">
-                    <div className="text-center">
-                        <p className="text-3xl font-bold flex items-center justify-center gap-2">
-                           <Wifi/> {wifiHeadcount ?? '-'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Simulated Wi-Fi Headcount</p>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg bg-muted p-4">
                      <div className="text-center">
                         <p className="text-3xl font-bold flex items-center justify-center gap-2">
                            <Camera/> {cameraHeadcount ?? '-'}
@@ -352,7 +312,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                 )}
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-                <Button onClick={handleSaveAttendance} className="w-full sm:w-auto ml-auto" disabled={isVerifyingWifi || isVerifyingCamera}>
+                <Button onClick={handleSaveAttendance} className="w-full sm:w-auto ml-auto" disabled={isVerifyingCamera}>
                     <Check className="mr-2"/> Save Attendance
                 </Button>
             </CardFooter>

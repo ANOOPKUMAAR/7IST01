@@ -1,8 +1,8 @@
+
 "use server";
 
 import type { AttendanceRecord, Subject } from "@/lib/types";
 import { detectAttendanceAnomaly } from "@/ai/flows/attendance-anomaly-detection";
-import { getHeadcount } from "@/ai/flows/get-headcount-flow";
 
 interface CheckOutData {
   checkInTime: string;
@@ -47,20 +47,4 @@ export async function checkAttendanceAnomaly({
   }
 }
 
-
-export async function getAutomaticHeadcount(subjectId: string, studentCount: number) {
-  try {
-    const result = await getHeadcount({
-      subjectId,
-      totalStudentsInClass: studentCount,
-    });
-    return result;
-  } catch (error) {
-    console.error("Error getting automatic headcount:", error);
-    // In case of an error, return a random number to simulate a real-world scenario
-    // where the network scan might fail but still provide some data.
-    return {
-      headcount: Math.floor(Math.random() * (studentCount + 1)),
-    };
-  }
-}
+    

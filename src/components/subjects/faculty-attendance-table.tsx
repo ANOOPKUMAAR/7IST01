@@ -93,6 +93,28 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   
   const isMismatch = cameraHeadcount !== null && cameraHeadcount !== presentCount;
 
+  const handleWifiSync = () => {
+    const newAttendance: Record<string, AttendanceStatus> = {};
+    let presentCount = 0;
+    // Simulate finding 80-90% of students on the network
+    const presentThreshold = Math.random() * 0.1 + 0.8;
+    
+    students.forEach(student => {
+      if (Math.random() < presentThreshold) {
+        newAttendance[student.id] = 'present';
+        presentCount++;
+      } else {
+        newAttendance[student.id] = 'unmarked';
+      }
+    });
+
+    setAttendance(newAttendance);
+    toast({
+        title: "Wi-Fi Sync Complete",
+        description: `${presentCount} students were automatically marked as present.`
+    });
+  }
+
   const fetchCameraHeadcount = useCallback(async () => {
     if (!videoRef.current) {
       toast({
@@ -239,6 +261,10 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                         <CardDescription>Compare automated headcounts with your manual count.</CardDescription>
                     </div>
                      <div className="flex gap-2">
+                         <Button variant="outline" onClick={handleWifiSync}>
+                            <Wifi className="mr-2"/>
+                            Sync with Wi-Fi
+                        </Button>
                          <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>
                             {isVerifyingCamera ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2"/>}
                             Refresh Camera
@@ -280,7 +306,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Class</CardTitle>
+                        <CardTitle>Class Roster</CardTitle>
                         <CardDescription>Mark attendance for each student below.</CardDescription>
                     </div>
                     <div className="flex gap-2">
@@ -320,5 +346,3 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
-
-    

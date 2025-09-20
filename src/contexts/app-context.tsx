@@ -367,8 +367,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserDetails = (details: Partial<Omit<UserDetails, 'deviceId'>>) => {
-    setUserDetails(prev => ({...prev, ...details}));
-    toast({ title: "Profile Updated", description: "Your details have been saved." });
+    // Update the main userDetails state for the current user's view
+    const updatedUserDetails = { ...userDetails, ...details };
+    setUserDetails(updatedUserDetails);
+
+    // Find the corresponding student in the master `students` list and update them
+    setStudents(prevStudents => 
+        prevStudents.map(student => {
+            if (student.rollNo === userDetails.rollNo) {
+                return { 
+                    ...student,
+                    name: updatedUserDetails.name,
+                    // any other fields on the `Student` type can be updated here
+                };
+            }
+            return student;
+        })
+    );
+    
+    // The change to the `students` array will automatically be reflected in any
+    // class rosters because they share the same object references.
+    // No need to manually update `programsBySchool` state.
+    
+    toast({ title: "Profile Updated", description: "Your details have been saved across the app." });
   };
 
   const findClassAndUpdate = (

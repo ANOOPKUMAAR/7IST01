@@ -40,6 +40,7 @@ export interface UserDetails {
   parentName: string;
   address: string;
   deviceId: string;
+  avatar?: string;
 }
 
 export interface Student {

@@ -23,27 +23,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import type { UserDetails } from "@/lib/types";
-import { User, Edit, Briefcase, GraduationCap, Database } from "lucide-react";
+import { User, Edit, Briefcase, GraduationCap, Database, Upload, Camera } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useToast } from "@/hooks/use-toast";
 
-function InfoRow({ label, value }: { label: string, value: string }) {
+function InfoRow({ label, value }: { label: string, value: string | undefined }) {
     return (
         <div className="flex justify-between py-2 border-b">
             <p className="font-medium text-muted-foreground">{label}</p>
-            <p className="font-semibold text-right">{value}</p>
+            <p className="font-semibold text-right">{value || 'N/A'}</p>
         </div>
     )
 }
 
 function EditProfileDialog({ onDone }: { onDone: () => void }) {
     const { userDetails, updateUserDetails } = useAppContext();
-    const { register, handleSubmit } = useForm<Omit<UserDetails, 'deviceId'>>({
+    const { register, handleSubmit } = useForm<Omit<UserDetails, 'deviceId' | 'avatar'>>({
         defaultValues: userDetails
     });
 
-    const onSubmit: SubmitHandler<Omit<UserDetails, 'deviceId'>> = (data) => {
+    const onSubmit: SubmitHandler<Omit<UserDetails, 'deviceId' | 'avatar'>> = (data) => {
         updateUserDetails(data);
         onDone();
     };
@@ -98,10 +99,80 @@ function EditProfileDialog({ onDone }: { onDone: () => void }) {
     )
 }
 
+function EditAvatarDialog({ onDone }: { onDone: () => void }) {
+    const { updateUserDetails } = useAppContext();
+    const { toast } = useToast();
+    const [file, setFile] = useState<File | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const selectedFile = e.target.files[0];
+            if (selectedFile.size > 2 * 1024 * 1024) { // 2MB limit
+                toast({
+                    title: "File Too Large",
+                    description: "Please select an image smaller than 2MB.",
+                    variant: "destructive",
+                });
+                return;
+            }
+            setFile(selectedFile);
+        }
+    };
+
+    const handleSave = () => {
+        if (file) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const dataUrl = reader.result as string;
+                updateUserDetails({ avatar: dataUrl });
+                toast({ title: "Avatar updated successfully!" });
+                onDone();
+            };
+            reader.onerror = () => {
+                toast({
+                    title: "Error Reading File",
+                    description: "Could not process the selected file.",
+                    variant: "destructive",
+                });
+            }
+        }
+    };
+    
+    return (
+      <>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="avatar-file">Upload new photo</Label>
+            <Input id="avatar-file" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleFileChange} />
+            <p className="text-xs text-muted-foreground">Recommended size: 200x200px. Max 2MB.</p>
+          </div>
+          {file && (
+            <div className="flex justify-center">
+                <Avatar className="h-32 w-32 border">
+                    <AvatarImage src={URL.createObjectURL(file)} />
+                    <AvatarFallback><Camera/></AvatarFallback>
+                </Avatar>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+            <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleSave} disabled={!file}>
+                <Upload className="mr-2" />
+                Save Photo
+            </Button>
+        </DialogFooter>
+      </>
+    );
+}
 
 export default function ProfilePage() {
   const { subjects, attendance, isLoaded, userDetails, mode, setMode } = useAppContext();
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [isAvatarDialogOpen, setAvatarDialogOpen] = useState(false);
 
   const { totalAttended, totalMissed, pieData } = useMemo(() => {
     let totalAttended = 0;
@@ -167,12 +238,28 @@ export default function ProfilePage() {
         <>
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Avatar className="h-24 w-24 border">
-                        <AvatarImage src="https://picsum.photos/200" data-ai-hint="student avatar" />
-                        <AvatarFallback>
-                            <User className="h-12 w-12 text-muted-foreground" />
-                        </AvatarFallback>
-                    </Avatar>
+                    <div className="relative group">
+                        <Avatar className="h-24 w-24 border">
+                            <AvatarImage src={userDetails.avatar} data-ai-hint="student avatar" />
+                            <AvatarFallback>
+                                <User className="h-12 w-12 text-muted-foreground" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button size="icon" className="absolute bottom-0 right-0 rounded-full h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Edit className="h-4 w-4" />
+                                    <span className="sr-only">Edit Avatar</span>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Change Profile Picture</DialogTitle>
+                                </DialogHeader>
+                                <EditAvatarDialog onDone={() => setAvatarDialogOpen(false)} />
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                     <div>
                         <h2 className="text-3xl font-bold">{userDetails.name}</h2>
                         <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>

@@ -19,7 +19,7 @@ import type {
   Department,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
-import { countPeopleInImage } from "@/ai/flows/count-people-in-image-flow";
+import { getHeadcount } from "@/ai/flows/get-headcount-flow";
 import { initialSchools, initialProgramsBySchool, mockStudents } from "@/lib/school-data";
 
 interface AppContextType {
@@ -43,12 +43,11 @@ interface AppContextType {
   checkIn: (subjectId: string) => void;
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
-  updateUserDetails: (details: UserDetails) => void;
+  updateUserDetails: (details: Partial<Omit<UserDetails, 'deviceId'>>) => void;
   hasCameraPermission: boolean | null;
   setHasCameraPermission: (hasPermission: boolean | null) => void;
   requestCameraPermission: (videoEl: HTMLVideoElement | null, showToast?: boolean) => Promise<MediaStream | null>;
   stopCameraStream: (stream: MediaStream | null, videoEl: HTMLVideoElement | null) => void;
-  videoRef: React.RefObject<HTMLVideoElement>;
   // Admin functions
   addSchool: (school: Omit<School, 'id'>) => void;
   updateSchool: (school: School) => void;
@@ -81,7 +80,7 @@ const initialWifiZones: WifiZone[] = [
     { id: 'wifi1', ssid: 'Campus-WiFi' },
 ];
 
-const initialUserDetails: Omit<UserDetails, 'deviceId'> = {
+const initialUserDetails: Omit<UserDetails, 'deviceId' | 'avatar'> = {
     name: "Alex Doe",
     rollNo: "20221IST0001",
     program: "Bachelor of Technology",
@@ -121,11 +120,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
-  const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, deviceId: '' });
+  const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, deviceId: '', avatar: `https://picsum.photos/seed/${Math.random()}/200` });
   const [students, setStudents] = useState<Student[]>(mockStudents);
   const [mode, setModeState] = useState<UserMode>('student');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [schools, setSchools] = useState<School[]>([]);
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
@@ -164,8 +162,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (!userDetailsData.deviceId) {
               userDetailsData.deviceId = generateDeviceId();
           }
+          if (!userDetailsData.avatar) {
+              userDetailsData.avatar = `https://picsum.photos/seed/${Math.random()}/200`;
+          }
       } else {
-          userDetailsData = { ...initialUserDetails, deviceId: generateDeviceId() };
+          userDetailsData = { ...initialUserDetails, deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${Math.random()}/200` };
       }
       setUserDetails(userDetailsData);
       
@@ -181,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       const deviceId = generateDeviceId();
-      setUserDetails({ ...initialUserDetails, deviceId });
+      setUserDetails({ ...initialUserDetails, deviceId, avatar: `https://picsum.photos/seed/${Math.random()}/200` });
       setSubjects(initialSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
@@ -295,55 +296,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Wi-Fi Zone Removed", variant: "destructive" });
   };
 
-  const handleHeadcount = async (videoEl: HTMLVideoElement | null) => {
-    if (!videoEl || hasCameraPermission !== true) {
-      toast({
-        title: "Camera not ready",
-        description: "Camera permission is not granted or the camera is not yet initialized.",
-        variant: "destructive",
-      });
-      return;
-    };
-
-    const canvas = document.createElement("canvas");
-    if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
-      toast({
-        title: "Camera Error",
-        description: "Could not capture image from camera. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-    canvas.width = videoEl.videoWidth;
-    canvas.height = videoEl.videoHeight;
-    const context = canvas.getContext("2d");
-
-    if (context) {
-        context.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-        const imageDataUri = canvas.toDataURL("image/jpeg");
-        
-        try {
-            toast({
-              title: "Analyzing classroom...",
-              description: "The AI is counting the number of students.",
-            });
-            const result = await countPeopleInImage({ imageDataUri });
-            toast({
-                title: "AI Headcount Complete",
-                description: `The AI detected ${result.count} ${result.count === 1 ? 'person' : 'people'}.`,
-                variant: 'success',
-            });
-        } catch (error) {
-            console.error("Error counting people: ", error);
-            toast({
-                title: "Headcount Failed",
-                description: "The AI could not process the image. Please try again.",
-                variant: "destructive"
-            });
-        }
-    }
-  }
-
   const checkIn = async (subjectId: string) => {
     if (activeCheckIn) {
       toast({ title: "Already Checked In", description: "You must check out from your current session first.", variant: "destructive" });
@@ -367,12 +319,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setActiveCheckIn(newActiveCheckIn);
     const subject = subjects.find(s => s.id === subjectId);
     toast({ title: "Checked In", description: `You have checked in for ${subject?.name}.` });
-    
-    const stream = await requestCameraPermission(videoRef.current, false);
-    setTimeout(() => {
-      handleHeadcount(videoRef.current)
-      stopCameraStream(stream, videoRef.current);
-    }, 1000);
   };
 
   const checkOut = async (subjectId: string) => {
@@ -420,7 +366,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Record Deleted", variant: "destructive" });
   };
 
-  const updateUserDetails = (details: Omit<UserDetails, 'deviceId'>) => {
+  const updateUserDetails = (details: Partial<Omit<UserDetails, 'deviceId'>>) => {
     setUserDetails(prev => ({...prev, ...details}));
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
@@ -652,7 +598,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setHasCameraPermission,
     requestCameraPermission,
     stopCameraStream,
-    videoRef,
     // Admin functions
     addSchool,
     updateSchool,
@@ -674,7 +619,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return <AppContext.Provider value={value}>
       {children}
-      <video ref={videoRef} className="hidden" autoPlay muted playsInline />
     </AppContext.Provider>;
 }
 

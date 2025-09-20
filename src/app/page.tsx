@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileUp, List, LayoutGrid, Briefcase } from "lucide-react";
+import { FileUp, List, LayoutGrid, Briefcase, School } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,41 @@ import { Timetable } from "@/components/dashboard/time-table";
 import { SubjectCardsView } from "@/components/dashboard/subject-cards-view";
 import { useAppContext } from "@/contexts/app-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+
+function AdminDashboard() {
+    const schools = [
+        { name: 'School of Engineering', icon: <School className="h-10 w-10 text-primary" /> },
+        { name: 'School of Business', icon: <School className="h-10 w-10 text-primary" /> },
+        { name: 'School of Arts & Sciences', icon: <School className="h-10 w-10 text-primary" /> },
+        { name: 'School of Medicine', icon: <School className="h-10 w-10 text-primary" /> },
+        { name: 'School of Law', icon: <School className="h-10 w-10 text-primary" /> },
+        { name: 'School of Design', icon: <School className="h-10 w-10 text-primary" /> },
+    ];
+
+    return (
+        <div className="flex flex-col gap-6">
+             <div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                    University Overview
+                </h2>
+                <p className="text-muted-foreground">
+                    Select a school to view its details.
+                </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {schools.map((school, index) => (
+                    <Card key={index} className="hover:bg-accent/50 cursor-pointer transition-colors">
+                        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+                           {school.icon}
+                           <CardTitle className="text-xl">{school.name}</CardTitle>
+                        </CardHeader>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 
 function FacultyDashboard() {
@@ -92,10 +127,12 @@ function StudentDashboard() {
 export default function DashboardPage() {
     const { mode } = useAppContext();
 
+    if (mode === 'admin') {
+        return <AdminDashboard />;
+    }
     if (mode === 'faculty') {
         return <FacultyDashboard />;
     }
 
     return <StudentDashboard />;
 }
-

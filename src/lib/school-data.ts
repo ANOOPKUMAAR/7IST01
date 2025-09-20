@@ -18,6 +18,7 @@ export interface Class {
     day: string;
     startTime: string;
     endTime: string;
+    faculties?: string[];
 }
 
 export interface Department {
@@ -46,18 +47,18 @@ export const programsBySchool: Record<string, Program[]> = {
     engineering: [
         { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [
             {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing', classes: [
-                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace', students: mockStudents.slice(0, 2), day: 'Monday', startTime: '09:00', endTime: '10:30' },
-                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents.slice(2, 5), day: 'Wednesday', startTime: '11:00', endTime: '12:30' },
+                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace', students: mockStudents.slice(0, 2), day: 'Monday', startTime: '09:00', endTime: '10:30', faculties: ['Prof. Ada Lovelace', 'Dr. Grace Hopper'] },
+                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents.slice(2, 5), day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: ['Prof. Niklaus Wirth'] },
             ]},
             {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
-                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(1, 3), day: 'Tuesday', startTime: '14:00', endTime: '15:30' },
-                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(0, 4), day: 'Thursday', startTime: '10:00', endTime: '11:30' },
+                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(1, 3), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: ['Prof. Geoffrey Hinton'] },
+                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(0, 4), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: ['Prof. Andrew Ng', 'Dr. Yann LeCun'] },
             ]},
             {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
-                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(3, 5), day: 'Friday', startTime: '13:00', endTime: '14:30' },
+                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(3, 5), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: ['Prof. Ron Rivest', 'Prof. Adi Shamir'] },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 3), day: 'Monday', startTime: '16:00', endTime: '17:30' },
+                 { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 3), day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: ['Prof. Jeff Hammerbacher'] },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper'}] },
@@ -94,7 +95,7 @@ export const programsBySchool: Record<string, Program[]> = {
     ],
     design: [
         { id: 'bdes-graph', name: 'B.Des in Graphic Design', description: 'Focuses on visual communication and problem-solving.', departments: [{id: 'graph-ug', name: 'Graphic Design', hod: 'Dr. Paul Rand'}]},
-        { id: 'bdes-indus', name: 'B.Des in Industrial Design', description: 'The design of mass-produced products.', departments: [{id: 'indus-ug', 'name': 'Industrial Design', hod: 'Dr. Dieter Rams'}]},
-        { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', 'name': 'Fashion Design', hod: 'Dr. Coco Chanel'}]},
+        { id: 'bdes-indus', name: 'B.Des in Industrial Design', description: 'The design of mass-produced products.', departments: [{id: 'indus-ug', name: 'Industrial Design', hod: 'Dr. Dieter Rams'}]},
+        { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', name: 'Fashion Design', hod: 'Dr. Coco Chanel'}]},
     ],
 };

@@ -5,16 +5,17 @@ import { useParams, notFound } from "next/navigation";
 import { schools, programsBySchool } from "@/lib/school-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, Users, CalendarClock } from "lucide-react";
+import { ArrowLeft, Users, CalendarClock, Briefcase } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-function InfoRow({ label, value }: { label: string, value: string }) {
+function InfoRow({ label, value }: { label: string, value: string | React.ReactNode }) {
     return (
         <div className="flex justify-between py-2 border-b last:border-b-0">
             <p className="font-medium text-muted-foreground">{label}</p>
-            <p className="font-semibold text-right">{value}</p>
+            <div className="font-semibold text-right">{value}</div>
         </div>
     )
 }
@@ -36,6 +37,7 @@ export default function ClassDetailsPage() {
   }
 
   const students = cls.students || [];
+  const faculties = cls.faculties || [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,6 +113,33 @@ export default function ClassDetailsPage() {
                            <InfoRow label="Start Time" value={cls.startTime} />
                            <InfoRow label="End Time" value={cls.endTime} />
                         </div>
+                    </AccordionContent>
+                </AccordionItem>
+                 <AccordionItem value="faculties">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                           <Briefcase className="h-5 w-5" />
+                           <span className="font-semibold">Faculties ({faculties.length})</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                         {faculties.length > 0 ? (
+                            <div className="pt-4 border-t space-y-4">
+                               {faculties.map((faculty, index) => (
+                                    <div key={index} className="flex items-center gap-4">
+                                        <Avatar>
+                                            <AvatarFallback>{faculty.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <p className="font-semibold">{faculty}</p>
+                                    </div>
+                               ))}
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
+                                <Briefcase className="h-10 w-10" />
+                                <p>No faculties assigned to this class.</p>
+                            </div>
+                        )}
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>

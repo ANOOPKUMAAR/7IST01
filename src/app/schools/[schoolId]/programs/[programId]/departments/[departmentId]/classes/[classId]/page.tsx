@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Users, CalendarClock, Briefcase, PlusCircle, Trash } from "lucide-react";
+import { ArrowLeft, Users, CalendarClock, Briefcase, PlusCircle, Trash, Edit } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +50,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppContext } from "@/contexts/app-context";
 import { useState } from "react";
 import type { Student } from "@/lib/types";
+import { ClassFormDialog } from "@/components/admin/class-form-dialog";
 
 function InfoRow({
   label,
@@ -140,6 +141,8 @@ export default function ClassDetailsPage() {
   const classId = params.classId as string;
   const [isAddStudentOpen, setAddStudentOpen] = useState(false);
   const [isAddFacultyOpen, setAddFacultyOpen] = useState(false);
+  const [isEditClassOpen, setEditClassOpen] = useState(false);
+
 
   const { schools, programsBySchool, mode, students: allStudents, addStudentToClass, removeStudentFromClass, addFacultyToClass, removeFacultyFromClass } = useAppContext();
 
@@ -183,10 +186,10 @@ export default function ClassDetailsPage() {
         </CardHeader>
         <CardContent>
           <Accordion
-            type="single"
+            type="multiple"
             collapsible
             className="w-full"
-            defaultValue="student-roster"
+            defaultValue={["student-roster"]}
           >
             <AccordionItem value="student-roster">
               <AccordionTrigger>
@@ -264,6 +267,28 @@ export default function ClassDetailsPage() {
               </AccordionTrigger>
               <AccordionContent>
                 <div className="pt-4 border-t space-y-2">
+                   {mode === 'admin' && (
+                      <div className="flex justify-end mb-4">
+                        <Dialog open={isEditClassOpen} onOpenChange={setEditClassOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline"><Edit/> Edit Schedule</Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Edit Class Schedule</DialogTitle>
+                                <DialogDescription>Update the timetable details for {cls.name}.</DialogDescription>
+                            </DialogHeader>
+                            <ClassFormDialog
+                                schoolId={schoolId}
+                                programId={programId}
+                                departmentId={departmentId}
+                                cls={cls}
+                                onDone={() => setEditClassOpen(false)}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                  )}
                   <InfoRow label="Day" value={cls.day} />
                   <InfoRow label="Start Time" value={cls.startTime} />
                   <InfoRow label="End Time" value={cls.endTime} />

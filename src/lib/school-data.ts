@@ -23,7 +23,7 @@ export interface Program {
 
 export const programsBySchool: Record<string, Program[]> = {
     engineering: [
-        { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [{id: 'cs-ug', name: 'Undergraduate Computer Science'}] },
+        { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [{id: 'cs-ug', name: 'UG Computer Science'}] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science'}] },
         { id: 'btech-mech', name: 'B.Tech in Mechanical Engineering', description: 'Covers the design, construction, and use of machines.', departments: [{id: 'mech-ug', name: 'Undergraduate Mechanical Engineering'}] },
         { id: 'btech-elec', name: 'B.Tech in Electrical Engineering', description: 'Deals with electricity, electronics, and electromagnetism.', departments: [{id: 'elec-ug', name: 'Undergraduate Electrical Engineering'}] },

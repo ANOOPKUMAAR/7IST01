@@ -1,5 +1,7 @@
 
 
+import type { Student } from './types';
+
 export const schools = [
     { id: 'engineering', name: 'School of Engineering', icon: 'School' },
     { id: 'business', name: 'School of Business', icon: 'School' },
@@ -13,6 +15,7 @@ export interface Class {
     id: string;
     name: string;
     coordinator: string;
+    students?: Student[];
 }
 
 export interface Department {
@@ -29,22 +32,30 @@ export interface Program {
     departments: Department[];
 }
 
+const mockStudents: Student[] = [
+    { id: 's1', name: 'Bob Johnson', rollNo: '20221IST0002' },
+    { id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003' },
+    { id: 's3', name: 'Diana Prince', rollNo: '20221IST0004' },
+    { id: 's4', name: 'Ethan Hunt', rollNo: '20221IST0005' },
+    { id: 's5', name: 'Fiona Glenanne', rollNo: '20221IST0006' },
+];
+
 export const programsBySchool: Record<string, Program[]> = {
     engineering: [
         { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [
             {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing', classes: [
-                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace' },
-                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth' },
+                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace', students: mockStudents.slice(0, 2) },
+                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents.slice(2, 5) },
             ]},
             {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
-                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton' },
-                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng' },
+                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(1, 3) },
+                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(0, 4) },
             ]},
             {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
-                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest' },
+                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(3, 5) },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher' },
+                 { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 3) },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper'}] },

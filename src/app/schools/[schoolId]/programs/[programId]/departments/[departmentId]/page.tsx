@@ -44,15 +44,17 @@ export default function DepartmentDetailsPage() {
       {classes.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {classes.map((cls) => (
-            <Card key={cls.id}>
-              <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-                <BookCopy className="h-8 w-8 text-muted-foreground mt-1"/>
-                <div className="space-y-1 flex-1">
-                    <CardTitle>{cls.name}</CardTitle>
-                    <CardDescription>Coordinator: {cls.coordinator}</CardDescription>
-                </div>
-              </CardHeader>
-            </Card>
+            <Link href={`/schools/${schoolId}/programs/${programId}/departments/${departmentId}/classes/${cls.id}`} key={cls.id}>
+              <Card className="hover:bg-accent/50 cursor-pointer transition-colors h-full">
+                <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+                  <BookCopy className="h-8 w-8 text-muted-foreground mt-1"/>
+                  <div className="space-y-1 flex-1">
+                      <CardTitle>{cls.name}</CardTitle>
+                      <CardDescription>Coordinator: {cls.coordinator}</CardDescription>
+                  </div>
+                </CardHeader>
+              </Card>
+            </Link>
           ))}
         </div>
       ) : (

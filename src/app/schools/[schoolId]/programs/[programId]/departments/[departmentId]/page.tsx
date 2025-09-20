@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useParams, notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, BookCopy, PlusCircle } from "lucide-react";
+import { ArrowLeft, BookCopy, PlusCircle, FileUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/contexts/app-context";
@@ -19,6 +19,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { UploadClassTimetableDialog } from "@/components/admin/upload-class-timetable-dialog";
 
 function ClassCard({ schoolId, programId, departmentId, cls }: { schoolId: string, programId: string, departmentId: string, cls: Class }) {
     const { mode, deleteClass } = useAppContext();
@@ -69,6 +70,8 @@ export default function DepartmentDetailsPage() {
   const departmentId = params.departmentId as string;
   const { schools, programsBySchool, mode } = useAppContext();
   const [isAddOpen, setAddOpen] = useState(false);
+  const [isUploadOpen, setUploadOpen] = useState(false);
+
 
   const school = schools.find((s) => s.id === schoolId);
   const program = programsBySchool[schoolId]?.find((p) => p.id === programId);
@@ -98,22 +101,41 @@ export default function DepartmentDetailsPage() {
             </div>
         </div>
          {mode === 'admin' && (
-            <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
-                <DialogTrigger asChild>
-                    <Button><PlusCircle /> Add Class</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add New Class</DialogTitle>
-                    </DialogHeader>
-                    <ClassFormDialog
-                        schoolId={schoolId}
-                        programId={programId}
-                        departmentId={departmentId}
-                        onDone={() => setAddOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+                <Dialog open={isUploadOpen} onOpenChange={setUploadOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline"><FileUp/> Upload Timetable</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Upload Class Timetable</DialogTitle>
+                             <DialogDescription>Upload an image or PDF to bulk-create classes for this department.</DialogDescription>
+                        </DialogHeader>
+                        <UploadClassTimetableDialog
+                            schoolId={schoolId}
+                            programId={programId}
+                            departmentId={departmentId}
+                            onDone={() => setUploadOpen(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
+                    <DialogTrigger asChild>
+                        <Button><PlusCircle /> Add Class</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add New Class</DialogTitle>
+                        </DialogHeader>
+                        <ClassFormDialog
+                            schoolId={schoolId}
+                            programId={programId}
+                            departmentId={departmentId}
+                            onDone={() => setAddOpen(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
         )}
       </div>
       

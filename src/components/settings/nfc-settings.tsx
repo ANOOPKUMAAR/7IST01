@@ -10,9 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Nfc } from "lucide-react";
+import { Nfc, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Subject } from "@/lib/types";
 
 export function NfcSettings() {
   const { subjects, activeCheckIn, checkIn, checkOut, isLoaded } = useAppContext();
@@ -62,10 +61,34 @@ export function NfcSettings() {
       <CardHeader>
         <CardTitle>NFC Attendance</CardTitle>
         <CardDescription>
-          Use an NFC tag for quick check-ins and check-outs.
+          Use the simulated NFC scan for quick check-ins and check-outs.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="rounded-lg border bg-background p-4 space-y-4">
+            <div className="flex items-start gap-3">
+                <HelpCircle className="h-5 w-5 mt-1 text-primary"/>
+                <div>
+                    <h3 className="font-semibold">How to Mark Your Attendance Automatically</h3>
+                    <p className="text-sm text-muted-foreground">Follow these steps to ensure your attendance is recorded correctly:</p>
+                </div>
+            </div>
+            <ol className="list-decimal list-inside space-y-2 text-sm pl-2">
+                <li>
+                    <strong>Navigate here during class time.</strong> This screen will show you which class is currently active.
+                </li>
+                <li>
+                    <strong>Tap the "Simulate NFC Scan" button.</strong> This will check you in for the current subject.
+                </li>
+                <li>
+                    <strong>Tap again to check out.</strong> At the end of the class, return to this screen and tap the button again to check out.
+                </li>
+            </ol>
+            <p className="text-xs text-muted-foreground pl-2">
+                <strong>Note:</strong> An administrator must define a Wi-Fi zone in the settings for this feature to work. This simulates being in a specific location like a classroom.
+            </p>
+        </div>
+
         <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border-2 border-dashed p-12 text-center">
             <Nfc className="h-16 w-16 text-muted-foreground" />
             <p className="text-muted-foreground">

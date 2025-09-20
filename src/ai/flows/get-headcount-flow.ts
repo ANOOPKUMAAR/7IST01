@@ -35,34 +35,20 @@ export async function getHeadcount(
   return getHeadcountFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'getHeadcountPrompt',
-  input: {schema: GetHeadcountInputSchema},
-  output: {schema: GetHeadcountOutputSchema},
-  prompt: `You are an AI simulating a Wi-Fi based headcount system for a classroom.
-
-You will receive the subject ID and the total number of students in the class.
-
-Your task is to generate a realistic headcount. The number should be a random integer between 85% and 95% of the total students in the class, rounded down.
-
-Subject ID: {{{subjectId}}}
-Total Students in Class: {{{totalStudentsInClass}}}
-
-Return the simulated headcount in the 'headcount' field of the output.`,
-});
-
 const getHeadcountFlow = ai.defineFlow(
   {
     name: 'getHeadcountFlow',
     inputSchema: GetHeadcountInputSchema,
     outputSchema: GetHeadcountOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    if (output) {
-      // Ensure the headcount doesn't exceed the total number of students.
-      output.headcount = Math.min(output.headcount, input.totalStudentsInClass);
-    }
-    return output!;
+  async ({ totalStudentsInClass }) => {
+    // Generate a realistic headcount: a random integer between 85% and 95% of the total students.
+    const min = Math.floor(totalStudentsInClass * 0.85);
+    const max = Math.floor(totalStudentsInClass * 0.95);
+    const headcount = Math.floor(Math.random() * (max - min + 1)) + min;
+    
+    return {
+      headcount: Math.min(headcount, totalStudentsInClass) // Ensure headcount doesn't exceed total.
+    };
   }
 );

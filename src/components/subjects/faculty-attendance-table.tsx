@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX } from 'lucide-react';
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
+import { getHeadcount as getWifiHeadcount } from "@/ai/flows/get-headcount-flow";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
 
@@ -82,6 +83,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
+  const [isSyncingWifi, setIsSyncingWifi] = useState(false);
   const [cameraHeadcount, setCameraHeadcount] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -93,26 +95,48 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   
   const isMismatch = cameraHeadcount !== null && cameraHeadcount !== presentCount;
 
-  const handleWifiSync = () => {
-    const newAttendance: Record<string, AttendanceStatus> = {};
-    let presentCount = 0;
-    // Simulate finding 80-90% of students on the network
-    const presentThreshold = Math.random() * 0.1 + 0.8;
-    
-    students.forEach(student => {
-      if (Math.random() < presentThreshold) {
-        newAttendance[student.id] = 'present';
-        presentCount++;
-      } else {
-        newAttendance[student.id] = 'unmarked';
-      }
+  const handleWifiSync = async () => {
+    setIsSyncingWifi(true);
+    toast({
+        title: "Requesting Wi-Fi Headcount...",
+        description: "Simulating automatic attendance via Wi-Fi network."
     });
 
-    setAttendance(newAttendance);
-    toast({
-        title: "Wi-Fi Sync Complete",
-        description: `${presentCount} students were automatically marked as present.`
-    });
+    try {
+        const result = await getWifiHeadcount({
+            subjectId: subject.id,
+            totalStudentsInClass: students.length
+        });
+        
+        const wifiPresentCount = result.headcount;
+        
+        const newAttendance: Record<string, AttendanceStatus> = {};
+        const shuffledStudents = [...students].sort(() => 0.5 - Math.random());
+        
+        shuffledStudents.forEach((student, index) => {
+            if(index < wifiPresentCount) {
+                newAttendance[student.id] = 'present';
+            } else {
+                newAttendance[student.id] = 'unmarked';
+            }
+        });
+
+        setAttendance(newAttendance);
+        toast({
+            title: "Wi-Fi Sync Complete",
+            description: `AI simulation marked ${wifiPresentCount} students as present.`
+        });
+
+    } catch (error) {
+        console.error("Error with Wi-Fi headcount sync:", error);
+        toast({
+            title: "Wi-Fi Sync Failed",
+            description: "Could not get the simulated headcount.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsSyncingWifi(false);
+    }
   }
 
   const fetchCameraHeadcount = useCallback(async () => {
@@ -127,7 +151,6 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     
     setIsVerifyingCamera(true);
 
-    // Give camera time to initialize and ensure it has dimensions
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
@@ -261,8 +284,8 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                         <CardDescription>Compare automated headcounts with your manual count.</CardDescription>
                     </div>
                      <div className="flex gap-2">
-                         <Button variant="outline" onClick={handleWifiSync}>
-                            <Wifi className="mr-2"/>
+                         <Button variant="outline" onClick={handleWifiSync} disabled={isSyncingWifi}>
+                            {isSyncingWifi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2"/>}
                             Sync with Wi-Fi
                         </Button>
                          <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>

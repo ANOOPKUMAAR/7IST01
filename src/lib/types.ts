@@ -45,5 +45,34 @@ export interface Student {
     rollNo: string;
 }
 
+export interface Class {
+    id: string;
+    name: string;
+    coordinator: string;
+    students?: Student[];
+    day: string;
+    startTime: string;
+    endTime: string;
+    faculties?: string[];
+}
+
+export interface Department {
+    id: string;
+    name: string;
+    hod: string;
+    classes: Class[];
+}
+
+export interface Program {
+    id: string;
+    name: string;
+    description: string;
+    departments: Department[];
+}
+
+export interface School {
+    id: string;
+    name: string;
+}
 
 export type UserMode = 'student' | 'faculty' | 'admin';

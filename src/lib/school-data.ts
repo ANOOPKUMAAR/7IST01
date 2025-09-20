@@ -1,41 +1,15 @@
+import type { Student, School, Program } from './types';
 
-import type { Student } from './types';
-
-export const schools = [
-    { id: 'engineering', name: 'School of Engineering', icon: 'School' },
-    { id: 'business', name: 'School of Business', icon: 'School' },
-    { id: 'arts-sciences', name: 'School of Arts & Sciences', icon: 'School' },
-    { id: 'medicine', name: 'School of Medicine', icon: 'School' },
-    { id: 'law', name: 'School of Law', icon: 'School' },
-    { id: 'design', name: 'School of Design', icon: 'School' },
+export const initialSchools: School[] = [
+    { id: 'engineering', name: 'School of Engineering' },
+    { id: 'business', name: 'School of Business' },
+    { id: 'arts-sciences', name: 'School of Arts & Sciences' },
+    { id: 'medicine', name: 'School of Medicine' },
+    { id: 'law', name: 'School of Law' },
+    { id: 'design', name: 'School of Design' },
 ];
 
-export interface Class {
-    id: string;
-    name: string;
-    coordinator: string;
-    students?: Student[];
-    day: string;
-    startTime: string;
-    endTime: string;
-    faculties?: string[];
-}
-
-export interface Department {
-    id: string;
-    name: string;
-    hod: string;
-    classes?: Class[];
-}
-
-export interface Program {
-    id: string;
-    name: string;
-    description: string;
-    departments: Department[];
-}
-
-const mockStudents: Student[] = [
+export const mockStudents: Student[] = [
     { id: 's1', name: 'Bob Johnson', rollNo: '20221IST0002' },
     { id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003' },
     { id: 's3', name: 'Diana Prince', rollNo: '20221IST0004' },
@@ -43,7 +17,7 @@ const mockStudents: Student[] = [
     { id: 's5', name: 'Fiona Glenanne', rollNo: '20221IST0006' },
 ];
 
-export const programsBySchool: Record<string, Program[]> = {
+export const initialProgramsBySchool: Record<string, Program[]> = {
     engineering: [
         { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [
             {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing', classes: [
@@ -61,41 +35,41 @@ export const programsBySchool: Record<string, Program[]> = {
                  { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 3), day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: ['Prof. Jeff Hammerbacher'] },
             ]},
         ] },
-        { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper'}] },
+        { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },
         { id: 'btech-mech', name: 'B.Tech in Mechanical Engineering', description: 'Covers the design, construction, and use of machines.', departments: [
-            {id: 'mech-ug', name: 'Undergraduate Mechanical Engineering', hod: 'Dr. James Watt'},
-            {id: 'mech-robotics', name: 'Robotics', hod: 'Dr. Joseph Engelberger'},
-            {id: 'mech-thermo', name: 'Thermal Engineering', hod: 'Dr. Sadi Carnot'},
+            {id: 'mech-ug', name: 'Undergraduate Mechanical Engineering', hod: 'Dr. James Watt', classes: []},
+            {id: 'mech-robotics', name: 'Robotics', hod: 'Dr. Joseph Engelberger', classes: []},
+            {id: 'mech-thermo', name: 'Thermal Engineering', hod: 'Dr. Sadi Carnot', classes: []},
         ] },
         { id: 'btech-elec', name: 'B.Tech in Electrical Engineering', description: 'Deals with electricity, electronics, and electromagnetism.', departments: [
-            {id: 'elec-ug', name: 'Undergraduate Electrical Engineering', hod: 'Dr. Nikola Tesla'},
-            {id: 'elec-vlsi', name: 'VLSI Design', hod: 'Dr. Gordon Moore'},
-            {id: 'elec-power', name: 'Power Systems', hod: 'Dr. Edith Clarke'},
+            {id: 'elec-ug', name: 'Undergraduate Electrical Engineering', hod: 'Dr. Nikola Tesla', classes: []},
+            {id: 'elec-vlsi', name: 'VLSI Design', hod: 'Dr. Gordon Moore', classes: []},
+            {id: 'elec-power', name: 'Power Systems', hod: 'Dr. Edith Clarke', classes: []},
         ] },
-        { id: 'btech-civil', name: 'B.Tech in Civil Engineering', description: 'Concerned with the design and construction of public works.', departments: [{id: 'civil-ug', name: 'Undergraduate Civil Engineering', hod: 'Dr. John Smeaton'}] },
+        { id: 'btech-civil', name: 'B.Tech in Civil Engineering', description: 'Concerned with the design and construction of public works.', departments: [{id: 'civil-ug', name: 'Undergraduate Civil Engineering', hod: 'Dr. John Smeaton', classes: []}] },
     ],
     business: [
-        { id: 'mba-fin', name: 'MBA in Finance', description: 'Prepares students for careers in financial management and analysis.', departments: [{id: 'fin-pg', name: 'Finance Department', hod: 'Dr. Eugene Fama'}] },
-        { id: 'bba-mark', name: 'BBA in Marketing', description: 'Focuses on branding, advertising, and consumer behavior.', departments: [{id: 'mark-ug', name: 'Marketing Department', hod: 'Dr. Philip Kotler'}] },
-        { id: 'mba-mgmt', name: 'MBA in Management', description: 'Covers leadership, organizational behavior, and strategic planning.', departments: [{id: 'mgmt-pg', name: 'Management Department', hod: 'Dr. Peter Drucker'}] },
+        { id: 'mba-fin', name: 'MBA in Finance', description: 'Prepares students for careers in financial management and analysis.', departments: [{id: 'fin-pg', name: 'Finance Department', hod: 'Dr. Eugene Fama', classes: []}] },
+        { id: 'bba-mark', name: 'BBA in Marketing', description: 'Focuses on branding, advertising, and consumer behavior.', departments: [{id: 'mark-ug', name: 'Marketing Department', hod: 'Dr. Philip Kotler', classes: []}] },
+        { id: 'mba-mgmt', name: 'MBA in Management', description: 'Covers leadership, organizational behavior, and strategic planning.', departments: [{id: 'mgmt-pg', name: 'Management Department', hod: 'Dr. Peter Drucker', classes: []}] },
     ],
     'arts-sciences': [
-        { id: 'bsc-phy', name: 'B.Sc in Physics', description: 'Explores the fundamental principles of the universe.', departments: [{id: 'phy-ug', name: 'Physics Department', hod: 'Dr. Albert Einstein'}]},
-        { id: 'ba-hist', name: 'B.A. in History', description: 'The study of past events, particularly in human affairs.', departments: [{id: 'hist-ug', name: 'History Department', hod: 'Dr. Herodotus'}]},
-        { id: 'ma-eng', name: 'M.A. in English Literature', description: 'Analyzes literary works in the English language.', departments: [{id: 'eng-pg', name: 'English Department', hod: 'Dr. William Shakespeare'}]},
+        { id: 'bsc-phy', name: 'B.Sc in Physics', description: 'Explores the fundamental principles of the universe.', departments: [{id: 'phy-ug', name: 'Physics Department', hod: 'Dr. Albert Einstein', classes: []}]},
+        { id: 'ba-hist', name: 'B.A. in History', description: 'The study of past events, particularly in human affairs.', departments: [{id: 'hist-ug', name: 'History Department', hod: 'Dr. Herodotus', classes: []}]},
+        { id: 'ma-eng', name: 'M.A. in English Literature', description: 'Analyzes literary works in the English language.', departments: [{id: 'eng-pg', name: 'English Department', hod: 'Dr. William Shakespeare', classes: []}]},
     ],
     medicine: [
-        { id: 'mbbs', name: 'MBBS', description: 'Prepares students for medical school.', departments: [{id: 'med-ug', name: 'General Medicine', hod: 'Dr. Hippocrates'}]},
-        { id: 'bsc-nur', name: 'B.Sc. in Nursing', description: 'Focuses on patient care and health promotion.', departments: [{id: 'nur-ug', name: 'Nursing Department', hod: 'Dr. Florence Nightingale'}]},
-        { id: 'mph', name: 'Master of Public Health', description: 'Concerned with protecting and improving the health of communities.', departments: [{id: 'ph-pg', name: 'Public Health Department', hod: 'Dr. John Snow'}]},
+        { id: 'mbbs', name: 'MBBS', description: 'Prepares students for medical school.', departments: [{id: 'med-ug', name: 'General Medicine', hod: 'Dr. Hippocrates', classes: []}]},
+        { id: 'bsc-nur', name: 'B.Sc. in Nursing', description: 'Focuses on patient care and health promotion.', departments: [{id: 'nur-ug', name: 'Nursing Department', hod: 'Dr. Florence Nightingale', classes: []}]},
+        { id: 'mph', name: 'Master of Public Health', description: 'Concerned with protecting and improving the health of communities.', departments: [{id: 'ph-pg', name: 'Public Health Department', hod: 'Dr. John Snow', classes: []}]},
     ],
     law: [
-        { id: 'jd', name: 'Juris Doctor (JD)', description: 'The primary professional degree for lawyers.', departments: [{id: 'law-jd', name: 'Jurisprudence', hod: 'Dr. John Austin'}]},
-        { id: 'para', name: 'Paralegal Studies', description: 'Trains students to assist lawyers in their legal work.', departments: [{id: 'law-para', name: 'Paralegal Department', hod: 'Dr. Erin Brockovich'}]},
+        { id: 'jd', name: 'Juris Doctor (JD)', description: 'The primary professional degree for lawyers.', departments: [{id: 'law-jd', name: 'Jurisprudence', hod: 'Dr. John Austin', classes: []}]},
+        { id: 'para', name: 'Paralegal Studies', description: 'Trains students to assist lawyers in their legal work.', departments: [{id: 'law-para', name: 'Paralegal Department', hod: 'Dr. Erin Brockovich', classes: []}]},
     ],
     design: [
-        { id: 'bdes-graph', name: 'B.Des in Graphic Design', description: 'Focuses on visual communication and problem-solving.', departments: [{id: 'graph-ug', name: 'Graphic Design', hod: 'Dr. Paul Rand'}]},
-        { id: 'bdes-indus', name: 'B.Des in Industrial Design', description: 'The design of mass-produced products.', departments: [{id: 'indus-ug', name: 'Industrial Design', hod: 'Dr. Dieter Rams'}]},
-        { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', name: 'Fashion Design', hod: 'Dr. Coco Chanel'}]},
+        { id: 'bdes-graph', name: 'B.Des in Graphic Design', description: 'Focuses on visual communication and problem-solving.', departments: [{id: 'graph-ug', name: 'Graphic Design', hod: 'Dr. Paul Rand', classes: []}]},
+        { id: 'bdes-indus', name: 'B.Des in Industrial Design', description: 'The design of mass-produced products.', departments: [{id: 'indus-ug', name: 'Industrial Design', hod: 'Dr. Dieter Rams', classes: []}]},
+        { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', name: 'Fashion Design', hod: 'Dr. Coco Chanel', classes: []}]},
     ],
 };

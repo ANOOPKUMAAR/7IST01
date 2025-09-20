@@ -12,9 +12,14 @@ import type {
   UserDetails,
   Student,
   UserMode,
+  School,
+  Program,
+  Department,
+  Class,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 import { countPeopleInImage } from "@/ai/flows/count-people-in-image-flow";
+import { initialSchools, initialProgramsBySchool, mockStudents } from "@/lib/school-data";
 
 interface AppContextType {
   subjects: Subject[];
@@ -23,6 +28,8 @@ interface AppContextType {
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
   students: Student[];
+  schools: School[];
+  programsBySchool: Record<string, Program[]>;
   isLoaded: boolean;
   mode: UserMode;
   setMode: (mode: UserMode) => void;
@@ -41,6 +48,19 @@ interface AppContextType {
   requestCameraPermission: (videoEl: HTMLVideoElement | null, showToast?: boolean) => Promise<MediaStream | null>;
   stopCameraStream: (stream: MediaStream | null, videoEl: HTMLVideoElement | null) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
+  // Admin functions
+  addSchool: (school: Omit<School, 'id'>) => void;
+  updateSchool: (school: School) => void;
+  deleteSchool: (schoolId: string) => void;
+  addProgram: (schoolId: string, program: Omit<Program, 'id' | 'departments'>) => void;
+  updateProgram: (schoolId: string, program: Program) => void;
+  deleteProgram: (schoolId: string, programId: string) => void;
+  addDepartment: (schoolId: string, programId: string, department: Omit<Department, 'id' | 'classes'>) => void;
+  updateDepartment: (schoolId: string, programId: string, department: Department) => void;
+  deleteDepartment: (schoolId: string, programId: string, departmentId: string) => void;
+  addClass: (schoolId: string, programId: string, departmentId: string, newClass: Omit<Class, 'id'>) => void;
+  updateClass: (schoolId: string, programId: string, departmentId: string, updatedClass: Class) => void;
+  deleteClass: (schoolId: string, programId: string, departmentId: string, classId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -68,22 +88,6 @@ const initialUserDetails: UserDetails = {
     address: "123 University Lane, Tech City, 12345",
 };
 
-const initialStudents: Student[] = [
-    { id: 's1', name: 'Bob Johnson', rollNo: '20221IST0002' },
-    { id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003' },
-    { id: 's3', name: 'Diana Prince', rollNo: '20221IST0004' },
-    { id: 's4', name: 'Ethan Hunt', rollNo: '20221IST0005' },
-    { id: 's5', name: 'Fiona Glenanne', rollNo: '20221IST0006' },
-    { id: 's6', name: 'George Costanza', rollNo: '20221IST0007' },
-    { id: 's7', name: 'Hannah Montana', rollNo: '20221IST0008' },
-    { id: 's8', name: 'Indiana Jones', rollNo: '20221IST0009' },
-    { id: 's9', name: 'Jack Sparrow', rollNo: '20221IST0010' },
-    { id: 's10', name: 'Lara Croft', rollNo: '20221IST0011' },
-    { id: 's11', name: 'Michael Scott', rollNo: '20221IST0012' },
-    { id: 's12', name: 'Neo', rollNo: '20221IST0013' },
-];
-
-
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -92,18 +96,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const [students, setStudents] = useState<Student[]>(mockStudents);
   const [mode, setModeState] = useState<UserMode>('student');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
   // Ref to hold the latest state to be saved
-  const stateToSave = useRef({ subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode });
+  const stateToSave = useRef({ subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool });
 
   // Update ref whenever state changes
   useEffect(() => {
-    stateToSave.current = { subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode };
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode]);
+    stateToSave.current = { subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool };
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool]);
 
   const requestCameraPermission = useCallback(async (videoEl: HTMLVideoElement | null, showToast = true): Promise<MediaStream | null> => {
     try {
@@ -148,14 +154,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedUserDetails = localStorage.getItem("witrack_userDetails");
       const storedMode = localStorage.getItem("witrack_mode");
       const storedStudents = localStorage.getItem("witrack_students");
+      const storedSchools = localStorage.getItem("witrack_schools");
+      const storedProgramsBySchool = localStorage.getItem("witrack_programsBySchool");
       
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
-      setStudents(storedStudents ? JSON.parse(storedStudents) : initialStudents);
+      setStudents(storedStudents ? JSON.parse(storedStudents) : mockStudents);
       setModeState(storedMode ? JSON.parse(storedMode) : 'student');
+      setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
+      setProgramsBySchool(storedProgramsBySchool ? JSON.parse(storedProgramsBySchool) : initialProgramsBySchool);
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -164,8 +174,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
       setUserDetails(initialUserDetails);
-      setStudents(initialStudents);
+      setStudents(mockStudents);
       setModeState('student');
+      setSchools(initialSchools);
+      setProgramsBySchool(initialProgramsBySchool);
     }
     setIsLoaded(true);
   }, []);
@@ -174,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const saveState = useCallback(() => {
       if (!isLoaded) return;
       try {
-        const { subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students } = stateToSave.current;
+        const { subjects, attendance, wifiZones, activeCheckIn, userDetails, mode, students, schools, programsBySchool } = stateToSave.current;
         localStorage.setItem("witrack_subjects", JSON.stringify(subjects));
         localStorage.setItem("witrack_attendance", JSON.stringify(attendance));
         localStorage.setItem("witrack_wifiZones", JSON.stringify(wifiZones));
@@ -182,6 +194,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_userDetails", JSON.stringify(userDetails));
         localStorage.setItem("witrack_mode", JSON.stringify(mode));
         localStorage.setItem("witrack_students", JSON.stringify(students));
+        localStorage.setItem("witrack_schools", JSON.stringify(schools));
+        localStorage.setItem("witrack_programsBySchool", JSON.stringify(programsBySchool));
       } catch (error) {
           console.error("Failed to save data to localStorage", error);
       }
@@ -255,7 +269,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     const canvas = document.createElement("canvas");
-    // Ensure video is playing and has dimensions
     if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
       toast({
         title: "Camera Error",
@@ -299,8 +312,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast({ title: "Already Checked In", description: "You must check out from your current session first.", variant: "destructive" });
       return;
     }
-
-    // Check for defined Wi-Fi zones.
     if (wifiZones.length === 0) {
       toast({
         title: "Wi-Fi Zone Required",
@@ -309,9 +320,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-
-    // Check connection type using the Network Information API.
-    // @ts-ignore - for navigator.connection
+    // @ts-ignore
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (!connection || connection.type !== 'wifi') {
       toast({
@@ -321,15 +330,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-
     const newActiveCheckIn = { subjectId, checkInTime: new Date().toISOString() };
     setActiveCheckIn(newActiveCheckIn);
     const subject = subjects.find(s => s.id === subjectId);
     toast({ title: "Checked In", description: `You have checked in for ${subject?.name}.` });
     
-    // AI headcount
     const stream = await requestCameraPermission(videoRef.current, false);
-    // Give camera time to initialize
     setTimeout(() => {
       handleHeadcount(videoRef.current)
       stopCameraStream(stream, videoRef.current);
@@ -386,6 +392,152 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
+  // Admin functions
+  const addSchool = (school: Omit<School, 'id'>) => {
+    const newSchool = { ...school, id: `school_${Date.now()}` };
+    setSchools(prev => [...prev, newSchool]);
+    setProgramsBySchool(prev => ({...prev, [newSchool.id]: []}));
+    toast({ title: 'School Added' });
+  };
+
+  const updateSchool = (updatedSchool: School) => {
+    setSchools(prev => prev.map(s => s.id === updatedSchool.id ? updatedSchool : s));
+    toast({ title: 'School Updated' });
+  };
+
+  const deleteSchool = (schoolId: string) => {
+    setSchools(prev => prev.filter(s => s.id !== schoolId));
+    setProgramsBySchool(prev => {
+        const newPrograms = {...prev};
+        delete newPrograms[schoolId];
+        return newPrograms;
+    });
+    toast({ title: 'School Deleted', variant: 'destructive' });
+  };
+
+  const addProgram = (schoolId: string, program: Omit<Program, 'id' | 'departments'>) => {
+    const newProgram = { ...program, id: `prog_${Date.now()}`, departments: [] };
+    setProgramsBySchool(prev => ({
+        ...prev,
+        [schoolId]: [...(prev[schoolId] || []), newProgram]
+    }));
+    toast({ title: 'Program Added' });
+  };
+
+  const updateProgram = (schoolId: string, updatedProgram: Program) => {
+    setProgramsBySchool(prev => ({
+        ...prev,
+        [schoolId]: (prev[schoolId] || []).map(p => p.id === updatedProgram.id ? updatedProgram : p)
+    }));
+    toast({ title: 'Program Updated' });
+  };
+
+  const deleteProgram = (schoolId: string, programId: string) => {
+    setProgramsBySchool(prev => ({
+        ...prev,
+        [schoolId]: (prev[schoolId] || []).filter(p => p.id !== programId)
+    }));
+    toast({ title: 'Program Deleted', variant: 'destructive' });
+  };
+
+  const addDepartment = (schoolId: string, programId: string, department: Omit<Department, 'id' | 'classes'>) => {
+    const newDepartment = { ...department, id: `dept_${Date.now()}`, classes: [] };
+    setProgramsBySchool(prev => {
+        const schoolPrograms = (prev[schoolId] || []).map(p => {
+            if (p.id === programId) {
+                return { ...p, departments: [...p.departments, newDepartment] };
+            }
+            return p;
+        });
+        return { ...prev, [schoolId]: schoolPrograms };
+    });
+    toast({ title: 'Department Added' });
+  };
+
+  const updateDepartment = (schoolId: string, programId: string, updatedDepartment: Department) => {
+     setProgramsBySchool(prev => {
+        const schoolPrograms = (prev[schoolId] || []).map(p => {
+            if (p.id === programId) {
+                return { ...p, departments: p.departments.map(d => d.id === updatedDepartment.id ? updatedDepartment : d) };
+            }
+            return p;
+        });
+        return { ...prev, [schoolId]: schoolPrograms };
+    });
+    toast({ title: 'Department Updated' });
+  };
+
+  const deleteDepartment = (schoolId: string, programId: string, departmentId: string) => {
+    setProgramsBySchool(prev => {
+        const schoolPrograms = (prev[schoolId] || []).map(p => {
+            if (p.id === programId) {
+                return { ...p, departments: p.departments.filter(d => d.id !== departmentId) };
+            }
+            return p;
+        });
+        return { ...prev, [schoolId]: schoolPrograms };
+    });
+    toast({ title: 'Department Deleted', variant: 'destructive' });
+  };
+
+  const addClass = (schoolId: string, programId: string, departmentId: string, newClass: Omit<Class, 'id'>) => {
+    const finalNewClass = { ...newClass, id: `class_${Date.now()}` };
+    setProgramsBySchool(prev => {
+        const schoolPrograms = (prev[schoolId] || []).map(p => {
+            if (p.id === programId) {
+                const newDepartments = p.departments.map(d => {
+                    if (d.id === departmentId) {
+                        return { ...d, classes: [...d.classes, finalNewClass] };
+                    }
+                    return d;
+                });
+                return { ...p, departments: newDepartments };
+            }
+            return p;
+        });
+        return { ...prev, [schoolId]: schoolPrograms };
+    });
+    toast({ title: 'Class Added' });
+  };
+  
+  const updateClass = (schoolId: string, programId: string, departmentId: string, updatedClass: Class) => {
+    setProgramsBySchool(prev => {
+        const schoolPrograms = (prev[schoolId] || []).map(p => {
+            if (p.id === programId) {
+                const newDepartments = p.departments.map(d => {
+                    if (d.id === departmentId) {
+                        return { ...d, classes: d.classes.map(c => c.id === updatedClass.id ? updatedClass : c) };
+                    }
+                    return d;
+                });
+                return { ...p, departments: newDepartments };
+            }
+            return p;
+        });
+        return { ...prev, [schoolId]: schoolPrograms };
+    });
+    toast({ title: 'Class Updated' });
+  };
+
+  const deleteClass = (schoolId: string, programId: string, departmentId: string, classId: string) => {
+    setProgramsBySchool(prev => {
+        const schoolPrograms = (prev[schoolId] || []).map(p => {
+            if (p.id === programId) {
+                const newDepartments = p.departments.map(d => {
+                    if (d.id === departmentId) {
+                        return { ...d, classes: d.classes.filter(c => c.id !== classId) };
+                    }
+                    return d;
+                });
+                return { ...p, departments: newDepartments };
+            }
+            return p;
+        });
+        return { ...prev, [schoolId]: schoolPrograms };
+    });
+    toast({ title: 'Class Deleted', variant: 'destructive' });
+  };
+
   const value = {
     subjects,
     attendance,
@@ -393,6 +545,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeCheckIn,
     userDetails,
     students,
+    schools,
+    programsBySchool,
     isLoaded,
     mode,
     setMode,
@@ -411,11 +565,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     requestCameraPermission,
     stopCameraStream,
     videoRef,
+    // Admin functions
+    addSchool,
+    updateSchool,
+    deleteSchool,
+    addProgram,
+    updateProgram,
+    deleteProgram,
+    addDepartment,
+    updateDepartment,
+    deleteDepartment,
+    addClass,
+    updateClass,
+    deleteClass,
   };
 
   return <AppContext.Provider value={value}>
       {children}
-      {/* Hidden video element for camera access */}
       <video ref={videoRef} className="hidden" autoPlay muted playsInline />
     </AppContext.Provider>;
 }

@@ -4,7 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { FileUp, List, LayoutGrid, Briefcase, School } from "lucide-react";
+import { FileUp, List, LayoutGrid, School, PlusCircle, Edit, Trash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,36 +18,82 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Timetable } from "@/components/dashboard/time-table";
 import { SubjectCardsView } from "@/components/dashboard/subject-cards-view";
 import { useAppContext } from "@/contexts/app-context";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { schools } from "@/lib/school-data";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminActionMenu } from "@/components/admin/admin-action-menu";
+import { SchoolFormDialog } from "@/components/admin/school-form-dialog";
+import type { School as SchoolType } from "@/lib/types";
 
 function AdminDashboard() {
+  const { schools, mode } = useAppContext();
+  const [isAddSchoolOpen, setAddSchoolOpen] = useState(false);
 
-    return (
-        <div className="flex flex-col gap-6">
-             <div>
-                <h2 className="text-2xl font-bold tracking-tight">
-                    University Overview
-                </h2>
-                <p className="text-muted-foreground">
-                    Select a school to view its details.
-                </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {schools.map((school) => (
-                     <Link href={`/schools/${school.id}`} key={school.id}>
-                        <Card className="hover:bg-accent/50 cursor-pointer transition-colors h-full">
-                            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                                <School className="h-10 w-10 text-primary" />
-                                <CardTitle className="text-xl">{school.name}</CardTitle>
-                            </CardHeader>
-                        </Card>
-                    </Link>
-                ))}
-            </div>
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">
+            University Overview
+          </h2>
+          <p className="text-muted-foreground">
+            Select a school to view its details.
+          </p>
         </div>
-    )
+        {mode === 'admin' && (
+           <Dialog open={isAddSchoolOpen} onOpenChange={setAddSchoolOpen}>
+            <DialogTrigger asChild>
+              <Button><PlusCircle /> Add School</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New School</DialogTitle>
+                <DialogDescription>Enter the name of the new school.</DialogDescription>
+              </DialogHeader>
+              <SchoolFormDialog onDone={() => setAddSchoolOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {schools.map((school) => (
+          <SchoolCard key={school.id} school={school} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SchoolCard({ school }: { school: SchoolType }) {
+  const { mode, deleteSchool } = useAppContext();
+  const [isEditSchoolOpen, setEditSchoolOpen] = useState(false);
+
+  return (
+    <Card className="relative group">
+      <Link href={`/schools/${school.id}`} className="block hover:bg-accent/50 cursor-pointer transition-colors h-full">
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+          <School className="h-10 w-10 text-primary" />
+          <CardTitle className="text-xl">{school.name}</CardTitle>
+        </CardHeader>
+      </Link>
+      {mode === 'admin' && (
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <AdminActionMenu
+            onEdit={() => setEditSchoolOpen(true)}
+            onDelete={() => deleteSchool(school.id)}
+            deleteConfirmationMessage={`Are you sure you want to delete the school "${school.name}"? This will delete all associated programs, departments, and classes.`}
+          />
+          <Dialog open={isEditSchoolOpen} onOpenChange={setEditSchoolOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit School</DialogTitle>
+                <DialogDescription>Update the school's name.</DialogDescription>
+              </DialogHeader>
+              <SchoolFormDialog school={school} onDone={() => setEditSchoolOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+    </Card>
+  )
 }
 
 
@@ -121,7 +167,9 @@ function StudentDashboard() {
 
 
 export default function DashboardPage() {
-    const { mode } = useAppContext();
+    const { mode, isLoaded } = useAppContext();
+
+    if (!isLoaded) return null; // Or a loading skeleton
 
     if (mode === 'admin') {
         return <AdminDashboard />;

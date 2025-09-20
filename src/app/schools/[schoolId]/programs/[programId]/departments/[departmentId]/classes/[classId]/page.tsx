@@ -187,7 +187,6 @@ export default function ClassDetailsPage() {
         <CardContent>
           <Accordion
             type="multiple"
-            collapsible
             className="w-full"
             defaultValue={["student-roster"]}
           >

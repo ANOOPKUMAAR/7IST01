@@ -9,10 +9,17 @@ export const schools = [
     { id: 'design', name: 'School of Design', icon: 'School' },
 ];
 
+export interface Class {
+    id: string;
+    name: string;
+    coordinator: string;
+}
+
 export interface Department {
     id: string;
     name: string;
     hod: string;
+    classes?: Class[];
 }
 
 export interface Program {
@@ -25,10 +32,20 @@ export interface Program {
 export const programsBySchool: Record<string, Program[]> = {
     engineering: [
         { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [
-            {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing'},
-            {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy'},
-            {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick'},
-            {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil'},
+            {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing', classes: [
+                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace' },
+                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth' },
+            ]},
+            {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
+                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton' },
+                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng' },
+            ]},
+            {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
+                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest' },
+            ]},
+            {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
+                 { id: 'ds301', name: 'Foundations of Data Science', coordinator: 'Prof. Jeff Hammerbacher' },
+            ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper'}] },
         { id: 'btech-mech', name: 'B.Tech in Mechanical Engineering', description: 'Covers the design, construction, and use of machines.', departments: [

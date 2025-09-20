@@ -262,8 +262,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const bulkAddSubjects = (newSubjects: Omit<Subject, 'id'>[]) => {
     const subjectsToAdd = newSubjects.map(s => ({ ...s, id: `subj_${Date.now()}_${Math.random()}` }));
-    setSubjects(prev => [...prev, ...subjectsToAdd]);
-    toast({ title: "Subjects Imported", description: `${subjectsToAdd.length} new subjects have been added from the file.` });
+    setSubjects(subjectsToAdd);
+    setAttendance({}); // Clear old attendance records
+    toast({ title: "Timetable Replaced", description: `${subjectsToAdd.length} new subjects have been imported.` });
   };
 
   const updateSubject = (updatedSubject: Subject) => {

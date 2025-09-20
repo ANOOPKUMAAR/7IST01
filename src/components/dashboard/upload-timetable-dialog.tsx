@@ -82,7 +82,7 @@ export function UploadTimetableDialog({ onDone }: { onDone: () => void }) {
             onChange={handleFileChange}
           />
           <p className="text-xs text-muted-foreground">
-            Upload an image (PNG, JPG) or a PDF of your timetable.
+            Uploading a new file will replace your current timetable.
           </p>
         </div>
       </div>
@@ -98,7 +98,7 @@ export function UploadTimetableDialog({ onDone }: { onDone: () => void }) {
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
             </>
           ) : (
-            "Upload and Save"
+            "Upload and Replace"
           )}
         </Button>
       </DialogFooter>

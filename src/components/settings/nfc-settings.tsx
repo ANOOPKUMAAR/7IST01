@@ -12,22 +12,20 @@ import {
 } from "@/components/ui/card";
 import { Nfc } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMemo, useState, useEffect } from "react";
 import type { Subject } from "@/lib/types";
 
 export function NfcSettings() {
   const { subjects, activeCheckIn, checkIn, checkOut, isLoaded } = useAppContext();
   const { toast } = useToast();
-  const [currentSubject, setCurrentSubject] = useState<Subject | undefined>(undefined);
 
-  useEffect(() => {
-    if (!isLoaded) return;
+  const currentSubject = (() => {
+    if (!isLoaded) return undefined;
 
     const now = new Date();
     const dayOfWeek = now.getDay();
     const currentTime = now.toTimeString().slice(0, 5);
 
-    const subjectForNow = subjects.find(subject => {
+    return subjects.find(subject => {
         if (subject.dayOfWeek !== dayOfWeek) return false;
 
         const [startHour, startMinute] = subject.expectedCheckIn.split(':').map(Number);
@@ -40,9 +38,7 @@ export function NfcSettings() {
 
         return nowTime >= startTime && nowTime <= endTime;
     });
-
-    setCurrentSubject(subjectForNow);
-  }, [subjects, isLoaded, activeCheckIn]);
+  })();
 
   const handleNfcScan = () => {
     if (activeCheckIn) {

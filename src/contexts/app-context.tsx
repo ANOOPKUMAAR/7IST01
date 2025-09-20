@@ -77,7 +77,7 @@ const initialSubjects: Subject[] = [
 const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => { return {} };
 
 const initialWifiZones: WifiZone[] = [
-    { id: 'wifi1', ssid: 'Campus-WiFi' },
+    { id: 'wifi1', ssid: 'TP-Link_92EC_5G' },
 ];
 
 const initialUserDetails: Omit<UserDetails, 'deviceId' | 'avatar'> = {
@@ -518,7 +518,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (p.id === programId) {
                 const newDepartments = (p.departments || []).map(d => {
                     if (d.id === departmentId) {
-                        return { ...d, classes: [...(d.classes || []), finalNewClass] };
+                        // Ensure students and faculties are arrays
+                        const classToAdd: Class = {
+                            ...finalNewClass,
+                            students: finalNewClass.students || [],
+                            faculties: finalNewClass.faculties || [],
+                        };
+                        return { ...d, classes: [...(d.classes || []), classToAdd] };
                     }
                     return d;
                 });

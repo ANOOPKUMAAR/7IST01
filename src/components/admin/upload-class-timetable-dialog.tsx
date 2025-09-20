@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { extractClasses } from "@/ai/flows/extract-classes-flow";
 import { DialogFooter, DialogClose } from "@/components/ui/dialog";
+import type { Student } from "@/lib/types";
 
 interface UploadClassTimetableDialogProps {
   schoolId: string;
@@ -24,10 +25,25 @@ export function UploadClassTimetableDialog({
   departmentId,
   onDone,
 }: UploadClassTimetableDialogProps) {
-  const { addClass } = useAppContext();
+  const { addClass, programsBySchool } = useAppContext();
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const getStudentsInDepartment = (): Student[] => {
+    const program = programsBySchool[schoolId]?.find(p => p.id === programId);
+    const department = program?.departments.find(d => d.id === departmentId);
+    if (!department) return [];
+
+    const studentMap = new Map<string, Student>();
+    department.classes.forEach(cls => {
+        cls.students.forEach(student => {
+            studentMap.set(student.id, student);
+        });
+    });
+
+    return Array.from(studentMap.values());
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -42,6 +58,7 @@ export function UploadClassTimetableDialog({
     }
 
     setIsUploading(true);
+    const studentsToEnroll = getStudentsInDepartment();
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -51,11 +68,15 @@ export function UploadClassTimetableDialog({
         const result = await extractClasses({ fileDataUri });
         if (result.classes && result.classes.length > 0) {
           result.classes.forEach((cls) => {
-            addClass(schoolId, programId, departmentId, cls);
+            addClass(schoolId, programId, departmentId, {
+                ...cls,
+                students: studentsToEnroll,
+                faculties: []
+            });
           });
           toast({
             title: "Classes Imported",
-            description: `${result.classes.length} new classes have been added from the file.`,
+            description: `${result.classes.length} new classes have been added and all department students enrolled.`,
           });
           onDone();
         } else {
@@ -98,7 +119,7 @@ export function UploadClassTimetableDialog({
             onChange={handleFileChange}
           />
           <p className="text-xs text-muted-foreground">
-            Upload an image (PNG, JPG) or a PDF of the class schedule.
+            Upload an image (PNG, JPG) or a PDF of the class schedule. All students in this department will be enrolled in the created classes.
           </p>
         </div>
       </div>

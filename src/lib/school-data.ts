@@ -44,7 +44,7 @@ export const programsBySchool: Record<string, Program[]> = {
                 { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest' },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ds301', name: 'Foundations of Data Science', coordinator: 'Prof. Jeff Hammerbacher' },
+                 { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher' },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper'}] },

@@ -19,7 +19,7 @@ const facultyNavItems = [
   { href: "/", label: "Dashboard", icon: Briefcase },
   { href: "/attendance-visuals", label: "Attendance", icon: ClipboardList },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/profile", label: "Mode", icon: User },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function BottomNav() {

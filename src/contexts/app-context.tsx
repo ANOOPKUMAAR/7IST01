@@ -16,6 +16,7 @@ import type {
   School,
   Program,
   Class,
+  Department,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 import { countPeopleInImage } from "@/ai/flows/count-people-in-image-flow";
@@ -342,21 +343,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-    
-    // 2. Check if the user is connected to Wi-Fi. (Simulated check for SSID)
-    // In a real mobile app, you would get the SSID and compare it to wifiZones.
-    // For web, we are limited to checking the connection type.
-    // @ts-ignore
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (!connection || connection.type !== 'wifi') {
-      toast({
-        title: "Not in a Valid Wi-Fi Zone",
-        description: "You must be connected to an authorized Wi-Fi network to check in.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+        
     // 3. If all checks pass, proceed with check-in.
     const newActiveCheckIn = { subjectId, checkInTime: new Date().toISOString() };
     setActiveCheckIn(newActiveCheckIn);

@@ -38,16 +38,18 @@ export default function SchoolDetailsPage() {
       
       {programs.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {programs.map((program, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-                <div className="space-y-1 flex-1">
-                    <CardTitle>{program.name}</CardTitle>
-                    <CardDescription>{program.description}</CardDescription>
-                </div>
-                <BookOpen className="h-8 w-8 text-muted-foreground"/>
-              </CardHeader>
-            </Card>
+          {programs.map((program) => (
+            <Link href={`/schools/${schoolId}/programs/${program.id}`} key={program.id}>
+                <Card className="hover:bg-accent/50 cursor-pointer transition-colors h-full">
+                <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+                    <div className="space-y-1 flex-1">
+                        <CardTitle>{program.name}</CardTitle>
+                        <CardDescription>{program.description}</CardDescription>
+                    </div>
+                    <BookOpen className="h-8 w-8 text-muted-foreground"/>
+                </CardHeader>
+                </Card>
+            </Link>
           ))}
         </div>
       ) : (

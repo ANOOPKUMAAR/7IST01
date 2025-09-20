@@ -4,6 +4,7 @@
 import { useParams, notFound } from "next/navigation";
 import { schools, programsBySchool } from "@/lib/school-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft, Users } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -39,42 +40,56 @@ export default function ClassDetailsPage() {
         <div>
             <h2 className="text-2xl font-bold tracking-tight">{cls.name}</h2>
             <p className="text-muted-foreground">
-                Enrolled students.
+                Class details and student roster.
             </p>
         </div>
       </div>
       
       <Card>
         <CardHeader>
-            <CardTitle>Student Roster</CardTitle>
+            <CardTitle>Class Information</CardTitle>
             <CardDescription>
-                List of all students enrolled in this class.
+                Details for this class.
             </CardDescription>
         </CardHeader>
         <CardContent>
-            {students.length > 0 ? (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Roll Number</TableHead>
-                            <TableHead>Student Name</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {students.map((student) => (
-                            <TableRow key={student.id}>
-                                <TableCell className="font-mono">{student.rollNo}</TableCell>
-                                <TableCell>{student.name}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            ) : (
-                <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
-                    <Users className="h-10 w-10" />
-                    <p>No students enrolled in this class.</p>
-                </div>
-            )}
+            <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="student-roster">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                           <Users className="h-5 w-5" />
+                           <span className="font-semibold">Student Roster ({students.length})</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        {students.length > 0 ? (
+                            <div className="pt-4 border-t">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Roll Number</TableHead>
+                                            <TableHead>Student Name</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {students.map((student) => (
+                                            <TableRow key={student.id}>
+                                                <TableCell className="font-mono">{student.rollNo}</TableCell>
+                                                <TableCell>{student.name}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
+                                <Users className="h-10 w-10" />
+                                <p>No students enrolled in this class.</p>
+                            </div>
+                        )}
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </CardContent>
       </Card>
     </div>

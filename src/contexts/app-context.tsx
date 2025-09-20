@@ -81,7 +81,7 @@ const initialWifiZones: WifiZone[] = [
     { id: 'wifi1', ssid: 'Campus-WiFi' },
 ];
 
-const initialUserDetails: UserDetails = {
+const initialUserDetails: Omit<UserDetails, 'deviceId'> = {
     name: "Alex Doe",
     rollNo: "20221IST0001",
     program: "Bachelor of Technology",
@@ -110,6 +110,10 @@ function useDebounce(value: any, delay: number) {
     return debouncedValue;
 }
 
+function generateDeviceId() {
+    return 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -117,7 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
-  const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
+  const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, deviceId: '' });
   const [students, setStudents] = useState<Student[]>(mockStudents);
   const [mode, setModeState] = useState<UserMode>('student');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -147,17 +151,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedAttendance = localStorage.getItem("witrack_attendance");
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
-      const storedUserDetails = localStorage.getItem("witrack_userDetails");
       const storedMode = localStorage.getItem("witrack_mode");
       const storedStudents = localStorage.getItem("witrack_students");
       const storedSchools = localStorage.getItem("witrack_schools");
       const storedProgramsBySchool = localStorage.getItem("witrack_programsBySchool");
+
+      let storedUserDetails = localStorage.getItem("witrack_userDetails");
+      let userDetailsData;
+
+      if (storedUserDetails) {
+          userDetailsData = JSON.parse(storedUserDetails);
+          if (!userDetailsData.deviceId) {
+              userDetailsData.deviceId = generateDeviceId();
+          }
+      } else {
+          userDetailsData = { ...initialUserDetails, deviceId: generateDeviceId() };
+      }
+      setUserDetails(userDetailsData);
       
       setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
-      setUserDetails(storedUserDetails ? JSON.parse(storedUserDetails) : initialUserDetails);
       setStudents(storedStudents ? JSON.parse(storedStudents) : mockStudents);
       setModeState(storedMode ? JSON.parse(storedMode) : 'student');
       setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
@@ -165,11 +180,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
+      const deviceId = generateDeviceId();
+      setUserDetails({ ...initialUserDetails, deviceId });
       setSubjects(initialSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
-      setUserDetails(initialUserDetails);
       setStudents(mockStudents);
       setModeState('student');
       setSchools(initialSchools);
@@ -334,7 +350,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    // 1. Check if any Wi-Fi zones are defined by the admin.
     if (wifiZones.length === 0) {
       toast({
         title: "Wi-Fi Zone Required",
@@ -344,8 +359,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
         
-    // 3. If all checks pass, proceed with check-in.
-    const newActiveCheckIn = { subjectId, checkInTime: new Date().toISOString() };
+    const newActiveCheckIn: ActiveCheckIn = {
+      subjectId,
+      checkInTime: new Date().toISOString(),
+      deviceId: userDetails.deviceId,
+    };
     setActiveCheckIn(newActiveCheckIn);
     const subject = subjects.find(s => s.id === subjectId);
     toast({ title: "Checked In", description: `You have checked in for ${subject?.name}.` });
@@ -402,8 +420,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Record Deleted", variant: "destructive" });
   };
 
-  const updateUserDetails = (details: UserDetails) => {
-    setUserDetails(details);
+  const updateUserDetails = (details: Omit<UserDetails, 'deviceId'>) => {
+    setUserDetails(prev => ({...prev, ...details}));
     toast({ title: "Profile Updated", description: "Your details have been saved." });
   };
 
@@ -629,7 +647,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkIn,
     checkOut,
     deleteAttendanceRecord,
-    updateUserDetails,
+    updateUserDetails: updateUserDetails as (details: UserDetails) => void,
     hasCameraPermission,
     setHasCameraPermission,
     requestCameraPermission,

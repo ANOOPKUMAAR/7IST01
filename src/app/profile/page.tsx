@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAppContext } from "@/contexts/app-context";
@@ -38,11 +39,11 @@ function InfoRow({ label, value }: { label: string, value: string }) {
 
 function EditProfileDialog({ onDone }: { onDone: () => void }) {
     const { userDetails, updateUserDetails } = useAppContext();
-    const { register, handleSubmit } = useForm<UserDetails>({
+    const { register, handleSubmit } = useForm<Omit<UserDetails, 'deviceId'>>({
         defaultValues: userDetails
     });
 
-    const onSubmit: SubmitHandler<UserDetails> = (data) => {
+    const onSubmit: SubmitHandler<Omit<UserDetails, 'deviceId'>> = (data) => {
         updateUserDetails(data);
         onDone();
     };
@@ -205,6 +206,9 @@ export default function ProfilePage() {
                         <InfoRow label="Section" value={userDetails.section} />
                         <InfoRow label="Phone Number" value={userDetails.phone} />
                         <InfoRow label="Parent's Name" value={userDetails.parentName} />
+                         <div className="md:col-span-2">
+                            <InfoRow label="Device ID" value={userDetails.deviceId} />
+                        </div>
                         <div className="md:col-span-2">
                             <InfoRow label="Address" value={userDetails.address} />
                         </div>

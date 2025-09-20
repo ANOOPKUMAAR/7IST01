@@ -10,11 +10,11 @@ export const initialSchools: School[] = [
 ];
 
 export const mockStudents: Student[] = [
-    { id: 's1', name: 'Bob Johnson', rollNo: '20221IST0002' },
-    { id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003' },
-    { id: 's3', name: 'Diana Prince', rollNo: '20221IST0004' },
-    { id: 's4', name: 'Ethan Hunt', rollNo: '20221IST0005' },
-    { id: 's5', name: 'Fiona Glenanne', rollNo: '20221IST0006' },
+    { id: 's1', name: 'Bob Johnson', rollNo: '20221IST0002', deviceId: 'dev_abc123' },
+    { id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003', deviceId: 'dev_def456' },
+    { id: 's3', name: 'Diana Prince', rollNo: '20221IST0004', deviceId: 'dev_ghi789' },
+    { id: 's4', name: 'Ethan Hunt', rollNo: '20221IST0005', deviceId: 'dev_jkl012' },
+    { id: 's5', name: 'Fiona Glenanne', rollNo: '20221IST0006', deviceId: 'dev_mno345' },
 ];
 
 export const initialProgramsBySchool: Record<string, Program[]> = {

@@ -26,6 +26,7 @@ export interface WifiZone {
 export interface ActiveCheckIn {
   subjectId: string;
   checkInTime: string;
+  deviceId: string;
 }
 
 export interface UserDetails {
@@ -38,12 +39,14 @@ export interface UserDetails {
   phone: string;
   parentName: string;
   address: string;
+  deviceId: string;
 }
 
 export interface Student {
     id: string;
     name: string;
     rollNo: string;
+    deviceId: string;
 }
 
 export interface Class {

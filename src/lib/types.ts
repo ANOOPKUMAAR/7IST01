@@ -44,3 +44,6 @@ export interface Student {
     name: string;
     rollNo: string;
 }
+
+
+export type UserMode = 'student' | 'faculty' | 'admin';

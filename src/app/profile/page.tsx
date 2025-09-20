@@ -22,9 +22,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import type { UserDetails } from "@/lib/types";
-import { User, Edit, Briefcase, GraduationCap } from "lucide-react";
+import { User, Edit, Briefcase, GraduationCap, Database } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 function InfoRow({ label, value }: { label: string, value: string }) {
     return (
@@ -138,24 +139,26 @@ export default function ProfilePage() {
         <Card>
             <CardHeader>
                 <CardTitle>User Mode</CardTitle>
-                <CardDescription>Switch between student and faculty views.</CardDescription>
+                <CardDescription>Switch between student, faculty, and admin views.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex items-center space-x-4 rounded-md border p-4">
-                    <div className="flex items-center space-x-2">
-                        <GraduationCap />
-                        <Label htmlFor="mode-switch">Student</Label>
-                    </div>
-                    <Switch 
-                        id="mode-switch"
-                        checked={mode === 'faculty'}
-                        onCheckedChange={(checked) => setMode(checked ? 'faculty' : 'student')}
-                    />
-                    <div className="flex items-center space-x-2">
-                        <Briefcase />
-                        <Label htmlFor="mode-switch">Faculty</Label>
-                    </div>
-                </div>
+                <RadioGroup value={mode} onValueChange={(value) => setMode(value as any)} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <Label className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 [&:has([data-state=checked])]:bg-accent">
+                        <RadioGroupItem value="student" id="student-mode" />
+                        <GraduationCap className="h-6 w-6" />
+                        <span>Student</span>
+                    </Label>
+                     <Label className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 [&:has([data-state=checked])]:bg-accent">
+                        <RadioGroupItem value="faculty" id="faculty-mode" />
+                        <Briefcase className="h-6 w-6" />
+                        <span>Faculty</span>
+                    </Label>
+                     <Label className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 [&:has([data-state=checked])]:bg-accent">
+                        <RadioGroupItem value="admin" id="admin-mode" />
+                        <Database className="h-6 w-6" />
+                        <span>Admin</span>
+                    </Label>
+                </RadioGroup>
             </CardContent>
         </Card>
 
@@ -253,7 +256,7 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
         </>
-      ) : (
+      ) : mode === 'faculty' ? (
         <Card>
             <CardHeader className="items-center text-center">
                 <Briefcase className="h-12 w-12 text-muted-foreground mb-2"/>
@@ -262,6 +265,17 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
                  <p className="text-center text-muted-foreground">You can manage your courses and view student attendance from the main dashboard.</p>
+            </CardContent>
+        </Card>
+      ) : (
+        <Card>
+            <CardHeader className="items-center text-center">
+                <Database className="h-12 w-12 text-muted-foreground mb-2"/>
+                <CardTitle>Admin Mode</CardTitle>
+                <CardDescription>This is the admin dashboard view. More features coming soon!</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <p className="text-center text-muted-foreground">You can manage all app data and settings from here.</p>
             </CardContent>
         </Card>
       )}

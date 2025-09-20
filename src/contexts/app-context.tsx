@@ -11,11 +11,10 @@ import type {
   ActiveCheckIn,
   UserDetails,
   Student,
+  UserMode,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 import { countPeopleInImage } from "@/ai/flows/count-people-in-image-flow";
-
-type UserMode = 'student' | 'faculty';
 
 interface AppContextType {
   subjects: Subject[];
@@ -197,7 +196,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
-    toast({ title: `Switched to ${newMode === 'faculty' ? 'Faculty' : 'Student'} Mode`});
+    let modeName = "Student";
+    if (newMode === 'faculty') modeName = "Faculty";
+    if (newMode === 'admin') modeName = "Admin";
+    toast({ title: `Switched to ${modeName} Mode`});
   }
 
   const addSubject = (subject: Omit<Subject, "id">) => {

@@ -317,24 +317,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast({ title: "Already Checked In", description: "You must check out from your current session first.", variant: "destructive" });
       return;
     }
+    
+    // 1. Check if any Wi-Fi zones are defined by the admin.
     if (wifiZones.length === 0) {
       toast({
         title: "Wi-Fi Zone Required",
-        description: "Please define at least one Wi-Fi zone in settings to enable check-in.",
+        description: "An administrator must define at least one Wi-Fi zone in settings to enable check-in.",
         variant: "destructive",
       });
       return;
     }
+    
+    // 2. Check if the user is connected to Wi-Fi. (Simulated check for SSID)
+    // In a real mobile app, you would get the SSID and compare it to wifiZones.
+    // For web, we are limited to checking the connection type.
     // @ts-ignore
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (!connection || connection.type !== 'wifi') {
       toast({
-        title: "Wi-Fi Connection Required",
-        description: "You must be connected to a Wi-Fi network to check in. Cellular data is not permitted.",
+        title: "Not in a Valid Wi-Fi Zone",
+        description: "You must be connected to an authorized Wi-Fi network to check in.",
         variant: "destructive",
       });
       return;
     }
+    
+    // 3. If all checks pass, proceed with check-in.
     const newActiveCheckIn = { subjectId, checkInTime: new Date().toISOString() };
     setActiveCheckIn(newActiveCheckIn);
     const subject = subjects.find(s => s.id === subjectId);

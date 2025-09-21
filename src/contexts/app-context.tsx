@@ -19,6 +19,7 @@ import type {
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 import { getHeadcount } from "@/ai/flows/get-headcount-flow";
 import { initialSchools, initialProgramsBySchool, mockStudents } from "@/lib/school-data";
+import { useRouter } from "next/navigation";
 
 interface AppContextType {
   subjects: Subject[];
@@ -32,6 +33,7 @@ interface AppContextType {
   isLoaded: boolean;
   mode: UserMode | null;
   setMode: (mode: UserMode) => void;
+  logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
   updateSubject: (subject: Subject) => void;
@@ -96,6 +98,7 @@ function generateDeviceId() {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
@@ -199,6 +202,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_userDetails", JSON.stringify(stateToSave.userDetails));
         if (stateToSave.mode) {
             localStorage.setItem("witrack_mode", JSON.stringify(stateToSave.mode));
+        } else {
+            localStorage.removeItem("witrack_mode");
         }
         localStorage.setItem("witrack_students", JSON.stringify(stateToSave.students));
         localStorage.setItem("witrack_schools", JSON.stringify(stateToSave.schools));
@@ -255,6 +260,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (newMode === 'admin') modeName = "Admin";
     toast({ title: `Switched to ${modeName} Mode`});
   }
+
+  const logout = () => {
+    setModeState(null);
+    localStorage.removeItem("witrack_mode");
+    router.push('/select-role');
+    toast({ title: "Logged Out" });
+  };
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
@@ -608,6 +620,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isLoaded,
     mode,
     setMode,
+    logout,
     addSubject,
     bulkAddSubjects,
     updateSubject,

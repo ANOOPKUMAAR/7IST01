@@ -167,7 +167,7 @@ function EditAvatarDialog({ onDone }: { onDone: () => void }) {
 }
 
 export default function ProfilePage() {
-  const { subjects, attendance, isLoaded, userDetails, mode } = useAppContext();
+  const { subjects, attendance, isLoaded, userDetails, mode, logout } = useAppContext();
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [isAvatarDialogOpen, setAvatarDialogOpen] = useState(false);
 
@@ -350,7 +350,7 @@ export default function ProfilePage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Button variant="destructive" onClick={() => (window.location.href = "/select-role")}>
+                <Button variant="destructive" onClick={logout}>
                     Logout
                 </Button>
             </CardContent>

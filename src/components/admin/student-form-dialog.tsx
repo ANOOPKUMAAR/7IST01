@@ -19,7 +19,7 @@ import type { Student } from "@/lib/types";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required."),
-  rollNo: z.string().min(2, "Roll number is required."),
+  rollNo: z.string().regex(/^\d{5}[a-zA-Z]{3}\d{4}$/, "Roll number must be in the format: 5-digit year, 3-letter department code, 4-digit number (e.g., 20231IST0001)."),
   program: z.string().min(2, "Program is required."),
   branch: z.string().min(2, "Branch is required."),
   department: z.string().min(2, "Department is required."),
@@ -58,7 +58,6 @@ export function StudentFormDialog({
     const dataWithAvatar = {
         ...values,
         avatar: `https://picsum.photos/seed/${values.rollNo}/200`,
-        deviceId: student?.deviceId || ''
     };
 
     if (student) {
@@ -93,7 +92,7 @@ export function StudentFormDialog({
               <FormItem>
                 <FormLabel>Roll Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 2023CS001" {...field} disabled={!!student} />
+                  <Input placeholder="e.g., 20231IST0001" {...field} disabled={!!student} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

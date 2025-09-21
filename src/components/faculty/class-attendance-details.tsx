@@ -11,10 +11,9 @@ import { User, Download } from 'lucide-react';
 import { Button } from '../ui/button';
 
 export function ClassAttendanceDetails({ cls }: { cls: Class }) {
-  const { attendance, subjects } = useAppContext();
+  const { attendance } = useAppContext();
 
-  const classSubject = subjects.find(s => s.id === cls.id);
-  const totalClasses = classSubject?.totalClasses || 20; // Default if not found
+  const totalClasses = cls.totalClasses || 20; // Default if not found
 
   const studentAttendanceData = useMemo(() => {
     const classAttendanceRecords = attendance[cls.id] || [];

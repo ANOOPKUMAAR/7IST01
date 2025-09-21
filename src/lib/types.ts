@@ -65,6 +65,7 @@ export interface Class {
     startTime: string;
     endTime: string;
     faculties: Faculty[];
+    totalClasses: number;
 }
 
 export interface Department {

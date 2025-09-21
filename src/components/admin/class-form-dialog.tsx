@@ -23,6 +23,7 @@ const formSchema = z.object({
   day: z.string().min(1, "Day is required."),
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:mm)."),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:mm)."),
+  totalClasses: z.coerce.number().min(1, "Total classes must be at least 1."),
 });
 
 interface ClassFormDialogProps {
@@ -43,6 +44,7 @@ export function ClassFormDialog({ schoolId, programId, departmentId, cls, onDone
       day: cls?.day || "Monday",
       startTime: cls?.startTime || "09:00",
       endTime: cls?.endTime || "10:00",
+      totalClasses: cls?.totalClasses || 20,
     },
   });
 
@@ -125,6 +127,19 @@ export function ClassFormDialog({ schoolId, programId, departmentId, cls, onDone
             )}
             />
         </div>
+        <FormField
+          control={form.control}
+          name="totalClasses"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Total Classes</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="e.g., 20" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">

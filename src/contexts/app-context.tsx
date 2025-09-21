@@ -352,8 +352,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 name: cls.name,
                 expectedCheckIn: cls.startTime,
                 expectedCheckOut: cls.endTime,
-                // A reasonable default if totalClasses is not a property on Class
-                totalClasses: 20, 
+                totalClasses: cls.totalClasses, 
                 dayOfWeek: ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].indexOf(cls.day.toLowerCase()),
               });
             }
@@ -1056,14 +1055,3 @@ export function useAppContext(): AppContextType {
   }
   return context;
 }
-
-    
-
-    
-
-    
-
-    
-
-    
-

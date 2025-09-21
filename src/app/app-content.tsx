@@ -12,14 +12,9 @@ export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
   const pathname = usePathname();
   const router = useRouter();
-  const [showLoading, setShowLoading] = useState(true);
 
   useEffect(() => {
-    // This effect runs only on the client, after the initial render.
-    // It prevents the loading UI from being part of the server-rendered HTML,
-    // which is a common cause for hydration errors.
     if (isLoaded) {
-      setShowLoading(false);
       if (mode) {
         if (pathname === '/select-role' || pathname === '/') {
             router.replace('/dashboard');
@@ -30,7 +25,7 @@ export function AppContent({ children }: { children: ReactNode }) {
     }
   }, [isLoaded, mode, pathname, router]);
 
-  if (showLoading && pathname !== '/select-role') {
+  if (!isLoaded && pathname !== '/select-role') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="text-center space-y-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
@@ -12,16 +12,23 @@ export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
   const pathname = usePathname();
   const router = useRouter();
+  const [showLoading, setShowLoading] = useState(true);
 
   useEffect(() => {
-    if (isLoaded && mode) {
+    // This effect runs only on the client, after the initial render.
+    // It prevents the loading UI from being part of the server-rendered HTML,
+    // which is a common cause for hydration errors.
+    if (isLoaded) {
+      setShowLoading(false);
+      if (mode) {
         if (pathname === '/select-role' || pathname === '/') {
             router.replace('/dashboard');
         }
+      }
     }
   }, [isLoaded, mode, pathname, router]);
 
-  if (!isLoaded && pathname !== '/select-role') {
+  if (showLoading && pathname !== '/select-role') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="text-center space-y-2">

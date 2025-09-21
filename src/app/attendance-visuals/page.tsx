@@ -4,7 +4,7 @@ import { AttendanceCharts } from "@/components/visuals/attendance-charts";
 import { AttendanceByDay } from "@/components/visuals/attendance-by-day";
 import { OverallAttendanceSummary } from "@/components/visuals/overall-attendance-summary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, PieChart, LineChart, Briefcase } from "lucide-react";
+import { BarChart, PieChart, LineChart, Briefcase, GraduationCap, UserCheck } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import {
   Card,
@@ -22,7 +22,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMemo } from "react";
-import type { Class, Department, Program } from "@/lib/types";
+import type { Class, Department, Program, Student } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface FacultyClassInfo {
   class: Class;
@@ -36,79 +38,149 @@ function FacultyAttendancePage() {
 
   const facultyClasses = useMemo(() => {
     if (!isLoaded) return [];
-
     const classes: FacultyClassInfo[] = [];
-
     Object.values(programsBySchool).flat().forEach(program => {
         program.departments.forEach(department => {
             department.classes.forEach(cls => {
                 if (cls.faculties.includes(facultyName)) {
-                    classes.push({
-                        class: cls,
-                        department,
-                        program,
-                    });
+                    classes.push({ class: cls, department, program });
                 }
             });
         });
     });
-
     return classes;
-
   }, [programsBySchool, isLoaded, facultyName]);
-  
-  // Simulate the number of classes attended/taught by the faculty for each subject.
-  // In a real app, this would come from a backend record.
+
   const taughtCount = useMemo(() => {
       const counts: Record<string, number> = {};
       facultyClasses.forEach(info => {
-          // Simulate a realistic number of taught classes, e.g., 80% of total.
-          counts[info.class.id] = Math.floor(Math.random() * 5 + 12);
+          counts[info.class.id] = Math.floor(Math.random() * 5 + 12); // Simulate 12-16 classes taught
       });
       return counts;
   }, [facultyClasses]);
 
+  const uniqueStudents = useMemo(() => {
+    const studentMap = new Map<string, Student>();
+    facultyClasses.forEach(info => {
+      info.class.students.forEach(student => {
+        studentMap.set(student.id, student);
+      });
+    });
+    return Array.from(studentMap.values());
+  }, [facultyClasses]);
+  
+  const studentAttendancePercentages = useMemo(() => {
+    const percentages: Record<string, number> = {};
+    uniqueStudents.forEach(student => {
+        // Simulate a realistic attendance percentage between 65% and 98%
+        percentages[student.id] = Math.floor(Math.random() * (98 - 65 + 1) + 65);
+    });
+    return percentages;
+  }, [uniqueStudents]);
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage < 75) return "bg-status-red";
+    if (percentage < 85) return "bg-status-orange";
+    return "bg-status-green";
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Faculty Attendance Report</CardTitle>
-        <CardDescription>
-          Summary of classes taught this semester for {facultyName}.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {facultyClasses.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead>Program</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead className="text-right">Classes Taught</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {facultyClasses.map((info) => (
-                <TableRow key={info.class.id}>
-                  <TableCell className="font-medium">{info.class.name}</TableCell>
-                  <TableCell>{info.program.name}</TableCell>
-                  <TableCell>{info.department.name}</TableCell>
-                  <TableCell className="text-right font-mono">{taughtCount[info.class.id] || 0}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="flex flex-col items-center text-center gap-4 p-8">
-            <Briefcase className="h-16 w-16 text-muted-foreground" />
-            <p className="text-muted-foreground">
-              You are not assigned to any classes yet.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <Briefcase className="h-8 w-8 text-primary"/>
+                    <div>
+                        <CardTitle>My Taught Classes</CardTitle>
+                        <CardDescription>
+                        Summary of classes taught this semester for {facultyName}.
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                {facultyClasses.length > 0 ? (
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Program</TableHead>
+                        <TableHead>Department</TableHead>
+                        <TableHead className="text-right">Classes Taught</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {facultyClasses.map((info) => (
+                        <TableRow key={info.class.id}>
+                        <TableCell className="font-medium">{info.class.name}</TableCell>
+                        <TableCell>{info.program.name}</TableCell>
+                        <TableCell>{info.department.name}</TableCell>
+                        <TableCell className="text-right font-mono">{taughtCount[info.class.id] || 0}</TableCell>
+                        </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
+                ) : (
+                <div className="flex flex-col items-center text-center gap-4 p-8">
+                    <Briefcase className="h-16 w-16 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                    You are not assigned to any classes yet.
+                    </p>
+                </div>
+                )}
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <GraduationCap className="h-8 w-8 text-primary"/>
+                    <div>
+                        <CardTitle>Student Attendance Summary</CardTitle>
+                        <CardDescription>
+                            Overall attendance for all students in your classes.
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                {uniqueStudents.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Student Name</TableHead>
+                                <TableHead>Roll Number</TableHead>
+                                <TableHead className="w-[200px]">Attendance %</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {uniqueStudents.map(student => {
+                                const percentage = studentAttendancePercentages[student.id] || 0;
+                                return (
+                                <TableRow key={student.id}>
+                                    <TableCell className="font-medium">{student.name}</TableCell>
+                                    <TableCell className="font-mono text-xs">{student.rollNo}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <Progress value={percentage} indicatorClassName={getProgressColor(percentage)} className="h-2"/>
+                                            <span className="font-mono text-xs w-10 text-right">{percentage}%</span>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )})}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <div className="flex flex-col items-center text-center gap-4 p-8">
+                        <UserCheck className="h-16 w-16 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                            No students are enrolled in your classes yet.
+                        </p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    </div>
   );
 }
 

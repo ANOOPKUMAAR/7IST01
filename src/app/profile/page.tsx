@@ -344,14 +344,14 @@ export default function ProfilePage() {
       )}
        <Card>
             <CardHeader>
-                <CardTitle>Switch Role</CardTitle>
+                <CardTitle>Logout</CardTitle>
                 <CardDescription>
-                Change your user role to access different features.
+                Log out of your current session.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Button onClick={() => (window.location.href = "/select-role")}>
-                    Go to Role Selection
+                <Button variant="destructive" onClick={() => (window.location.href = "/select-role")}>
+                    Logout
                 </Button>
             </CardContent>
         </Card>

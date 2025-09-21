@@ -6,11 +6,10 @@ import { ClassAttendanceDetails } from "@/components/faculty/class-attendance-de
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function FacultyAttendancePage() {
   const { facultyClasses, isLoaded } = useAppContext();
-
-  const istClass = facultyClasses.find(cls => cls.name === "7IST01");
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -33,13 +32,30 @@ export default function FacultyAttendancePage() {
         </div>
       </div>
 
-      {isLoaded && istClass ? (
-        <ClassAttendanceDetails cls={istClass} />
+      {isLoaded && facultyClasses.length > 0 ? (
+        <Accordion type="single" collapsible className="w-full" defaultValue={facultyClasses[0]?.id}>
+            {facultyClasses.map(cls => (
+                <AccordionItem value={cls.id} key={cls.id}>
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                            <BookCopy className="h-5 w-5" />
+                            <div className="text-left">
+                                <p className="font-semibold">{cls.name}</p>
+                                <p className="text-sm text-muted-foreground">{cls.day} at {cls.startTime}</p>
+                            </div>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <ClassAttendanceDetails cls={cls} />
+                    </AccordionContent>
+                </AccordionItem>
+            ))}
+        </Accordion>
       ) : (
         <Card>
             <CardContent className="p-8 text-center">
                 <p className="text-muted-foreground">
-                    {isLoaded ? "The '7IST01' class is not assigned to you." : "Loading your classes..."}
+                    {isLoaded ? "You are not assigned to any classes." : "Loading your classes..."}
                 </p>
             </CardContent>
         </Card>

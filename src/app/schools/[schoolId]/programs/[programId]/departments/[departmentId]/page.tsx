@@ -95,12 +95,29 @@ export default function DepartmentDetailsPage() {
             <div>
                 <h2 className="text-2xl font-bold tracking-tight">{department.name}</h2>
                 <p className="text-muted-foreground">
-                    Manage classes by uploading a timetable.
+                    Manage classes by uploading a timetable or adding them manually.
                 </p>
             </div>
         </div>
         {mode === 'admin' && (
             <div className="flex gap-2">
+                 <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline"><PlusCircle /> Add Class</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add New Class</DialogTitle>
+                            <DialogDescription>Enter the details for the new class.</DialogDescription>
+                        </DialogHeader>
+                        <ClassFormDialog
+                            schoolId={schoolId}
+                            programId={programId}
+                            departmentId={departmentId}
+                            onDone={() => setAddOpen(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
                 <Dialog open={isUploadOpen} onOpenChange={setUploadOpen}>
                     <DialogTrigger asChild>
                         <Button><FileUp/> Upload Timetable</Button>

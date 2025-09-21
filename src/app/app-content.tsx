@@ -1,11 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { Icons } from "@/components/icons";
-import { MainLayout } from "@/components/sidebar";
+import { Header } from "@/components/header";
 
 export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
@@ -40,8 +40,11 @@ export function AppContent({ children }: { children: ReactNode }) {
   }
   
   return (
-    <MainLayout>
+    <div className="flex min-h-screen w-full flex-col">
+      <Header />
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         {children}
-    </MainLayout>
+      </main>
+    </div>
   );
 }

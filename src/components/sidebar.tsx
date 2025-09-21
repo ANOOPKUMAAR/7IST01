@@ -88,35 +88,9 @@ function MainSidebar({ side }: { side: "left" | "right" }) {
 export function SidebarTrigger() {
     const isMobile = useIsMobile();
     if(isMobile) return null;
-    return <SidebarTriggerPrimitive className="md:hidden" />;
+    return <SidebarTriggerPrimitive className="hidden" />;
 }
 
 export function MainLayout({children}: {children: ReactNode}) {
-    const isMobile = useIsMobile();
-    const sidebarSide = "right";
-
-    return (
-        <SidebarProvider>
-            {isMobile ? (
-                 <>
-                    <Header />
-                    <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-                        {children}
-                    </main>
-                    <BottomNav />
-                </>
-            ) : (
-                <>
-                    {sidebarSide === 'left' && <MainSidebar side="left" />}
-                    <SidebarInset>
-                        <Header />
-                        <main className="flex-1 overflow-y-auto">
-                            {children}
-                        </main>
-                    </SidebarInset>
-                    {sidebarSide === 'right' && <MainSidebar side="right" />}
-                </>
-            )}
-        </SidebarProvider>
-    )
+    return <>{children}</>;
 }

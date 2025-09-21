@@ -25,6 +25,12 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase } from "lucide-react";
@@ -64,8 +70,8 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
         </FacultyDetailsDialog>
       </TableCell>
       <TableCell>{faculty.designation}</TableCell>
-      <TableCell>{faculty.department}</TableCell>
       <TableCell>{faculty.email}</TableCell>
+      <TableCell>{faculty.phone}</TableCell>
       <TableCell className="text-right">
         {mode === 'admin' && (
           <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
@@ -112,13 +118,25 @@ export default function FacultyPage() {
   const [isUploadOpen, setUploadOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredFaculties = useMemo(() => {
-    return faculties.filter(
+  const groupedFaculties = useMemo(() => {
+    const groups: Record<string, Faculty[]> = {};
+
+    const filtered = faculties.filter(
       (faculty) =>
         faculty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         faculty.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         faculty.department.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    filtered.forEach(faculty => {
+        const department = faculty.department || 'Unassigned';
+        if (!groups[department]) {
+            groups[department] = [];
+        }
+        groups[department].push(faculty);
+    });
+
+    return groups;
   }, [faculties, searchTerm]);
 
 
@@ -180,7 +198,7 @@ export default function FacultyPage() {
         <CardHeader>
           <CardTitle>Faculty List</CardTitle>
           <CardDescription>
-            A list of all faculty members currently in the system.
+            A list of all faculty members currently in the system, organized by department.
           </CardDescription>
           <div className="pt-2">
             <Input
@@ -192,23 +210,37 @@ export default function FacultyPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredFaculties.length > 0 ? (
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Designation</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {filteredFaculties.map((faculty) => (
-                    <FacultyRow key={faculty.id} faculty={faculty} />
+          {Object.keys(groupedFaculties).length > 0 ? (
+            <Accordion type="multiple" className="w-full" defaultValue={Object.keys(groupedFaculties)}>
+                {Object.entries(groupedFaculties).sort(([a], [b]) => a.localeCompare(b)).map(([department, deptFaculties]) => (
+                    <AccordionItem value={department} key={department}>
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-2">
+                                <Briefcase className="h-5 w-5" />
+                                <span>{department} ({deptFaculties.length} members)</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                             <Table>
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Designation</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Phone</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {deptFaculties.map((faculty) => (
+                                    <FacultyRow key={faculty.id} faculty={faculty} />
+                                ))}
+                                </TableBody>
+                            </Table>
+                        </AccordionContent>
+                    </AccordionItem>
                 ))}
-                </TableBody>
-            </Table>
+            </Accordion>
           ) : (
             <div className="h-24 text-center flex items-center justify-center">
               <p className="text-muted-foreground">

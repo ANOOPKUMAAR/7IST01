@@ -802,58 +802,76 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast({ title: "Faculty Removed from Class", variant: "destructive" });
   };
 
-  const assignFacultyToClassesFromTimetable = (faculty: Faculty, classes: Partial<Class>[]) => {
-    setProgramsBySchool(prev => {
-        const newState = JSON.parse(JSON.stringify(prev));
-        
-        // Step 1: Un-assign the faculty member from all classes they are currently assigned to.
-        for (const school of Object.values(newState)) {
-            for (const program of school) {
-                for (const department of program.departments) {
-                    for (const cls of department.classes) {
-                        const facultyIndex = cls.faculties.findIndex((f: Faculty) => f.id === faculty.id);
-                        if (facultyIndex !== -1) {
-                            cls.faculties.splice(facultyIndex, 1);
-                        }
-                    }
-                }
+  const assignFacultyToClassesFromTimetable = (
+    faculty: Faculty,
+    classes: Partial<Class>[]
+  ) => {
+    let assignedCount = 0;
+    setProgramsBySchool((prev) => {
+      const newState = JSON.parse(JSON.stringify(prev));
+
+      // Step 1: Un-assign the faculty member from all classes.
+      for (const school of Object.values(newState)) {
+        for (const program of school) {
+          for (const department of program.departments) {
+            for (const cls of department.classes) {
+              const facultyIndex = cls.faculties.findIndex(
+                (f: Faculty) => f.id === faculty.id
+              );
+              if (facultyIndex !== -1) {
+                cls.faculties.splice(facultyIndex, 1);
+              }
             }
+          }
         }
-        
-        // Step 2: Create the new classes and assign the faculty.
-        classes.forEach(newClassData => {
-            // Find a department to put the class in. For simplicity, we'll find the first one.
-            // A more robust solution might require department info in the timetable.
-            let added = false;
-            for (const school of Object.values(newState)) {
-                if (added) break;
-                for (const program of school) {
-                    if (added) break;
-                    for (const department of program.departments) {
-                        const newClass = {
-                            id: `cls_${Date.now()}_${Math.random()}`,
-                            name: newClassData.name!,
-                            coordinator: newClassData.coordinator || 'N/A',
-                            day: newClassData.day!,
-                            startTime: newClassData.startTime!,
-                            endTime: newClassData.endTime!,
-                            students: mockStudents.slice(0, 5), // Assign some default students
-                            faculties: [faculty]
-                        };
-                        department.classes.push(newClass);
-                        added = true;
-                        break;
-                    }
+      }
+
+      // Step 2: Assign faculty to new classes based on flexible matching.
+      for (const newClassData of classes) {
+        let classAssigned = false;
+        for (const school of Object.values(newState)) {
+          if (classAssigned) break;
+          for (const program of school) {
+            if (classAssigned) break;
+            for (const department of program.departments) {
+              if (classAssigned) break;
+              for (const cls of department.classes) {
+                // Flexible matching: check name, day, and time
+                if (
+                  cls.name.toLowerCase() === newClassData.name?.toLowerCase() &&
+                  cls.day.toLowerCase() === newClassData.day?.toLowerCase() &&
+                  cls.startTime === newClassData.startTime
+                ) {
+                  // Avoid duplicates
+                  if (!cls.faculties.some((f: Faculty) => f.id === faculty.id)) {
+                    cls.faculties.push(faculty);
+                    assignedCount++;
+                  }
+                  classAssigned = true;
+                  break;
                 }
+              }
             }
-        });
+          }
+        }
+      }
 
-        toast({
-            title: "Timetable Replaced",
-            description: `${faculty.name}'s schedule has been completely updated with ${classes.length} new classes.`,
-        });
+      setTimeout(() => {
+        if (assignedCount > 0) {
+          toast({
+            title: "Timetable Updated",
+            description: `${faculty.name} has been assigned to ${assignedCount} classes.`,
+          });
+        } else {
+          toast({
+            title: "No Matching Classes Found",
+            description: `Could not find any existing classes that match the timetable for ${faculty.name}. Please ensure classes are created first.`,
+            variant: "destructive",
+          });
+        }
+      }, 0);
 
-        return newState;
+      return newState;
     });
   };
   
@@ -990,6 +1008,8 @@ export function useAppContext(): AppContextType {
   }
   return context;
 }
+
+    
 
     
 

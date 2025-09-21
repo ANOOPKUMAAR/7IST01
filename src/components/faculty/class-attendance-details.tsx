@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { User, Download } from 'lucide-react';
+import { Button } from '../ui/button';
 
 export function ClassAttendanceDetails({ cls }: { cls: Class }) {
   const { attendance, subjects } = useAppContext();
@@ -41,14 +42,49 @@ export function ClassAttendanceDetails({ cls }: { cls: Class }) {
     return Math.round(total / studentAttendanceData.length);
   }, [studentAttendanceData]);
 
+  const handleDownload = () => {
+    const headers = ["Student Name", "Roll Number", "Attended Classes", "Total Classes", "Attendance Percentage"];
+    const csvRows = [headers.join(',')];
+
+    studentAttendanceData.forEach(student => {
+        const row = [
+            `"${student.name}"`,
+            `"${student.rollNo}"`,
+            student.attendedCount,
+            totalClasses,
+            `${student.attendancePercentage}%`
+        ];
+        csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${cls.name}_Attendance_Report.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="border rounded-lg p-4 bg-muted/20">
       <Card>
         <CardHeader>
-          <CardTitle>Attendance Overview for {cls.name}</CardTitle>
-          <CardDescription>
-            Overall class attendance is approximately {overallAttendance}%.
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Attendance Overview for {cls.name}</CardTitle>
+              <CardDescription>
+                Overall class attendance is approximately {overallAttendance}%.
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleDownload}>
+              <Download className="mr-2 h-4 w-4" />
+              Download Report
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>

@@ -23,8 +23,8 @@ const daysOfWeekMap: { [key: string]: number } = {
 
 const SubjectSchema = z.object({
     name: z.string().describe('The name of the subject or course.'),
-    checkIn: z.string().describe("The start time of the class in HH:mm format."),
-    checkOut: z.string().describe("The end time of the class in HH:mm format."),
+    expectedCheckIn: z.string().describe("The start time of the class in HH:mm format."),
+    expectedCheckOut: z.string().describe("The end time of the class in HH:mm format."),
     totalClasses: z.number().describe('The total number of classes for the subject in the semester. If not specified, estimate a reasonable number like 20 or 25.'),
     dayOfWeek: z.string().describe('The day of the week for the class (e.g., "Monday", "Tuesday").'),
 });
@@ -49,15 +49,11 @@ export async function extractTimetable(
 ): Promise<ExtractTimetableOutput> {
   const result = await extractTimetableFlow(input);
   
-  // Post-process to convert day string to number
   const processedSubjects = result.subjects.map(subject => {
       const dayNumber = daysOfWeekMap[subject.dayOfWeek.toLowerCase()];
       return {
-          name: subject.name,
-          expectedCheckIn: subject.checkIn,
-          expectedCheckOut: subject.checkOut,
-          totalClasses: subject.totalClasses,
-          dayOfWeek: dayNumber !== undefined ? dayNumber : 1, // Default to Monday if day is invalid
+          ...subject,
+          dayOfWeek: dayNumber !== undefined ? dayNumber : 1, 
       }
   });
 
@@ -68,12 +64,12 @@ const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
   output: {schema: ExtractTimetableOutputSchema},
-  prompt: `You are an expert at parsing and extracting structured information from timetable images or documents.
+  prompt: `You are an expert at parsing and extracting structured information from timetable images or documents for students.
 
 Analyze the provided file and extract all the subjects listed. For each subject, identify the following details:
 - name: The name of the subject.
-- checkIn: The start time of the class, formatted as HH:mm.
-- checkOut: The end time of the class, formatted as HH:mm.
+- expectedCheckIn: The start time of the class, formatted as HH:mm.
+- expectedCheckOut: The end time of the class, formatted as HH:mm.
 - totalClasses: The total number of classes scheduled for this subject. If not explicitly mentioned, make a reasonable estimate (e.g., 20).
 - dayOfWeek: The day of the week the class occurs on (e.g., "Monday").
 

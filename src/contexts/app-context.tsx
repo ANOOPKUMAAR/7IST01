@@ -90,23 +90,6 @@ const initialUserDetails: Omit<UserDetails, 'deviceId' | 'avatar'> = {
     address: "123 University Lane, Tech City, 12345",
 };
 
-// Custom hook for debouncing
-function useDebounce(value: any, delay: number) {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
-}
-
 function generateDeviceId() {
     return 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 }
@@ -125,8 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [schools, setSchools] = useState<School[]>([]);
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
-  // Combine all state into one object for easier debouncing
-  const appState = {
+  const appStateRef = useRef({
     subjects,
     attendance,
     wifiZones,
@@ -136,9 +118,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     mode,
     schools,
     programsBySchool,
-  };
+  });
 
-  const debouncedState = useDebounce(appState, 500);
+  useEffect(() => {
+    appStateRef.current = {
+      subjects,
+      attendance,
+      wifiZones,
+      activeCheckIn,
+      userDetails,
+      students,
+      mode,
+      schools,
+      programsBySchool,
+    };
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool]);
   
   // Load from localStorage on mount
   useEffect(() => {
@@ -193,23 +187,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  // Save to localStorage whenever debounced state changes
+  // Save to localStorage when the user is about to leave the page
   useEffect(() => {
-      if (!isLoaded) return;
+    const handleBeforeUnload = () => {
       try {
-        localStorage.setItem("witrack_subjects", JSON.stringify(debouncedState.subjects));
-        localStorage.setItem("witrack_attendance", JSON.stringify(debouncedState.attendance));
-        localStorage.setItem("witrack_wifiZones", JSON.stringify(debouncedState.wifiZones));
-        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(debouncedState.activeCheckIn));
-        localStorage.setItem("witrack_userDetails", JSON.stringify(debouncedState.userDetails));
-        localStorage.setItem("witrack_mode", JSON.stringify(debouncedState.mode));
-        localStorage.setItem("witrack_students", JSON.stringify(debouncedState.students));
-        localStorage.setItem("witrack_schools", JSON.stringify(debouncedState.schools));
-        localStorage.setItem("witrack_programsBySchool", JSON.stringify(debouncedState.programsBySchool));
+        const stateToSave = appStateRef.current;
+        localStorage.setItem("witrack_subjects", JSON.stringify(stateToSave.subjects));
+        localStorage.setItem("witrack_attendance", JSON.stringify(stateToSave.attendance));
+        localStorage.setItem("witrack_wifiZones", JSON.stringify(stateToSave.wifiZones));
+        localStorage.setItem("witrack_activeCheckIn", JSON.stringify(stateToSave.activeCheckIn));
+        localStorage.setItem("witrack_userDetails", JSON.stringify(stateToSave.userDetails));
+        localStorage.setItem("witrack_mode", JSON.stringify(stateToSave.mode));
+        localStorage.setItem("witrack_students", JSON.stringify(stateToSave.students));
+        localStorage.setItem("witrack_schools", JSON.stringify(stateToSave.schools));
+        localStorage.setItem("witrack_programsBySchool", JSON.stringify(stateToSave.programsBySchool));
       } catch (error) {
-          console.error("Failed to save debounced data to localStorage", error);
+        console.error("Failed to save data to localStorage on unload", error);
       }
-  }, [debouncedState, isLoaded]);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, []);
 
   const requestCameraPermission = useCallback(async (videoEl: HTMLVideoElement | null, showToast = true): Promise<MediaStream | null> => {
     try {

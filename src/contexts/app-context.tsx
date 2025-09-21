@@ -140,7 +140,7 @@ const initialWifiZones: WifiZone[] = [
 
 const initialUserDetails: UserDetails = {
     id: "20221IST0001",
-    name: "Alex Doe",
+    name: "Bob Johnson",
     rollNo: "20221IST0001",
     program: "Bachelor of Technology",
     branch: "Computer Science",
@@ -1042,6 +1042,8 @@ export function useAppContext(): AppContextType {
   }
   return context;
 }
+
+    
 
     
 

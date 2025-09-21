@@ -12,7 +12,7 @@ const baseStudentDetails = {
 };
 
 export const mockStudents: Student[] = [
-    { ...baseStudentDetails, id: '20221IST0001', name: 'Aditya Sharma', rollNo: '20221IST0001', deviceId: 'dev_user', avatar: `https://picsum.photos/seed/s0/200` },
+    { ...baseStudentDetails, id: '20221IST0001', name: 'Bob Johnson', rollNo: '20221IST0001', deviceId: 'dev_user', avatar: `https://picsum.photos/seed/s0/200` },
     { ...baseStudentDetails, id: '20221IST0002', name: 'Priya Singh', rollNo: '20221IST0002', deviceId: 'dev_abc123', avatar: `https://picsum.photos/seed/s1/200` },
     { ...baseStudentDetails, id: '20221IST0003', name: 'Rohan Gupta', rollNo: '20221IST0003', deviceId: 'dev_def456', avatar: `https://picsum.photos/seed/s2/200` },
     { ...baseStudentDetails, id: '20221IST0004', name: 'Sneha Patel', rollNo: '20221IST0004', deviceId: 'dev_ghi789', avatar: `https://picsum.photos/seed/s3/200` },
@@ -54,7 +54,7 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
                 { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(3, 5), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [] },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ds301', name: 'IST', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 15), day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]] },
+                 { id: 'ist', name: 'IST', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 15), day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]] },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },
@@ -95,3 +95,5 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
         { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', name: 'Fashion Design', hod: 'Dr. Coco Chanel', classes: []}]},
     ],
 };
+
+    

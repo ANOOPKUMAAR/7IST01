@@ -805,16 +805,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const assignFacultyToClassesFromTimetable = (faculty: Faculty, classes: Partial<Class>[]) => {
     let assignedCount = 0;
     setProgramsBySchool(prev => {
-        const newState = JSON.parse(JSON.stringify(prev)); // Deep copy to avoid mutation issues
+        const newState = JSON.parse(JSON.stringify(prev));
         
+        // First, remove the faculty member from all classes
+        for (const schoolId in newState) {
+            for (const program of newState[schoolId]) {
+                for (const department of program.departments) {
+                    for (const cls of department.classes) {
+                        const facultyIndex = cls.faculties.findIndex((f: Faculty) => f.id === faculty.id);
+                        if (facultyIndex !== -1) {
+                            cls.faculties.splice(facultyIndex, 1);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Then, assign the faculty to the new classes from the timetable
         for (const schoolId in newState) {
             for (const program of newState[schoolId]) {
                 for (const department of program.departments) {
                     for (const cls of department.classes) {
                         const isMatch = classes.some(timetableClass => 
-                            timetableClass.name?.toLowerCase() === cls.name.toLowerCase() &&
+                            timetableClass.name &&
+                            cls.name.toLowerCase().includes(timetableClass.name.toLowerCase()) &&
                             timetableClass.day?.toLowerCase() === cls.day.toLowerCase() &&
-                            timetableClass.startTime === cls.startTime
+                            timetableClass.startTime === timetableClass.startTime
                         );
 
                         if (isMatch) {
@@ -831,9 +847,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     if (assignedCount > 0) {
-        toast({ title: 'Assignments Successful', description: `${faculty.name} has been assigned to ${assignedCount} classes.` });
+        toast({ title: 'Timetable Updated', description: `${faculty.name} has been assigned to ${assignedCount} new classes.` });
     } else {
-        toast({ title: 'No New Assignments', description: `No matching classes found to assign for ${faculty.name}. Please ensure classes exist before assigning a faculty timetable.`, variant: 'destructive' });
+        toast({ title: 'No Matching Classes Found', description: `Could not find any existing classes that match the uploaded timetable for ${faculty.name}.`, variant: 'destructive' });
     }
   };
   
@@ -970,5 +986,7 @@ export function useAppContext(): AppContextType {
   }
   return context;
 }
+
+    
 
     

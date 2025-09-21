@@ -785,11 +785,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         if (cls) {
             if (cls.faculties.some(f => f.id === facultyId)) {
-                toast({ title: "Faculty already assigned", variant: "destructive" });
+                setTimeout(() => toast({ title: "Faculty already assigned", variant: "destructive" }), 0);
                 return prev;
             }
             cls.faculties.push(faculty);
-            toast({ title: "Faculty Assigned to Class" });
+            setTimeout(() => toast({ title: "Faculty Assigned to Class" }), 0);
         }
         return newPrograms;
     });
@@ -812,10 +812,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     const cls = department.classes.find(c => c.id === classId);
                     if (cls) {
                         if (cls.faculties.some(f => f.id === facultyId)) {
-                            toast({ title: "Faculty already assigned to this class.", variant: "destructive" });
+                            setTimeout(() => toast({ title: "Faculty already assigned to this class.", variant: "destructive" }), 0);
                         } else {
                             cls.faculties.push(faculty);
-                            toast({ title: "Faculty Assigned", description: `${faculty.name} assigned to ${cls.name}.` });
+                            setTimeout(() => toast({ title: "Faculty Assigned", description: `${faculty.name} assigned to ${cls.name}.` }), 0);
                         }
                         classFound = true;
                         break;

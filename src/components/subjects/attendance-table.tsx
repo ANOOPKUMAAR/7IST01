@@ -31,15 +31,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Trash } from "lucide-react";
-import type { Subject, AttendanceRecord, Class } from "@/lib/types";
+import type { Subject, AttendanceRecord } from "@/lib/types";
 
-export function AttendanceTable({ subject, records }: { subject: Class; records: AttendanceRecord[] }) {
-  const { deleteAttendanceRecord, userDetails } = useAppContext();
+export function AttendanceTable({ subject, records }: { subject: Subject; records: AttendanceRecord[] }) {
+  const { deleteAttendanceRecord } = useAppContext();
 
-  // Filter records for the current student
-  const studentRecords = records.filter(rec => rec.studentId === userDetails.rollNo);
-
-  const sortedRecords = studentRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedRecords = records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Card>

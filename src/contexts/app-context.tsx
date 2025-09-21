@@ -1,10 +1,7 @@
-
-
-
 "use client";
 
 import type { ReactNode } from "react";
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type {
   Subject,
@@ -12,27 +9,17 @@ import type {
   WifiZone,
   ActiveCheckIn,
   UserDetails,
-  Student,
   UserMode,
-  School,
-  Program,
-  Class,
-  Department,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
-import { getHeadcount } from "@/ai/flows/get-headcount-flow";
-import { initialSchools, initialProgramsBySchool, mockStudents } from "@/lib/school-data";
 import { useRouter } from "next/navigation";
 
 interface AppContextType {
-  subjects: Array<Subject | Class>;
+  subjects: Subject[];
   attendance: Record<string, AttendanceRecord[]>;
   wifiZones: WifiZone[];
   activeCheckIn: ActiveCheckIn | null;
   userDetails: UserDetails;
-  students: Student[];
-  schools: School[];
-  programsBySchool: Record<string, Program[]>;
   isLoaded: boolean;
   mode: UserMode | null;
   setMode: (mode: UserMode) => void;
@@ -47,38 +34,51 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: Partial<Omit<UserDetails, 'deviceId'>>) => void;
-  recordClassAttendance: (subject: Class, presentStudentIds: string[], absentStudentIds: string[]) => void;
-  hasCameraPermission: boolean | null;
-  setHasCameraPermission: (hasPermission: boolean | null) => void;
-  requestCameraPermission: (videoEl: HTMLVideoElement | null, showToast?: boolean) => Promise<MediaStream | null>;
-  stopCameraStream: (stream: MediaStream | null, videoEl: HTMLVideoElement | null) => void;
-  // Admin functions
-  addSchool: (school: Omit<School, 'id'>) => void;
-  updateSchool: (school: School) => void;
-  deleteSchool: (schoolId: string) => void;
-  addProgram: (schoolId: string, program: Omit<Program, 'id' | 'departments'>) => void;
-  updateProgram: (schoolId: string, program: Program) => void;
-  deleteProgram: (schoolId: string, programId: string) => void;
-  addDepartment: (schoolId: string, programId: string, department: Omit<Department, 'id' | 'classes'>) => void;
-  updateDepartment: (schoolId: string, programId: string, department: Department) => void;
-  deleteDepartment: (schoolId: string, programId: string, departmentId: string) => void;
-  addClass: (schoolId: string, programId: string, departmentId: string, newClass: Omit<Class, 'id'>) => void;
-  updateClass: (schoolId: string, programId: string, departmentId: string, updatedClass: Class) => void;
-  deleteClass: (schoolId: string, programId: string, departmentId: string, classId: string) => void;
-  addStudentToClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
-  removeStudentFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
-  addFacultyToClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => void;
-  removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const initialSubjects: Subject[] = [];
+const initialSubjects: Subject[] = [
+    { id: 'math101', name: 'Calculus I', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20, dayOfWeek: 1 },
+    { id: 'phy101', name: 'Physics for Engineers', expectedCheckIn: '11:00', expectedCheckOut: '12:30', totalClasses: 25, dayOfWeek: 1 },
+    { id: 'cs101', name: 'Intro to Programming', expectedCheckIn: '14:00', expectedCheckOut: '15:30', totalClasses: 18, dayOfWeek: 2 },
+    { id: 'chem101', name: 'General Chemistry', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 22, dayOfWeek: 3 },
+    { id: 'eng101', name: 'English Composition', expectedCheckIn: '13:00', expectedCheckOut: '14:30', totalClasses: 15, dayOfWeek: 4 },
+];
 
-const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => { return {} };
+const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => {
+    const attendance: Record<string, AttendanceRecord[]> = {};
+    const today = new Date();
+    initialSubjects.forEach(subject => {
+        attendance[subject.id] = [];
+        for (let i = 0; i < 5; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - (i * 7 + (today.getDay() - subject.dayOfWeek + 7) % 7));
+            const checkInTime = new Date(date);
+            const [startHour, startMinute] = subject.expectedCheckIn.split(':').map(Number);
+            checkInTime.setHours(startHour, startMinute, 0, 0);
+
+            const checkOutTime = new Date(date);
+            const [endHour, endMinute] = subject.expectedCheckOut.split(':').map(Number);
+            checkOutTime.setHours(endHour, endMinute, 0, 0);
+            
+            attendance[subject.id].push({
+                id: `att_${subject.id}_${i}`,
+                date: date.toISOString(),
+                checkIn: checkInTime.toISOString(),
+                checkOut: checkOutTime.toISOString(),
+                isAnomaly: false,
+                anomalyReason: '',
+                studentId: '20221IST0001',
+            });
+        }
+    });
+    return attendance;
+};
 
 const initialWifiZones: WifiZone[] = [
-    { id: 'wifi1', ssid: 'TP-Link_92EC_5G' },
+    { id: 'wifi1', ssid: 'University-Guest' },
+    { id: 'wifi2', ssid: 'Library-Wifi' },
 ];
 
 const initialUserDetails: Omit<UserDetails, 'deviceId' | 'avatar'> = {
@@ -101,42 +101,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [subjectsState, setSubjectsState] = useState<Subject[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, deviceId: '', avatar: '' });
-  const [students, setStudents] = useState<Student[]>(mockStudents);
   const [mode, setModeState] = useState<UserMode | null>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const [schools, setSchools] = useState<School[]>([]);
-  const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
   const appStateRef = useRef({
-    subjectsState,
+    subjects,
     attendance,
     wifiZones,
     activeCheckIn,
     userDetails,
-    students,
-    mode,
-    schools,
-    programsBySchool,
+    mode
   });
 
   useEffect(() => {
     appStateRef.current = {
-      subjectsState,
+      subjects,
       attendance,
       wifiZones,
       activeCheckIn,
       userDetails,
-      students,
-      mode,
-      schools,
-      programsBySchool,
+      mode
     };
-  }, [subjectsState, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool]);
+  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, mode]);
   
   // Load from localStorage on mount
   useEffect(() => {
@@ -146,9 +136,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedMode = localStorage.getItem("witrack_mode");
-      const storedStudents = localStorage.getItem("witrack_students");
-      const storedSchools = localStorage.getItem("witrack_schools");
-      const storedProgramsBySchool = localStorage.getItem("witrack_programsBySchool");
 
       let storedUserDetails = localStorage.getItem("witrack_userDetails");
       let userDetailsData;
@@ -166,79 +153,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setUserDetails(userDetailsData);
       
-      setSubjectsState(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
+      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
-      setStudents(storedStudents ? JSON.parse(storedStudents) : mockStudents);
       setModeState(storedMode ? JSON.parse(storedMode) : null);
-      setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
-      setProgramsBySchool(storedProgramsBySchool ? JSON.parse(storedProgramsBySchool) : initialProgramsBySchool);
       
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       const deviceId = generateDeviceId();
       setUserDetails({ ...initialUserDetails, deviceId, avatar: `https://picsum.photos/seed/${Math.random()}/200` });
-      setSubjectsState(initialSubjects);
+      setSubjects(initialSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
-      setStudents(mockStudents);
       setModeState(null);
-      setSchools(initialSchools);
-      setProgramsBySchool(initialProgramsBySchool);
     }
     setIsLoaded(true);
   }, []);
-
-  const subjects = useMemo((): Array<Subject | Class> => {
-    if (!isLoaded || !mode) return [];
-
-    if (mode === 'faculty') {
-        const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
-        const facultyClasses: Class[] = [];
-        Object.values(programsBySchool).flat().forEach(program => {
-            program.departments.forEach(department => {
-                department.classes.forEach(cls => {
-                    if (cls.faculties.includes(facultyName)) {
-                        facultyClasses.push(cls);
-                    }
-                });
-            });
-        });
-        return facultyClasses;
-    } 
-    
-    if (mode === 'student') {
-        const enrolledClasses: Class[] = [];
-        const enrolledClassIds = new Set<string>();
-
-        Object.values(programsBySchool).flat().forEach(program => {
-            program.departments.forEach(department => {
-                department.classes.forEach(cls => {
-                    if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
-                        enrolledClasses.push(cls);
-                        enrolledClassIds.add(cls.id);
-                    }
-                });
-            });
-        });
-        
-        // Filter out manually added subjects that are already part of the enrolled classes
-        const manualSubjects = subjectsState.filter(manualSubj => !enrolledClassIds.has(manualSubj.id));
-        
-        return [...enrolledClasses, ...manualSubjects];
-    }
-
-    return [];
-  }, [mode, isLoaded, programsBySchool, userDetails.rollNo, subjectsState]);
 
   // Save to localStorage when the user is about to leave the page
   useEffect(() => {
     const handleBeforeUnload = () => {
       try {
         const stateToSave = appStateRef.current;
-        localStorage.setItem("witrack_subjects", JSON.stringify(stateToSave.subjectsState));
+        localStorage.setItem("witrack_subjects", JSON.stringify(stateToSave.subjects));
         localStorage.setItem("witrack_attendance", JSON.stringify(stateToSave.attendance));
         localStorage.setItem("witrack_wifiZones", JSON.stringify(stateToSave.wifiZones));
         localStorage.setItem("witrack_activeCheckIn", JSON.stringify(stateToSave.activeCheckIn));
@@ -248,9 +187,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } else {
             localStorage.removeItem("witrack_mode");
         }
-        localStorage.setItem("witrack_students", JSON.stringify(stateToSave.students));
-        localStorage.setItem("witrack_schools", JSON.stringify(stateToSave.schools));
-        localStorage.setItem("witrack_programsBySchool", JSON.stringify(stateToSave.programsBySchool));
       } catch (error) {
         console.error("Failed to save data to localStorage on unload", error);
       }
@@ -262,45 +198,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const requestCameraPermission = useCallback(async (videoEl: HTMLVideoElement | null, showToast = true): Promise<MediaStream | null> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setHasCameraPermission(true);
-
-      if (videoEl) {
-        videoEl.srcObject = stream;
-      }
-      return stream;
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      setHasCameraPermission(false);
-      if (showToast) {
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description:
-            "Please enable camera permissions in your browser settings to use this app.",
-        });
-      }
-      return null;
-    }
-  }, [toast]);
-
-  const stopCameraStream = useCallback((stream: MediaStream | null, videoEl: HTMLVideoElement | null) => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    if (videoEl) {
-      videoEl.srcObject = null;
-    }
-  }, []);
-
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
-    if (newMode === 'student') {
-        // We shouldn't clear subjectsState on mode switch, 
-        // as it holds the student's manually added timetable.
-        // setSubjectsState(initialSubjects); 
+    // Reset to default data when switching modes
+    setSubjects(initialSubjects);
+    setAttendance(generateInitialAttendance());
+    if(newMode !== 'student') {
+        setSubjects([]);
+        setAttendance({});
     }
   };
 
@@ -313,24 +218,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
-    setSubjectsState((prev) => [...prev, newSubject]);
+    setSubjects((prev) => [...prev, newSubject]);
     toast({ title: "Subject Added", description: `${subject.name} has been added.` });
   };
 
   const bulkAddSubjects = (newSubjects: Omit<Subject, 'id'>[]) => {
     const subjectsToAdd = newSubjects.map(s => ({ ...s, id: `subj_${Date.now()}_${Math.random()}` }));
-    setSubjectsState(subjectsToAdd);
+    setSubjects(subjectsToAdd);
     setAttendance({}); // Clear old attendance records
     toast({ title: "Timetable Replaced", description: `${subjectsToAdd.length} new subjects have been imported.` });
   };
 
   const updateSubject = (updatedSubject: Subject) => {
-    setSubjectsState((prev) => prev.map((s) => (s.id === updatedSubject.id ? updatedSubject : s)));
+    setSubjects((prev) => prev.map((s) => (s.id === updatedSubject.id ? updatedSubject : s)));
     toast({ title: "Subject Updated", description: `${updatedSubject.name} has been updated.` });
   };
   
   const deleteSubject = (subjectId: string) => {
-    setSubjectsState((prev) => prev.filter((s) => s.id !== subjectId));
+    setSubjects((prev) => prev.filter((s) => s.id !== subjectId));
     setAttendance(prev => {
         const newAttendance = {...prev};
         delete newAttendance[subjectId];
@@ -386,16 +291,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     const subject = subjects.find(s => s.id === subjectId);
     if (!subject) return;
-
-    // To use checkAttendanceAnomaly, we need a Subject, not a Class object.
-    const simpleSubject: Subject = {
-      id: subject.id,
-      name: subject.name,
-      expectedCheckIn: 'expectedCheckIn' in subject ? subject.expectedCheckIn : subject.startTime,
-      expectedCheckOut: 'expectedCheckOut' in subject ? subject.expectedCheckOut : subject.endTime,
-      totalClasses: 'totalClasses' in subject ? subject.totalClasses : 20,
-      dayOfWeek: 'dayOfWeek' in subject ? subject.dayOfWeek : (Object.values({ 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 })['day' in subject ? subject.day.toLowerCase() : 1] || 1),
-    };
   
     const checkOutTime = new Date().toISOString();
     const newRecord: Omit<AttendanceRecord, 'isAnomaly' | 'anomalyReason' | 'studentId'> = {
@@ -408,7 +303,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const anomalyResult = await checkAttendanceAnomaly({
         checkInTime: newRecord.checkIn,
         checkOutTime: newRecord.checkOut!,
-        subject: simpleSubject,
+        subject: subject,
         history: attendance[subjectId] || [],
     });
 
@@ -435,283 +330,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserDetails = (details: Partial<Omit<UserDetails, 'deviceId'>>) => {
-    const updatedUserDetails = { ...userDetails, ...details };
-    setUserDetails(updatedUserDetails);
-
-    setStudents(prevStudents => 
-        prevStudents.map(student => {
-            if (student.rollNo === userDetails.rollNo) {
-                return { 
-                    ...student,
-                    name: updatedUserDetails.name,
-                    deviceId: updatedUserDetails.deviceId, // Ensure deviceId is also updated in the master list
-                };
-            }
-            return student;
-        })
-    );
-    
-    toast({ title: "Profile Updated", description: "Your details have been saved across the app." });
-  };
-  
-  const recordClassAttendance = (subject: Class, presentStudentIds: string[], absentStudentIds: string[]) => {
-    const now = new Date();
-    const startTime = new Date(now);
-    startTime.setHours(Number(subject.startTime.split(':')[0]), Number(subject.startTime.split(':')[1]), 0, 0);
-
-    const endTime = new Date(now);
-    endTime.setHours(Number(subject.endTime.split(':')[0]), Number(subject.endTime.split(':')[1]), 0, 0);
-
-    const newAttendanceRecords: Record<string, AttendanceRecord[]> = {};
-
-    presentStudentIds.forEach(studentId => {
-        const student = students.find(s => s.id === studentId);
-        if (!student) return;
-
-        const presentRecord: AttendanceRecord = {
-            id: `att_${Date.now()}_${studentId}`,
-            date: now.toISOString(),
-            checkIn: startTime.toISOString(),
-            checkOut: endTime.toISOString(),
-            isAnomaly: false,
-            anomalyReason: '',
-            studentId: student.rollNo,
-        };
-        
-        if (!newAttendanceRecords[subject.id]) {
-            newAttendanceRecords[subject.id] = [];
-        }
-        newAttendanceRecords[subject.id].push(presentRecord);
-    });
-    
-    setAttendance(prev => {
-        const updatedAttendance = { ...prev };
-        Object.keys(newAttendanceRecords).forEach(subjectId => {
-            // Filter out any existing records for these students on this day to avoid duplicates
-            const existingRecords = updatedAttendance[subjectId] || [];
-            const otherStudentRecords = existingRecords.filter(rec => {
-                const recDate = new Date(rec.date).toDateString();
-                const isToday = recDate === now.toDateString();
-                const isAffectedStudent = presentStudentIds.some(sid => students.find(s=>s.id===sid)?.rollNo === rec.studentId) || 
-                                      absentStudentIds.some(sid => students.find(s=>s.id===sid)?.rollNo === rec.studentId);
-                return !(isToday && isAffectedStudent);
-            });
-            updatedAttendance[subjectId] = [...otherStudentRecords, ...newAttendanceRecords[subjectId]];
-        });
-        return updatedAttendance;
-    });
-
-    toast({
-        title: "Attendance Recorded",
-        description: `Marked ${presentStudentIds.length} present and ${absentStudentIds.length} absent for ${subject.name}.`
-    });
-  };
-
-  const findClassAndUpdate = (
-    schoolId: string,
-    programId: string,
-    departmentId: string,
-    classId: string,
-    updateFn: (cls: Class) => Class
-  ) => {
-    setProgramsBySchool(prev => {
-        const schoolPrograms = (prev[schoolId] || []).map(p => {
-            if (p.id === programId) {
-                const newDepartments = p.departments.map(d => {
-                    if (d.id === departmentId) {
-                        const newClasses = d.classes.map(c => {
-                            if (c.id === classId) {
-                                return updateFn(c);
-                            }
-                            return c;
-                        });
-                        return { ...d, classes: newClasses };
-                    }
-                    return d;
-                });
-                return { ...p, departments: newDepartments };
-            }
-            return p;
-        });
-        return { ...prev, [schoolId]: schoolPrograms };
-    });
-  }
-
-  // Admin functions
-  const addSchool = (school: Omit<School, 'id'>) => {
-    const newSchool = { ...school, id: `school_${Date.now()}` };
-    setSchools(prev => [...prev, newSchool]);
-    setProgramsBySchool(prev => ({...prev, [newSchool.id]: []}));
-    toast({ title: 'School Added' });
-  };
-
-  const updateSchool = (updatedSchool: School) => {
-    setSchools(prev => prev.map(s => s.id === updatedSchool.id ? updatedSchool : s));
-    toast({ title: 'School Updated' });
-  };
-
-  const deleteSchool = (schoolId: string) => {
-    setSchools(prev => prev.filter(s => s.id !== schoolId));
-    setProgramsBySchool(prev => {
-        const newPrograms = {...prev};
-        delete newPrograms[schoolId];
-        return newPrograms;
-    });
-    toast({ title: 'School Deleted', variant: 'destructive' });
-  };
-
-  const addProgram = (schoolId: string, program: Omit<Program, 'id' | 'departments'>) => {
-    const newProgram = { ...program, id: `prog_${Date.now()}`, departments: [] };
-    setProgramsBySchool(prev => ({
-        ...prev,
-        [schoolId]: [...(prev[schoolId] || []), newProgram]
-    }));
-    toast({ title: 'Program Added' });
-  };
-
-  const updateProgram = (schoolId: string, updatedProgram: Program) => {
-    setProgramsBySchool(prev => ({
-        ...prev,
-        [schoolId]: (prev[schoolId] || []).map(p => p.id === updatedProgram.id ? updatedProgram : p)
-    }));
-    toast({ title: 'Program Updated' });
-  };
-
-  const deleteProgram = (schoolId: string, programId: string) => {
-    setProgramsBySchool(prev => ({
-        ...prev,
-        [schoolId]: (prev[schoolId] || []).filter(p => p.id !== programId)
-    }));
-    toast({ title: 'Program Deleted', variant: 'destructive' });
-  };
-
-  const addDepartment = (schoolId: string, programId: string, department: Omit<Department, 'id' | 'classes'>) => {
-    const newDepartment = { ...department, id: `dept_${Date.now()}`, classes: [] };
-    setProgramsBySchool(prev => {
-        const schoolPrograms = (prev[schoolId] || []).map(p => {
-            if (p.id === programId) {
-                return { ...p, departments: [...(p.departments || []), newDepartment] };
-            }
-            return p;
-        });
-        return { ...prev, [schoolId]: schoolPrograms };
-    });
-    toast({ title: 'Department Added' });
-  };
-
-  const updateDepartment = (schoolId: string, programId: string, updatedDepartment: Department) => {
-     setProgramsBySchool(prev => {
-        const schoolPrograms = (prev[schoolId] || []).map(p => {
-            if (p.id === programId) {
-                return { ...p, departments: (p.departments || []).map(d => d.id === updatedDepartment.id ? updatedDepartment : d) };
-            }
-            return p;
-        });
-        return { ...prev, [schoolId]: schoolPrograms };
-    });
-    toast({ title: 'Department Updated' });
-  };
-
-  const deleteDepartment = (schoolId: string, programId: string, departmentId: string) => {
-    setProgramsBySchool(prev => {
-        const schoolPrograms = (prev[schoolId] || []).map(p => {
-            if (p.id === programId) {
-                return { ...p, departments: (p.departments || []).filter(d => d.id !== departmentId) };
-            }
-            return p;
-        });
-        return { ...prev, [schoolId]: schoolPrograms };
-    });
-    toast({ title: 'Department Deleted', variant: 'destructive' });
-  };
-
-  const addClass = (schoolId: string, programId: string, departmentId: string, newClass: Omit<Class, 'id'>) => {
-    const finalNewClass = { ...newClass, id: `class_${Date.now()}` };
-    setProgramsBySchool(prev => {
-        const schoolPrograms = (prev[schoolId] || []).map(p => {
-            if (p.id === programId) {
-                const newDepartments = (p.departments || []).map(d => {
-                    if (d.id === departmentId) {
-                        // Ensure students and faculties are arrays
-                        const classToAdd: Class = {
-                            ...finalNewClass,
-                            students: finalNewClass.students || [],
-                            faculties: finalNewClass.faculties || [],
-                        };
-                        return { ...d, classes: [...(d.classes || []), classToAdd] };
-                    }
-                    return d;
-                });
-                return { ...p, departments: newDepartments };
-            }
-            return p;
-        });
-        return { ...prev, [schoolId]: schoolPrograms };
-    });
-    toast({ title: 'Class Added' });
-  };
-  
-  const updateClass = (schoolId: string, programId: string, departmentId: string, updatedClass: Class) => {
-    findClassAndUpdate(schoolId, programId, departmentId, updatedClass.id, () => updatedClass);
-    toast({ title: 'Class Updated' });
-  };
-
-  const deleteClass = (schoolId: string, programId: string, departmentId: string, classId: string) => {
-    setProgramsBySchool(prev => {
-        const schoolPrograms = (prev[schoolId] || []).map(p => {
-            if (p.id === programId) {
-                const newDepartments = (p.departments || []).map(d => {
-                    if (d.id === departmentId) {
-                        return { ...d, classes: (d.classes || []).filter(c => c.id !== classId) };
-                    }
-                    return d;
-                });
-                return { ...p, departments: newDepartments };
-            }
-            return p;
-        });
-        return { ...prev, [schoolId]: schoolPrograms };
-    });
-    toast({ title: 'Class Deleted', variant: 'destructive' });
-  };
-
-  const addStudentToClass = (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => {
-    const studentToAdd = students.find(s => s.id === studentId);
-    if (!studentToAdd) return;
-
-    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
-        if (cls.students.some(s => s.id === studentId)) {
-            toast({ title: 'Student Already Enrolled', variant: 'destructive' });
-            return cls;
-        }
-        toast({ title: 'Student Added' });
-        return { ...cls, students: [...cls.students, studentToAdd] };
-    });
-  };
-
-  const removeStudentFromClass = (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => {
-    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
-        toast({ title: 'Student Removed', variant: 'destructive' });
-        return { ...cls, students: cls.students.filter(s => s.id !== studentId) };
-    });
-  };
-
-  const addFacultyToClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => {
-    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
-        if (cls.faculties.includes(facultyName)) {
-            toast({ title: 'Faculty Already Assigned', variant: 'destructive' });
-            return cls;
-        }
-        toast({ title: 'Faculty Added' });
-        return { ...cls, faculties: [...cls.faculties, facultyName] };
-    });
-  };
-
-  const removeFacultyFromClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => {
-    findClassAndUpdate(schoolId, programId, departmentId, classId, (cls) => {
-        toast({ title: 'Faculty Removed', variant: 'destructive' });
-        return { ...cls, faculties: cls.faculties.filter(f => f !== facultyName) };
-    });
+    setUserDetails(prev => ({...prev, ...details}));
+    toast({ title: "Profile Updated" });
   };
 
   const value = {
@@ -720,9 +340,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     wifiZones,
     activeCheckIn,
     userDetails,
-    students,
-    schools,
-    programsBySchool,
     isLoaded,
     mode,
     setMode,
@@ -737,28 +354,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails: updateUserDetails as (details: Partial<Omit<UserDetails, 'deviceId'>>) => void,
-    recordClassAttendance,
-    hasCameraPermission,
-    setHasCameraPermission,
-    requestCameraPermission,
-    stopCameraStream,
-    // Admin functions
-    addSchool,
-    updateSchool,
-    deleteSchool,
-    addProgram,
-    updateProgram,
-    deleteProgram,
-    addDepartment,
-    updateDepartment,
-    deleteDepartment,
-    addClass,
-    updateClass,
-    deleteClass,
-    addStudentToClass,
-    removeStudentFromClass,
-    addFacultyToClass,
-    removeFacultyFromClass,
   };
 
   return <AppContext.Provider value={value}>
@@ -773,9 +368,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    
-
-    
-
-

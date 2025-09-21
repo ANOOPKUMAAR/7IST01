@@ -1,69 +1,17 @@
-
-
 "use client";
 
 import { useAppContext } from "@/contexts/app-context";
 import { AttendanceTable } from "@/components/subjects/attendance-table";
-import { FacultyAttendanceTable } from "@/components/subjects/faculty-attendance-table";
 import { notFound, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { useState, useMemo } from "react";
-import { Play, Pause } from "lucide-react";
-import type { Class, Subject } from "@/lib/types";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { subjects, attendance, isLoaded, mode, programsBySchool, subjects: subjectsState } = useAppContext();
-  const [isAttendanceActive, setIsAttendanceActive] = useState(false);
-  
-  const subjectOrClass = useMemo(() => {
-    if (!isLoaded) return undefined;
-    
-    // First, search within the main hierarchical data
-    for (const schoolId in programsBySchool) {
-      for (const program of programsBySchool[schoolId]) {
-        for (const department of program.departments) {
-          const foundClass = department.classes.find(c => c.id === id);
-          if (foundClass) return foundClass;
-        }
-      }
-    }
+  const { subjects, attendance, isLoaded } = useAppContext();
 
-    // If not found and user is a student, check manually added subjects
-    if (mode === 'student') {
-        const manualSubject = subjectsState.find(s => s.id === id);
-        if (manualSubject && !('coordinator' in manualSubject)) {
-             return manualSubject;
-        }
-    }
-
-    return subjects.find(s => s.id === id);
-  }, [id, isLoaded, subjects, programsBySchool, mode, subjectsState]);
-
-  const subjectAsClass = useMemo((): Class | undefined => {
-    if (!subjectOrClass) return undefined;
-    
-    // Check if it's already a Class object (duck typing)
-    if ('coordinator' in subjectOrClass) {
-        return subjectOrClass as Class;
-    }
-
-    // If it's a simple Subject, convert it to a Class-like object
-    const dayMap: { [key: number]: string } = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 0: 'Sunday' };
-    return {
-        id: subjectOrClass.id,
-        name: subjectOrClass.name,
-        startTime: subjectOrClass.expectedCheckIn,
-        endTime: subjectOrClass.expectedCheckOut,
-        day: dayMap[subjectOrClass.dayOfWeek] || 'N/A',
-        coordinator: 'N/A',
-        students: [], // Manual subjects don't have a roster
-        faculties: []
-    };
-  }, [subjectOrClass]);
-
+  const subject = subjects.find((s) => s.id === id);
+  const subjectAttendance = attendance[id] || [];
 
   if (!isLoaded) {
     return (
@@ -76,42 +24,21 @@ export default function SubjectDetailsPage() {
       </div>
     )
   }
-  
-  if (!subjectAsClass) {
+
+  if (!subject) {
     notFound();
   }
-  
-  const subjectAttendance = attendance[id] || [];
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">{subjectAsClass.name}</h2>
-          <p className="text-muted-foreground">
-            {mode === 'faculty' 
-              ? `Class attendance for ${new Date().toLocaleDateString()}` 
-              : `Detailed attendance log for your enrollment in this class.`
-            }
-          </p>
-        </div>
-        {mode === 'faculty' && (
-            <Button onClick={() => setIsAttendanceActive(!isAttendanceActive)} variant={isAttendanceActive ? "destructive" : "default"}>
-                {isAttendanceActive ? <Pause className="mr-2"/> : <Play className="mr-2"/>}
-                {isAttendanceActive ? "Stop Attendance" : "Start Attendance"}
-            </Button>
-        )}
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">{subject.name}</h2>
+        <p className="text-muted-foreground">
+          Detailed attendance log for your enrollment in this class.
+        </p>
       </div>
 
-      {mode === 'faculty' ? (
-        <FacultyAttendanceTable subject={subjectAsClass} isAttendanceActive={isAttendanceActive} />
-      ) : (
-        <AttendanceTable subject={subjectAsClass} records={subjectAttendance} />
-      )}
+      <AttendanceTable subject={subject} records={subjectAttendance} />
     </div>
   );
 }
-
-    
-
-    

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Subject, Class } from "@/lib/types";
+import type { Subject } from "@/lib/types";
 import { useAppContext } from "@/contexts/app-context";
 import {
   Card,
@@ -18,23 +18,7 @@ import { LogIn, LogOut, ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 
 interface SubjectCardProps {
-  subject: Subject | Class;
-}
-
-function getSubjectProps(subject: Subject | Class) {
-    if ('coordinator' in subject) { // It's a Class
-        return {
-            checkIn: subject.startTime,
-            checkOut: subject.endTime,
-            totalClasses: 20, // Placeholder
-        };
-    }
-    // It's a Subject
-    return {
-        checkIn: subject.expectedCheckIn,
-        checkOut: subject.expectedCheckOut,
-        totalClasses: subject.totalClasses,
-    };
+  subject: Subject;
 }
 
 export function SubjectCard({ subject }: SubjectCardProps) {
@@ -42,13 +26,10 @@ export function SubjectCard({ subject }: SubjectCardProps) {
   const subjectAttendance = attendance[subject.id] || [];
   const attendedClasses = subjectAttendance.length;
 
-  const { checkIn: expectedCheckIn, checkOut: expectedCheckOut, totalClasses } = getSubjectProps(subject);
-  const finalTotalClasses = totalClasses > 0 ? totalClasses : attendedClasses || 1;
-  
   const attendancePercentage = useMemo(() => {
-    if (finalTotalClasses === 0) return 0;
-    return Math.round((attendedClasses / finalTotalClasses) * 100);
-  }, [attendedClasses, finalTotalClasses]);
+    if (subject.totalClasses === 0) return 0;
+    return Math.round((attendedClasses / subject.totalClasses) * 100);
+  }, [attendedClasses, subject.totalClasses]);
 
   const isCurrentlyCheckedIn = activeCheckIn?.subjectId === subject.id;
   
@@ -66,14 +47,14 @@ export function SubjectCard({ subject }: SubjectCardProps) {
             {isCurrentlyCheckedIn && <Badge variant="default">Checked In</Badge>}
         </div>
         <CardDescription>
-          Expected: {expectedCheckIn} - {expectedCheckOut}
+          Expected: {subject.expectedCheckIn} - {subject.expectedCheckOut}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="space-y-2">
           <div className="flex justify-between text-sm font-medium">
             <span>Attendance</span>
-            <span>{attendedClasses} / {totalClasses} classes</span>
+            <span>{attendedClasses} / {subject.totalClasses} classes</span>
           </div>
           <Progress value={attendancePercentage} indicatorClassName={getProgressColor()} />
           <p className="text-right text-lg font-bold">{attendancePercentage}%</p>

@@ -2,21 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, User, Settings, Briefcase, ClipboardList, Home } from "lucide-react";
+import { BarChart3, User, Settings, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppContext } from "@/contexts/app-context";
-import { Icons } from "./icons";
 
 const studentNavItems = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Home", icon: Home },
   { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
-  { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/profile", label: "Profile", icon: User },
-];
-
-const facultyNavItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Briefcase },
-  { href: "/attendance-visuals", label: "Attendance", icon: ClipboardList },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/profile", label: "Profile", icon: User },
 ];
@@ -25,12 +17,13 @@ export function BottomNav() {
   const pathname = usePathname();
   const { mode } = useAppContext();
 
-  const navItems = mode === 'faculty' ? facultyNavItems : studentNavItems;
+  // For now, only show nav for students
+  if (mode !== 'student') return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm">
-      <div className={cn("grid items-center justify-items-center h-16")} style={{gridTemplateColumns: `repeat(${navItems.length}, 1fr)`}}>
-        {navItems.map((item) => {
+      <div className={cn("grid items-center justify-items-center h-16")} style={{gridTemplateColumns: `repeat(${studentNavItems.length}, 1fr)`}}>
+        {studentNavItems.map((item) => {
           const isActive = item.href === "/" ? pathname === "/" || pathname.startsWith('/subjects') || pathname === '/dashboard' : pathname.startsWith(item.href);
           return (
             <Link

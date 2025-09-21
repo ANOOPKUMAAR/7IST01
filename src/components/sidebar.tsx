@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar as SidebarPrimitive,
-  SidebarTrigger,
+  SidebarTrigger as SidebarTriggerPrimitive,
   SidebarHeader,
   SidebarContent,
   SidebarFooter,
@@ -24,6 +24,7 @@ import { navLinks, type NavLink } from "@/lib/nav-links";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
+import { Header } from "./header";
 
 function MainSidebar() {
   const { mode, userDetails, logout } = useAppContext();
@@ -82,15 +83,20 @@ function MainSidebar() {
   );
 }
 
-export function Sidebar({children}: {children: ReactNode}) {
+export function SidebarTrigger() {
+    return <SidebarTriggerPrimitive className="md:hidden" />;
+}
+
+export function MainLayout({children}: {children: ReactNode}) {
     return (
         <SidebarProvider>
             <MainSidebar />
             <SidebarInset>
-                {children}
+                <Header />
+                <main className="flex-1 overflow-y-auto">
+                    {children}
+                </main>
             </SidebarInset>
         </SidebarProvider>
     )
 }
-
-export { SidebarTrigger };

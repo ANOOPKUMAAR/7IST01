@@ -19,7 +19,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { UploadClassTimetableDialog } from "@/components/admin/upload-class-timetable-dialog";
-import { Header } from "@/components/header";
 
 function ClassCard({ schoolId, programId, departmentId, cls }: { schoolId: string, programId: string, departmentId: string, cls: Class }) {
     const { mode, deleteClass } = useAppContext();
@@ -84,77 +83,74 @@ export default function DepartmentDetailsPage() {
   const classes = department.classes || [];
 
   return (
-    <>
-      <Header />
-      <div className="flex flex-col gap-6 p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" asChild>
-                  <Link href={`/schools/${schoolId}/programs/${programId}`}>
-                      <ArrowLeft />
-                      <span className="sr-only">Back to {program.name}</span>
-                  </Link>
-              </Button>
-              <div>
-                  <h2 className="text-2xl font-bold tracking-tight">{department.name}</h2>
-                  <p className="text-muted-foreground">
-                      Classes in this department.
-                  </p>
-              </div>
-          </div>
-          {mode === 'admin' && (
-              <div className="flex gap-2">
-                  <Dialog open={isUploadOpen} onOpenChange={setUploadOpen}>
-                      <DialogTrigger asChild>
-                          <Button variant="outline"><FileUp/> Upload Timetable</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                          <DialogHeader>
-                              <DialogTitle>Upload Class Timetable</DialogTitle>
-                              <DialogDescription>Upload an image or PDF to bulk-create classes for this department.</DialogDescription>
-                          </DialogHeader>
-                          <UploadClassTimetableDialog
-                              schoolId={schoolId}
-                              programId={programId}
-                              departmentId={departmentId}
-                              onDone={() => setUploadOpen(false)}
-                          />
-                      </DialogContent>
-                  </Dialog>
-                  <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
-                      <DialogTrigger asChild>
-                          <Button><PlusCircle /> Add Class</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                          <DialogHeader>
-                              <DialogTitle>Add New Class</DialogTitle>
-                          </DialogHeader>
-                          <ClassFormDialog
-                              schoolId={schoolId}
-                              programId={programId}
-                              departmentId={departmentId}
-                              onDone={() => setAddOpen(false)}
-                          />
-                      </DialogContent>
-                  </Dialog>
-              </div>
-          )}
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" asChild>
+                <Link href={`/schools/${schoolId}/programs/${programId}`}>
+                    <ArrowLeft />
+                    <span className="sr-only">Back to {program.name}</span>
+                </Link>
+            </Button>
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight">{department.name}</h2>
+                <p className="text-muted-foreground">
+                    Classes in this department.
+                </p>
+            </div>
         </div>
-        
-        {classes.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {classes.map((cls) => (
-              <ClassCard key={cls.id} schoolId={schoolId} programId={programId} departmentId={departmentId} cls={cls} />
-            ))}
-          </div>
-        ) : (
-          <Card>
-              <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">No classes found for this department.</p>
-              </CardContent>
-          </Card>
+        {mode === 'admin' && (
+            <div className="flex gap-2">
+                <Dialog open={isUploadOpen} onOpenChange={setUploadOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline"><FileUp/> Upload Timetable</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Upload Class Timetable</DialogTitle>
+                            <DialogDescription>Upload an image or PDF to bulk-create classes for this department.</DialogDescription>
+                        </DialogHeader>
+                        <UploadClassTimetableDialog
+                            schoolId={schoolId}
+                            programId={programId}
+                            departmentId={departmentId}
+                            onDone={() => setUploadOpen(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
+                    <DialogTrigger asChild>
+                        <Button><PlusCircle /> Add Class</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add New Class</DialogTitle>
+                        </DialogHeader>
+                        <ClassFormDialog
+                            schoolId={schoolId}
+                            programId={programId}
+                            departmentId={departmentId}
+                            onDone={() => setAddOpen(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
         )}
       </div>
-    </>
+      
+      {classes.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {classes.map((cls) => (
+            <ClassCard key={cls.id} schoolId={schoolId} programId={programId} departmentId={departmentId} cls={cls} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+            <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground">No classes found for this department.</p>
+            </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

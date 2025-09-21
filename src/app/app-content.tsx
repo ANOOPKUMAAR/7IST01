@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { Icons } from "@/components/icons";
-import { Sidebar } from "@/components/sidebar";
+import { MainLayout } from "@/components/sidebar";
 
 export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
@@ -40,10 +40,8 @@ export function AppContent({ children }: { children: ReactNode }) {
   }
   
   return (
-    <Sidebar>
-      <main className="flex-1 overflow-y-auto">
+    <MainLayout>
         {children}
-      </main>
-    </Sidebar>
+    </MainLayout>
   );
 }

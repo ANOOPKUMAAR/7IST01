@@ -18,7 +18,6 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Header } from "@/components/header";
 
 function DepartmentCard({ schoolId, programId, department }: { schoolId: string, programId: string, department: Department }) {
     const { mode, deleteDepartment } = useAppContext();
@@ -79,53 +78,50 @@ export default function ProgramDetailsPage() {
   const departments = program.departments || [];
 
   return (
-    <>
-      <Header />
-      <div className="flex flex-col gap-6 p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" asChild>
-                  <Link href={`/schools/${schoolId}`}>
-                      <ArrowLeft />
-                      <span className="sr-only">Back to {school.name}</span>
-                  </Link>
-              </Button>
-              <div>
-                  <h2 className="text-2xl font-bold tracking-tight">{program.name}</h2>
-                  <p className="text-muted-foreground">
-                      Departments under this program.
-                  </p>
-              </div>
-          </div>
-          {mode === 'admin' && (
-              <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
-                  <DialogTrigger asChild>
-                      <Button><PlusCircle /> Add Department</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                      <DialogHeader>
-                          <DialogTitle>Add New Department</DialogTitle>
-                      </DialogHeader>
-                      <DepartmentFormDialog schoolId={schoolId} programId={programId} onDone={() => setAddOpen(false)} />
-                  </DialogContent>
-              </Dialog>
-          )}
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" asChild>
+                <Link href={`/schools/${schoolId}`}>
+                    <ArrowLeft />
+                    <span className="sr-only">Back to {school.name}</span>
+                </Link>
+            </Button>
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight">{program.name}</h2>
+                <p className="text-muted-foreground">
+                    Departments under this program.
+                </p>
+            </div>
         </div>
-        
-        {departments.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {departments.map((department) => (
-              <DepartmentCard key={department.id} schoolId={schoolId} programId={programId} department={department} />
-            ))}
-          </div>
-        ) : (
-          <Card>
-              <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">No departments found for this program.</p>
-              </CardContent>
-          </Card>
+        {mode === 'admin' && (
+            <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
+                <DialogTrigger asChild>
+                    <Button><PlusCircle /> Add Department</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New Department</DialogTitle>
+                    </DialogHeader>
+                    <DepartmentFormDialog schoolId={schoolId} programId={programId} onDone={() => setAddOpen(false)} />
+                </DialogContent>
+            </Dialog>
         )}
       </div>
-    </>
+      
+      {departments.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {departments.map((department) => (
+            <DepartmentCard key={department.id} schoolId={schoolId} programId={programId} department={department} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+            <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground">No departments found for this program.</p>
+            </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

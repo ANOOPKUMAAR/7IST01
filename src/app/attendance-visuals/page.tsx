@@ -7,12 +7,9 @@ import { OverallAttendanceSummary } from "@/components/visuals/overall-attendanc
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, PieChart, LineChart } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
-import { Header } from "@/components/header";
 
 function StudentAttendancePage() {
     return (
-    <>
-      <Header />
       <div className="flex flex-col gap-6 p-4 sm:p-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
@@ -51,7 +48,6 @@ function StudentAttendancePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </>
   );
 }
 
@@ -63,11 +59,8 @@ export default function AttendanceVisualsPage() {
   }
 
   return (
-    <>
-      <Header />
-      <div className="flex flex-col items-center justify-center h-full p-4 sm:p-6">
-          <p className="text-muted-foreground">This page is only available for students.</p>
-      </div>
-    </>
+    <div className="flex flex-col items-center justify-center h-full p-4 sm:p-6">
+        <p className="text-muted-foreground">This page is only available for students.</p>
+    </div>
   );
 }

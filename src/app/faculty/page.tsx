@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase, CalendarUp } from "lucide-react";
+import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase, Upload } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import { FacultyFormDialog } from "@/components/admin/faculty-form-dialog";
 import { FacultyDetailsDialog } from "@/components/admin/faculty-details-dialog";
@@ -91,7 +91,7 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
                     <Edit className="mr-2" /> Edit Details
                   </DropdownMenuItem>
                    <DropdownMenuItem onClick={() => setUploadTimetableOpen(true)}>
-                    <CalendarUp className="mr-2" /> Upload Timetable
+                    <Upload className="mr-2" /> Upload Timetable
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

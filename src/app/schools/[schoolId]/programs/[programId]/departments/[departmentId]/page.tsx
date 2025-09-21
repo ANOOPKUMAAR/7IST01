@@ -95,7 +95,7 @@ export default function DepartmentDetailsPage() {
             <div>
                 <h2 className="text-2xl font-bold tracking-tight">{department.name}</h2>
                 <p className="text-muted-foreground">
-                    Classes in this department.
+                    Manage classes by uploading a timetable.
                 </p>
             </div>
         </div>
@@ -103,7 +103,7 @@ export default function DepartmentDetailsPage() {
             <div className="flex gap-2">
                 <Dialog open={isUploadOpen} onOpenChange={setUploadOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline"><FileUp/> Upload Timetable</Button>
+                        <Button><FileUp/> Upload Timetable</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
@@ -115,22 +115,6 @@ export default function DepartmentDetailsPage() {
                             programId={programId}
                             departmentId={departmentId}
                             onDone={() => setUploadOpen(false)}
-                        />
-                    </DialogContent>
-                </Dialog>
-                <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
-                    <DialogTrigger asChild>
-                        <Button><PlusCircle /> Add Class</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add New Class</DialogTitle>
-                        </DialogHeader>
-                        <ClassFormDialog
-                            schoolId={schoolId}
-                            programId={programId}
-                            departmentId={departmentId}
-                            onDone={() => setAddOpen(false)}
                         />
                     </DialogContent>
                 </Dialog>
@@ -147,7 +131,7 @@ export default function DepartmentDetailsPage() {
       ) : (
         <Card>
             <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground">No classes found for this department.</p>
+                <p className="text-muted-foreground">No classes found for this department. Upload a timetable to get started.</p>
             </CardContent>
         </Card>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
@@ -36,12 +36,10 @@ export function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-  if (pathname === '/select-role' || (isLoaded && !mode)) {
+  if (!mode) {
     return <>{children}</>;
   }
   
-  if (!mode) return null;
-
   return (
     <div className="flex flex-col h-screen">
       <Header />

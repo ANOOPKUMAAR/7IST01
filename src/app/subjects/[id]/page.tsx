@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAppContext } from "@/contexts/app-context";
@@ -9,12 +10,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { Play, Pause } from "lucide-react";
-import type { Class } from "@/lib/types";
+import type { Class, Subject } from "@/lib/types";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { attendance, isLoaded, mode, programsBySchool } = useAppContext();
+  const { subjects, attendance, isLoaded, mode, programsBySchool } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   const subjectClass = useMemo(() => {
@@ -38,9 +39,26 @@ export default function SubjectDetailsPage() {
       if (foundClass) break;
     }
     
+    if (!foundClass && mode === 'student') {
+        const manualSubject = subjects.find(s => s.id === id);
+        if (manualSubject) {
+             // Create a Class-like object from a Subject
+             foundClass = {
+                id: manualSubject.id,
+                name: manualSubject.name,
+                startTime: manualSubject.expectedCheckIn,
+                endTime: manualSubject.expectedCheckOut,
+                day: Object.keys(dayMap).find(key => dayMap[key] === manualSubject.dayOfWeek) || 'Monday',
+                coordinator: 'N/A',
+                students: [], // Manual subjects don't have a roster
+                faculties: []
+            };
+        }
+    }
+    
     return foundClass;
 
-  }, [id, isLoaded, programsBySchool]);
+  }, [id, isLoaded, programsBySchool, mode, subjects]);
 
 
   if (!isLoaded) {
@@ -89,5 +107,7 @@ export default function SubjectDetailsPage() {
     </div>
   );
 }
+
+    
 
     

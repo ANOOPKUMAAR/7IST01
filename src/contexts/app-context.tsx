@@ -219,41 +219,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     if (mode === 'student') {
         const enrolledSubjects: Subject[] = [];
-        const subjectMap = new Map<string, Subject>();
-
-        // Add classes student is enrolled in from the main data structure
         Object.values(programsBySchool).flat().forEach(program => {
             program.departments.forEach(department => {
                 department.classes.forEach(cls => {
                     if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
-                        const subject: Subject = {
+                        enrolledSubjects.push({
                             id: cls.id,
                             name: cls.name,
                             expectedCheckIn: cls.startTime,
                             expectedCheckOut: cls.endTime,
                             dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
                             totalClasses: 20 // Placeholder, can be improved
-                        };
-                        if (!subjectMap.has(subject.id)) {
-                            subjectMap.set(subject.id, subject);
-                        }
+                        });
                     }
                 });
             });
         });
-
-        // Add manually added/uploaded subjects, ensuring no duplicates by ID
-        subjectsState.forEach(manualSubject => {
-            if (!subjectMap.has(manualSubject.id)) {
-                subjectMap.set(manualSubject.id, manualSubject);
-            }
-        });
-        
-        return Array.from(subjectMap.values());
+        // This is where manually-added subjects would be combined, if desired.
+        // For now, it only returns subjects the student is officially enrolled in.
+        return enrolledSubjects;
     }
 
     return [];
-  }, [mode, isLoaded, programsBySchool, userDetails.rollNo, subjectsState]);
+  }, [mode, isLoaded, programsBySchool, userDetails.rollNo]);
 
   // Save to localStorage when the user is about to leave the page
   useEffect(() => {
@@ -785,5 +773,7 @@ export function useAppContext() {
   }
   return context;
 }
+
+    
 
     

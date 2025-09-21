@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
@@ -12,6 +12,11 @@ export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
   const pathname = usePathname();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (isLoaded) {
@@ -28,7 +33,7 @@ export function AppContent({ children }: { children: ReactNode }) {
   }, [isLoaded, mode, pathname, router]);
   
   const isAuthPage = pathname === '/select-role';
-  const showLoading = !isLoaded || (!mode && !isAuthPage);
+  const showLoading = !isClient || !isLoaded || (!mode && !isAuthPage);
 
   if (showLoading) {
     return (

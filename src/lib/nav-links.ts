@@ -1,4 +1,4 @@
-import { Home, BarChart3, Settings, User, GraduationCap, Briefcase, Building } from 'lucide-react';
+import { Home, BarChart3, Settings, User, GraduationCap, Briefcase, Building, Fingerprint } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { UserMode } from './types';
 
@@ -10,6 +10,7 @@ export interface NavLink {
 
 export const studentNavLinks: NavLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/attendance", label: "Attendance", icon: Fingerprint },
     { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
     { href: "/settings", label: "Settings", icon: Settings },
     { href: "/profile", label: "Profile", icon: User },

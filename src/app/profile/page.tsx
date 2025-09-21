@@ -25,6 +25,8 @@ import { User, Edit, Briefcase, GraduationCap, Database, Upload, Camera } from "
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Header } from "@/components/header";
+
 
 function InfoRow({ label, value }: { label: string, value: string | undefined }) {
     return (
@@ -204,158 +206,147 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-        
-      {mode === 'student' ? (
-        <>
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="relative group">
-                        <Avatar className="h-24 w-24 border">
-                            <AvatarImage src={userDetails.avatar} data-ai-hint="student avatar" />
-                            <AvatarFallback>
-                                <User className="h-12 w-12 text-muted-foreground" />
-                            </AvatarFallback>
-                        </Avatar>
-                        <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button size="icon" className="absolute bottom-0 right-0 rounded-full h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Edit className="h-4 w-4" />
-                                    <span className="sr-only">Edit Avatar</span>
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Change Profile Picture</DialogTitle>
-                                </DialogHeader>
-                                <EditAvatarDialog onDone={() => setAvatarDialogOpen(false)} />
-                            </DialogContent>
-                        </Dialog>
+    <>
+        <Header />
+        <div className="flex flex-col gap-6 p-4 sm:p-6">
+            
+        {mode === 'student' ? (
+            <>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="relative group">
+                            <Avatar className="h-24 w-24 border">
+                                <AvatarImage src={userDetails.avatar} data-ai-hint="student avatar" />
+                                <AvatarFallback>
+                                    <User className="h-12 w-12 text-muted-foreground" />
+                                </AvatarFallback>
+                            </Avatar>
+                            <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button size="icon" className="absolute bottom-0 right-0 rounded-full h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Edit className="h-4 w-4" />
+                                        <span className="sr-only">Edit Avatar</span>
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Change Profile Picture</DialogTitle>
+                                    </DialogHeader>
+                                    <EditAvatarDialog onDone={() => setAvatarDialogOpen(false)} />
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-bold">{userDetails.name}</h2>
+                            <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-3xl font-bold">{userDetails.name}</h2>
-                        <p className="text-muted-foreground">Roll No: {userDetails.rollNo}</p>
-                    </div>
+                    
+                    <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-3xl">
+                            <DialogHeader>
+                                <DialogTitle>Edit Profile</DialogTitle>
+                                <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
+                            </DialogHeader>
+                            <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
+                        </DialogContent>
+                    </Dialog>
                 </div>
-                
-                <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-3xl">
-                        <DialogHeader>
-                            <DialogTitle>Edit Profile</DialogTitle>
-                            <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
-                        </DialogHeader>
-                        <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
-                    </DialogContent>
-                </Dialog>
-            </div>
 
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Student Information</CardTitle>
+                        <CardDescription>Detailed student profile as per records.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-y-2 gap-x-8 md:grid-cols-2">
+                            <InfoRow label="Program" value={userDetails.program} />
+                            <InfoRow label="Branch" value={userDetails.branch} />
+                            <InfoRow label="Department" value={userDetails.department} />
+                            <InfoRow label="Section" value={userDetails.section} />
+                            <InfoRow label="Phone Number" value={userDetails.phone} />
+                            <InfoRow label="Parent's Name" value={userDetails.parentName} />
+                            <div className="md:col-span-2">
+                                <InfoRow label="Device ID" value={userDetails.deviceId} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <InfoRow label="Address" value={userDetails.address} />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Attendance Overview</CardTitle>
+                        <CardDescription>A visual summary of your attendance.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center">
+                        <div className="h-64 w-full max-w-sm">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip formatter={(value, name) => [`${value} classes`, name]}/>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="mt-4 flex gap-x-6 text-center">
+                            <div>
+                                <p className="text-2xl font-bold text-status-green">{totalAttended}</p>
+                                <p className="text-sm text-muted-foreground">Classes Attended</p>
+                            </div>
+                            <div>
+                                <p className="text-2xl font-bold text-status-red">{totalMissed}</p>
+                                <p className="text-sm text-muted-foreground">Classes Missed</p>
+                            </div>
+                        </div>
+
+                        <Tabs defaultValue="breakdown" className="w-full mt-6">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="breakdown">Course Breakdown</TabsTrigger>
+                                <TabsTrigger value="day-hour">Day/Hour View</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="breakdown">
+                                <p className="p-4 text-center text-muted-foreground">Course breakdown visuals will be shown here.</p>
+                            </TabsContent>
+                            <TabsContent value="day-hour">
+                                <p className="p-4 text-center text-muted-foreground">Day and hour attendance patterns will be shown here.</p>
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
+            </>
+        ) : mode === 'faculty' ? (
             <Card>
-                <CardHeader>
-                    <CardTitle>Student Information</CardTitle>
-                    <CardDescription>Detailed student profile as per records.</CardDescription>
+                <CardHeader className="items-center text-center">
+                    <Briefcase className="h-12 w-12 text-muted-foreground mb-2"/>
+                    <CardTitle>Faculty Mode</CardTitle>
+                    <CardDescription>This is the faculty dashboard view. You can switch to other modes from this page if needed.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-y-2 gap-x-8 md:grid-cols-2">
-                        <InfoRow label="Program" value={userDetails.program} />
-                        <InfoRow label="Branch" value={userDetails.branch} />
-                        <InfoRow label="Department" value={userDetails.department} />
-                        <InfoRow label="Section" value={userDetails.section} />
-                        <InfoRow label="Phone Number" value={userDetails.phone} />
-                        <InfoRow label="Parent's Name" value={userDetails.parentName} />
-                         <div className="md:col-span-2">
-                            <InfoRow label="Device ID" value={userDetails.deviceId} />
-                        </div>
-                        <div className="md:col-span-2">
-                            <InfoRow label="Address" value={userDetails.address} />
-                        </div>
-                    </div>
+                    <p className="text-center text-muted-foreground">You can manage your courses and view student attendance from the main dashboard.</p>
                 </CardContent>
             </Card>
-            
+        ) : (
             <Card>
-                <CardHeader>
-                    <CardTitle>Attendance Overview</CardTitle>
-                    <CardDescription>A visual summary of your attendance.</CardDescription>
+                <CardHeader className="items-center text-center">
+                    <Database className="h-12 w-12 text-muted-foreground mb-2"/>
+                    <CardTitle>Admin Mode</CardTitle>
+                    <CardDescription>This is the admin dashboard view. You can switch to other modes from this page if needed.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center">
-                    <div className="h-64 w-full max-w-sm">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                                    {pieData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip formatter={(value, name) => [`${value} classes`, name]}/>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="mt-4 flex gap-x-6 text-center">
-                        <div>
-                            <p className="text-2xl font-bold text-status-green">{totalAttended}</p>
-                            <p className="text-sm text-muted-foreground">Classes Attended</p>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-status-red">{totalMissed}</p>
-                            <p className="text-sm text-muted-foreground">Classes Missed</p>
-                        </div>
-                    </div>
-
-                    <Tabs defaultValue="breakdown" className="w-full mt-6">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="breakdown">Course Breakdown</TabsTrigger>
-                            <TabsTrigger value="day-hour">Day/Hour View</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="breakdown">
-                            <p className="p-4 text-center text-muted-foreground">Course breakdown visuals will be shown here.</p>
-                        </TabsContent>
-                        <TabsContent value="day-hour">
-                            <p className="p-4 text-center text-muted-foreground">Day and hour attendance patterns will be shown here.</p>
-                        </TabsContent>
-                    </Tabs>
+                <CardContent>
+                    <p className="text-center text-muted-foreground">You can manage all app data and settings from here.</p>
                 </CardContent>
             </Card>
-        </>
-      ) : mode === 'faculty' ? (
-        <Card>
-            <CardHeader className="items-center text-center">
-                <Briefcase className="h-12 w-12 text-muted-foreground mb-2"/>
-                <CardTitle>Faculty Mode</CardTitle>
-                <CardDescription>This is the faculty dashboard view. You can switch to other modes from this page if needed.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <p className="text-center text-muted-foreground">You can manage your courses and view student attendance from the main dashboard.</p>
-            </CardContent>
-        </Card>
-      ) : (
-        <Card>
-            <CardHeader className="items-center text-center">
-                <Database className="h-12 w-12 text-muted-foreground mb-2"/>
-                <CardTitle>Admin Mode</CardTitle>
-                <CardDescription>This is the admin dashboard view. You can switch to other modes from this page if needed.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <p className="text-center text-muted-foreground">You can manage all app data and settings from here.</p>
-            </CardContent>
-        </Card>
-      )}
-       <Card>
-            <CardHeader>
-                <CardTitle>Logout</CardTitle>
-                <CardDescription>
-                Log out of your current session.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Button variant="destructive" onClick={logout}>
-                    Logout
-                </Button>
-            </CardContent>
-        </Card>
-
-    </div>
+        )}
+        </div>
+    </>
   );
 }

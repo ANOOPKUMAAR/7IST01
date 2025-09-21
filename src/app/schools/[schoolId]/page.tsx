@@ -24,6 +24,7 @@ import {
   DialogTrigger,
   DialogDescription
 } from "@/components/ui/dialog";
+import { Header } from "@/components/header";
 
 function ProgramCard({ schoolId, program }: { schoolId: string, program: Program }) {
   const { mode, deleteProgram } = useAppContext();
@@ -81,51 +82,54 @@ export default function SchoolDetailsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-                <Link href="/">
-                    <ArrowLeft />
-                    <span className="sr-only">Back to Dashboard</span>
-                </Link>
-            </Button>
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight">{school.name}</h2>
-                <p className="text-muted-foreground">
-                    Programs offered by this school.
-                </p>
-            </div>
+    <>
+      <Header />
+      <div className="flex flex-col gap-6 p-4 sm:p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+              <Button variant="outline" size="icon" asChild>
+                  <Link href="/dashboard">
+                      <ArrowLeft />
+                      <span className="sr-only">Back to Dashboard</span>
+                  </Link>
+              </Button>
+              <div>
+                  <h2 className="text-2xl font-bold tracking-tight">{school.name}</h2>
+                  <p className="text-muted-foreground">
+                      Programs offered by this school.
+                  </p>
+              </div>
+          </div>
+          {mode === 'admin' && (
+              <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
+                  <DialogTrigger asChild>
+                      <Button><PlusCircle /> Add Program</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                      <DialogHeader>
+                          <DialogTitle>Add New Program</DialogTitle>
+                          <DialogDescription>Enter details for the new program.</DialogDescription>
+                      </DialogHeader>
+                      <ProgramFormDialog schoolId={schoolId} onDone={() => setAddOpen(false)} />
+                  </DialogContent>
+              </Dialog>
+          )}
         </div>
-        {mode === 'admin' && (
-            <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
-                <DialogTrigger asChild>
-                    <Button><PlusCircle /> Add Program</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add New Program</DialogTitle>
-                        <DialogDescription>Enter details for the new program.</DialogDescription>
-                    </DialogHeader>
-                    <ProgramFormDialog schoolId={schoolId} onDone={() => setAddOpen(false)} />
-                </DialogContent>
-            </Dialog>
+        
+        {programs.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {programs.map((program) => (
+              <ProgramCard key={program.id} schoolId={schoolId} program={program} />
+            ))}
+          </div>
+        ) : (
+          <Card>
+              <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">No programs found for this school.</p>
+              </CardContent>
+          </Card>
         )}
       </div>
-      
-      {programs.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {programs.map((program) => (
-            <ProgramCard key={program.id} schoolId={schoolId} program={program} />
-          ))}
-        </div>
-      ) : (
-        <Card>
-            <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground">No programs found for this school.</p>
-            </CardContent>
-        </Card>
-      )}
-    </div>
+    </>
   );
 }

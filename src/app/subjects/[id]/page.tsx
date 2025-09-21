@@ -4,6 +4,7 @@ import { useAppContext } from "@/contexts/app-context";
 import { AttendanceTable } from "@/components/subjects/attendance-table";
 import { notFound, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Header } from "@/components/header";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
@@ -15,13 +16,16 @@ export default function SubjectDetailsPage() {
 
   if (!isLoaded) {
     return (
-      <div className="space-y-6">
-        <div className="space-y-2">
-            <Skeleton className="h-8 w-1/2" />
-            <Skeleton className="h-5 w-1/3" />
+      <>
+        <Header />
+        <div className="space-y-6 p-4 sm:p-6">
+            <div className="space-y-2">
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-5 w-1/3" />
+            </div>
+            <Skeleton className="h-[400px] w-full" />
         </div>
-        <Skeleton className="h-[400px] w-full" />
-      </div>
+      </>
     )
   }
 
@@ -30,15 +34,18 @@ export default function SubjectDetailsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">{subject.name}</h2>
-        <p className="text-muted-foreground">
-          Detailed attendance log for your enrollment in this class.
-        </p>
-      </div>
+    <>
+      <Header />
+      <div className="flex flex-col gap-6 p-4 sm:p-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">{subject.name}</h2>
+          <p className="text-muted-foreground">
+            Detailed attendance log for your enrollment in this class.
+          </p>
+        </div>
 
-      <AttendanceTable subject={subject} records={subjectAttendance} />
-    </div>
+        <AttendanceTable subject={subject} records={subjectAttendance} />
+      </div>
+    </>
   );
 }

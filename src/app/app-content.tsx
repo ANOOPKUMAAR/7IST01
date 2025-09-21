@@ -4,9 +4,8 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
-import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
-import { BottomNav } from "@/components/bottom-nav";
+import { Sidebar } from "@/components/sidebar";
 
 export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
@@ -36,17 +35,15 @@ export function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!mode) {
+  if (!mode || pathname === '/select-role') {
     return <>{children}</>;
   }
   
   return (
-    <div className="flex flex-col h-screen">
-      <Header />
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 mb-16">
+    <Sidebar>
+      <main className="flex-1 overflow-y-auto">
         {children}
       </main>
-      <BottomNav />
-    </div>
+    </Sidebar>
   );
 }

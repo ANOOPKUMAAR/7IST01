@@ -37,7 +37,7 @@ interface AppContextType {
   attendance: Record<string, AttendanceRecord[]>;
   wifiZones: WifiZone[];
   activeCheckIn: ActiveCheckIn | null;
-  userDetails: UserDetails;
+  userDetails: UserDetails & { id: string };
   isLoaded: boolean;
   mode: UserMode | null;
   schools: School[];
@@ -68,7 +68,7 @@ interface AppContextType {
   updateClass: (schoolId: string, programId: string, departmentId: string, cls: Class) => void;
   deleteClass: (schoolId: string, programId: string, departmentId: string, classId: string) => void;
   addStudent: (student: Omit<Student, "id">) => void;
-  bulkAddStudents: (newStudents: Omit<Student, "id">[]) => void;
+  bulkAddStudents: (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => void;
   updateStudent: (student: Student) => void;
   deleteStudent: (studentId: string) => void;
   addStudentToClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
@@ -122,7 +122,8 @@ const initialWifiZones: WifiZone[] = [
     { id: 'wifi2', ssid: 'Library-Wifi' },
 ];
 
-const initialUserDetails: Omit<UserDetails, 'deviceId' | 'avatar' | 'id'> = {
+const initialUserDetails: UserDetails = {
+    id: "20221IST0001",
     name: "Alex Doe",
     rollNo: "20221IST0001",
     program: "Bachelor of Technology",
@@ -132,6 +133,8 @@ const initialUserDetails: Omit<UserDetails, 'deviceId' | 'avatar' | 'id'> = {
     phone: "+1 (123) 456-7890",
     parentName: "John Doe",
     address: "123 University Lane, Tech City, 12345",
+    deviceId: '',
+    avatar: ''
 };
 
 function generateDeviceId() {
@@ -146,7 +149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
-  const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, id: 'user1', deviceId: '', avatar: '' });
+  const [userDetails, setUserDetails] = useState<UserDetails & { id: string }>({ ...initialUserDetails, deviceId: '', avatar: '' });
   const [mode, setModeState] = useState<UserMode | null>(null);
   
   const [schools, setSchools] = useState<School[]>([]);
@@ -203,8 +206,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (!userDetailsData.avatar) {
               userDetailsData.avatar = `https://picsum.photos/seed/${Math.random()}/200`;
           }
+           if (!userDetailsData.id) {
+              userDetailsData.id = userDetailsData.rollNo;
+          }
       } else {
-          userDetailsData = { ...initialUserDetails, id: 'user1', deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${Math.random()}/200` };
+          userDetailsData = { ...initialUserDetails, deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
       }
       setUserDetails(userDetailsData);
       
@@ -217,7 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
       setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
       const allStudents = [
-        { ...userDetails, id: 'user1'},
+        { ...userDetailsData },
         ...mockStudents
       ];
       setStudents(storedStudents ? JSON.parse(storedStudents) : allStudents);
@@ -225,7 +231,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       const deviceId = generateDeviceId();
-      setUserDetails({ ...initialUserDetails, id: 'user1', deviceId, avatar: `https://picsum.photos/seed/${Math.random()}/200` });
+      setUserDetails({ ...initialUserDetails, deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` });
       setSubjectsState(initialStudentSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
@@ -234,7 +240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSchools(initialSchools);
       setProgramsBySchool(initialProgramsBySchool);
       setStudents([
-        { ...userDetails, id: 'user1'},
+        { ...userDetails, id: userDetails.rollNo},
         ...mockStudents
       ]);
     }
@@ -435,7 +441,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Record Deleted", variant: "destructive" });
   };
 
-  const updateUserDetails = (details: Partial<Omit<UserDetails, 'deviceId' | 'id'>>) => {
+  const updateUserDetails = (details: Partial<Omit<UserDetails, 'deviceId' | 'id' | 'rollNo'>>) => {
     setUserDetails(prev => ({...prev, ...details}));
     toast({ title: "Profile Updated" });
   };
@@ -538,25 +544,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Class Deleted", variant: "destructive" });
   };
   
-  const addStudent = (student: Omit<Student, "id">) => {
-    const newStudent = { ...student, id: `stu_${Date.now()}`, deviceId: generateDeviceId() };
+  const addStudent = (studentData: Omit<Student, "id">) => {
+    if (students.some(s => s.rollNo === studentData.rollNo)) {
+        toast({ title: "Student Exists", description: "A student with this roll number already exists.", variant: "destructive" });
+        return;
+    }
+    const newStudent: Student = { ...studentData, id: studentData.rollNo };
     setStudents(prev => [...prev, newStudent]);
     toast({ title: "Student Added" });
   };
 
-  const bulkAddStudents = (newStudents: Omit<Student, "id">[]) => {
-    const studentsToAdd = newStudents.map(s => ({
-      ...s,
-      id: `stu_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      deviceId: generateDeviceId(),
-      avatar: `https://picsum.photos/seed/${s.rollNo}/200`
-    }));
+  const bulkAddStudents = (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => {
+    const studentsToAdd: Student[] = [];
+    const existingRollNos = new Set(students.map(s => s.rollNo));
+
+    newStudents.forEach(s => {
+        if (!existingRollNos.has(s.rollNo)) {
+            studentsToAdd.push({
+                ...s,
+                id: s.rollNo,
+                deviceId: generateDeviceId(),
+                avatar: `https://picsum.photos/seed/${s.rollNo}/200`
+            });
+            existingRollNos.add(s.rollNo);
+        }
+    });
+
     setStudents(prev => [...prev, ...studentsToAdd]);
-    toast({ title: "Students Imported", description: `${studentsToAdd.length} new students have been imported.` });
+    
+    if (studentsToAdd.length > 0) {
+        toast({ title: "Students Imported", description: `${studentsToAdd.length} new students have been imported.` });
+    } else {
+        toast({ title: "No New Students", description: "All students in the file already exist in the system." });
+    }
   };
 
   const updateStudent = (updatedStudent: Student) => {
+    if (updatedStudent.id !== updatedStudent.rollNo) {
+        toast({ title: "Update Failed", description: "Roll No cannot be changed as it is the primary key.", variant: "destructive" });
+        // Revert the change in UI if it's based on optimistic update
+        setStudents(prev => [...prev]);
+        return;
+    }
+
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+
     if (updatedStudent.id === userDetails.id) {
         setUserDetails(updatedStudent);
     }
@@ -667,7 +699,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteSubject,
     addWifiZone,
     deleteWifiZone,
-    checkIn,
+checkIn,
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails: updateUserDetails as any,
@@ -680,11 +712,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addDepartment,
     updateDepartment,
     deleteDepartment,
-addClass,
+    addClass,
     updateClass,
     deleteClass,
     addStudent,
-    bulkAddStudents,
+    bulkAddStudents: bulkAddStudents as any,
     updateStudent,
     deleteStudent,
     addStudentToClass,

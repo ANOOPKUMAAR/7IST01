@@ -11,11 +11,11 @@ const baseStudentDetails = {
 };
 
 export const mockStudents: Student[] = [
-    { ...baseStudentDetails, id: 's1', name: 'Bob Johnson', rollNo: '20221IST0002', deviceId: 'dev_abc123', avatar: `https://picsum.photos/seed/s1/200` },
-    { ...baseStudentDetails, id: 's2', name: 'Charlie Brown', rollNo: '20221IST0003', deviceId: 'dev_def456', avatar: `https://picsum.photos/seed/s2/200` },
-    { ...baseStudentDetails, id: 's3', name: 'Diana Prince', rollNo: '20221IST0004', deviceId: 'dev_ghi789', avatar: `https://picsum.photos/seed/s3/200` },
-    { ...baseStudentDetails, id: 's4', name: 'Ethan Hunt', rollNo: '20221IST0005', deviceId: 'dev_jkl012', avatar: `https://picsum.photos/seed/s4/200` },
-    { ...baseStudentDetails, id: 's5', name: 'Fiona Glenanne', rollNo: '20221IST0006', deviceId: 'dev_mno345', avatar: `https://picsum.photos/seed/s5/200` },
+    { ...baseStudentDetails, id: '20221IST0002', name: 'Bob Johnson', rollNo: '20221IST0002', deviceId: 'dev_abc123', avatar: `https://picsum.photos/seed/s1/200` },
+    { ...baseStudentDetails, id: '20221IST0003', name: 'Charlie Brown', rollNo: '20221IST0003', deviceId: 'dev_def456', avatar: `https://picsum.photos/seed/s2/200` },
+    { ...baseStudentDetails, id: '20221IST0004', name: 'Diana Prince', rollNo: '20221IST0004', deviceId: 'dev_ghi789', avatar: `https://picsum.photos/seed/s3/200` },
+    { ...baseStudentDetails, id: '20221IST0005', name: 'Ethan Hunt', rollNo: '20221IST0005', deviceId: 'dev_jkl012', avatar: `https://picsum.photos/seed/s4/200` },
+    { ...baseStudentDetails, id: '20221IST0006', name: 'Fiona Glenanne', rollNo: '20221IST0006', deviceId: 'dev_mno345', avatar: `https://picsum.photos/seed/s5/200` },
 ];
 
 

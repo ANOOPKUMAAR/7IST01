@@ -57,7 +57,8 @@ export function StudentFormDialog({
   function onSubmit(values: z.infer<typeof formSchema>) {
     const dataWithAvatar = {
         ...values,
-        avatar: `https://picsum.photos/seed/${values.rollNo}/200`
+        avatar: `https://picsum.photos/seed/${values.rollNo}/200`,
+        deviceId: student?.deviceId || ''
     };
 
     if (student) {
@@ -92,7 +93,7 @@ export function StudentFormDialog({
               <FormItem>
                 <FormLabel>Roll Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 2023CS001" {...field} />
+                  <Input placeholder="e.g., 2023CS001" {...field} disabled={!!student} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

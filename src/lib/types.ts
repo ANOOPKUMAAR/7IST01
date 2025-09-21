@@ -43,7 +43,7 @@ export interface UserDetails {
 }
 
 export interface Student extends UserDetails {
-    id: string;
+    id: string; // Should be the same as rollNo
 }
 
 export interface Class {

@@ -24,6 +24,8 @@ export function AppContent({ children }: { children: ReactNode }) {
         if (pathname === '/select-role' || pathname === '/') {
             router.replace('/dashboard');
         }
+      } else if (pathname !== '/select-role') {
+          router.replace('/select-role');
       }
     }
   }, [isLoaded, mode, pathname, router]);
@@ -39,7 +41,7 @@ export function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-  if (pathname === '/select-role') {
+  if (pathname === '/select-role' || (isLoaded && !mode)) {
     return <>{children}</>;
   }
   

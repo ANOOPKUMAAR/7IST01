@@ -83,6 +83,7 @@ interface AppContextType {
   deleteFaculty: (facultyId: string) => void;
   addFacultyToClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
   removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
+  assignFacultyToClassesFromTimetable: (faculty: Faculty, classes: Partial<Class>[]) => void;
   recordClassAttendance: (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => void;
   requestCameraPermission: (videoRefCurrent: HTMLVideoElement | null, autoStart?: boolean) => Promise<MediaStream | null>;
   stopCameraStream: (stream: MediaStream | null, videoRefCurrent: HTMLVideoElement | null) => void;
@@ -783,6 +784,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }));
       toast({ title: "Faculty Removed from Class", variant: "destructive" });
   };
+
+  const assignFacultyToClassesFromTimetable = (faculty: Faculty, classes: Partial<Class>[]) => {
+    let assignedCount = 0;
+    const newProgramsBySchool = { ...programsBySchool };
+
+    for (const school of Object.values(newProgramsBySchool)) {
+        for (const program of school) {
+            for (const department of program.departments) {
+                for (const cls of department.classes) {
+                    const matchedClass = classes.find(c => c.name === cls.name && c.day === cls.day && c.startTime === cls.startTime);
+                    if (matchedClass) {
+                        if (!cls.faculties.some(f => f.id === faculty.id)) {
+                            cls.faculties.push(faculty);
+                            assignedCount++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    setProgramsBySchool(newProgramsBySchool);
+    if (assignedCount > 0) {
+        toast({ title: 'Assignments Successful', description: `${faculty.name} has been assigned to ${assignedCount} classes.` });
+    } else {
+        toast({ title: 'No New Assignments', description: `No matching classes found for ${faculty.name} in the timetable provided.`, variant: 'destructive' });
+    }
+  };
   
   const recordClassAttendance = (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => {
       const today = new Date().toISOString();
@@ -897,6 +926,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteFaculty,
     addFacultyToClass,
     removeFacultyFromClass,
+    assignFacultyToClassesFromTimetable,
     recordClassAttendance,
     requestCameraPermission,
     stopCameraStream,

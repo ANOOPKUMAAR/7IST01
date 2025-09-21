@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase } from "lucide-react";
+import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase, CalendarUp } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import { FacultyFormDialog } from "@/components/admin/faculty-form-dialog";
 import { FacultyDetailsDialog } from "@/components/admin/faculty-details-dialog";
@@ -42,15 +42,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import type { Faculty } from "@/lib/types";
 import { UploadFacultyListDialog } from "@/components/admin/upload-faculty-list-dialog";
+import { UploadFacultyTimetableDialog } from "@/components/admin/upload-faculty-timetable-dialog";
+
 
 function FacultyRow({ faculty }: { faculty: Faculty }) {
   const { mode, deleteFaculty } = useAppContext();
   const [isEditOpen, setEditOpen] = useState(false);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
+  const [isUploadTimetableOpen, setUploadTimetableOpen] = useState(false);
 
   return (
     <TableRow>
@@ -74,38 +78,58 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
       <TableCell>{faculty.phone}</TableCell>
       <TableCell className="text-right">
         {mode === 'admin' && (
-          <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                  <Edit className="mr-2" /> Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => deleteFaculty(faculty.id)}
-                >
-                  <Trash className="mr-2" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Faculty</DialogTitle>
-                <DialogDescription>
-                  Update the faculty member's information.
-                </DialogDescription>
-              </DialogHeader>
-              <FacultyFormDialog
-                faculty={faculty}
-                onDone={() => setEditOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <>
+            <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                    <Edit className="mr-2" /> Edit Details
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => setUploadTimetableOpen(true)}>
+                    <CalendarUp className="mr-2" /> Upload Timetable
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => deleteFaculty(faculty.id)}
+                  >
+                    <Trash className="mr-2" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Faculty</DialogTitle>
+                  <DialogDescription>
+                    Update the faculty member's information.
+                  </DialogDescription>
+                </DialogHeader>
+                <FacultyFormDialog
+                  faculty={faculty}
+                  onDone={() => setEditOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+             <Dialog open={isUploadTimetableOpen} onOpenChange={setUploadTimetableOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Upload Timetable for {faculty.name}</DialogTitle>
+                        <DialogDescription>
+                            Upload a timetable file to automatically assign this faculty member to classes.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <UploadFacultyTimetableDialog
+                        faculty={faculty}
+                        onDone={() => setUploadTimetableOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+          </>
         )}
       </TableCell>
     </TableRow>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -353,8 +354,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const facultyClasses = useMemo(() => {
     if (mode !== 'faculty') return [];
     
-    // For demo purposes, let's assume the first faculty member is the one logged in.
-    const facultyId = faculties[0]?.id;
+    const faculty = faculties.find(f => f.name === 'Dr. Geoffrey Hinton');
+    const facultyId = faculty?.id;
     if (!facultyId) return [];
 
     const assignedClasses: Class[] = [];
@@ -601,8 +602,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const bulkAddStudents = (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => {
     const studentMap = new Map<string, Student>();
     
-    // Keep the currently logged-in user
-    if (mode === 'student') {
+    // Keep the currently logged-in user if they are in the list, otherwise add them.
+    const loggedInUserInList = newStudents.some(s => s.rollNo === userDetails.rollNo);
+    if (mode === 'student' && !loggedInUserInList) {
         studentMap.set(userDetails.rollNo, userDetails);
     }
     
@@ -946,3 +948,5 @@ export function useAppContext(): AppContextType {
   }
   return context;
 }
+
+    

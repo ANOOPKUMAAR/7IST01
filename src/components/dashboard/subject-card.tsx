@@ -22,7 +22,7 @@ interface SubjectCardProps {
 }
 
 export function SubjectCard({ subject }: SubjectCardProps) {
-  const { attendance, activeCheckIn, checkIn, checkOut } = useAppContext();
+  const { attendance, activeCheckIn } = useAppContext();
   const subjectAttendance = attendance[subject.id] || [];
   const attendedClasses = subjectAttendance.length;
 
@@ -61,26 +61,9 @@ export function SubjectCard({ subject }: SubjectCardProps) {
         </div>
       </CardContent>
       <CardFooter className="flex gap-2">
-        {isCurrentlyCheckedIn ? (
-          <Button
-            className="w-full"
-            variant="destructive"
-            onClick={() => checkOut(subject.id)}
-          >
-            <LogOut className="mr-2 h-4 w-4" /> Check Out
-          </Button>
-        ) : (
-          <Button
-            className="w-full"
-            onClick={() => checkIn(subject.id)}
-            disabled={!!activeCheckIn}
-          >
-            <LogIn className="mr-2 h-4 w-4" /> Check In
-          </Button>
-        )}
-        <Button variant="outline" asChild>
+        <Button variant="outline" asChild className="w-full">
             <Link href={`/subjects/${subject.id}`}>
-                Details <ArrowRight className="ml-2 h-4 w-4" />
+                View Details <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
         </Button>
       </CardFooter>

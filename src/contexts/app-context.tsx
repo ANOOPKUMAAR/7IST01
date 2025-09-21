@@ -192,6 +192,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const subjects = useMemo(() => {
+    const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+
     if (mode === 'faculty') {
       const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
       const taughtClasses: Class[] = [];
@@ -205,7 +207,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       });
       const facultySubjects: Subject[] = taughtClasses.map(cls => {
-        const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
         return {
           id: cls.id,
           name: cls.name,
@@ -217,8 +218,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
       return facultySubjects;
     }
+
+    if (mode === 'student') {
+        const enrolledClasses: Class[] = [];
+        Object.values(programsBySchool).flat().forEach(program => {
+            program.departments.forEach(department => {
+                department.classes.forEach(cls => {
+                    if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
+                        enrolledClasses.push(cls);
+                    }
+                });
+            });
+        });
+
+        const studentSubjects: Subject[] = enrolledClasses.map(cls => ({
+            id: cls.id,
+            name: cls.name,
+            expectedCheckIn: cls.startTime,
+            expectedCheckOut: cls.endTime,
+            dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
+            totalClasses: 20 // Placeholder, could be dynamic in a real app
+        }));
+
+        // Combine with manually added subjects, avoiding duplicates
+        const combinedSubjects = [...studentSubjects];
+        subjectsState.forEach(manualSubject => {
+            if (!combinedSubjects.some(s => s.id === manualSubject.id)) {
+                combinedSubjects.push(manualSubject);
+            }
+        });
+        return combinedSubjects;
+    }
+
     return subjectsState;
-  }, [mode, programsBySchool, subjectsState]);
+  }, [mode, programsBySchool, subjectsState, userDetails.rollNo]);
 
   // Save to localStorage when the user is about to leave the page
   useEffect(() => {

@@ -13,10 +13,10 @@ import type { Class } from "@/lib/types";
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { attendance, isLoaded, mode, programsBySchool } = useAppContext();
+  const { attendance, isLoaded, mode, programsBySchool, subjects: contextSubjects, userDetails } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
-  const subject = useMemo(() => {
+  const subjectClass = useMemo(() => {
     if (!isLoaded) return undefined;
 
     // Unified search for all modes. Always find the full `Class` object.
@@ -31,10 +31,27 @@ export default function SubjectDetailsPage() {
       }
     }
     
-    // If not found in the detailed structure, return undefined
+    // Fallback for manually added student subjects that might not be in the main school structure.
+    if (mode === 'student') {
+        const manualSubject = contextSubjects.find(s => s.id === id);
+        if (manualSubject) {
+            // Create a minimal Class object for the table components
+            return {
+                id: manualSubject.id,
+                name: manualSubject.name,
+                students: [userDetails as any], // The table expects a student list
+                coordinator: 'N/A',
+                day: '',
+                startTime: manualSubject.expectedCheckIn,
+                endTime: manualSubject.expectedCheckOut,
+                faculties: []
+            };
+        }
+    }
+
     return undefined;
 
-  }, [id, isLoaded, programsBySchool]);
+  }, [id, isLoaded, programsBySchool, mode, contextSubjects, userDetails]);
 
 
   if (!isLoaded) {
@@ -49,7 +66,7 @@ export default function SubjectDetailsPage() {
     )
   }
   
-  if (!subject) {
+  if (!subjectClass) {
     notFound();
   }
   
@@ -59,7 +76,7 @@ export default function SubjectDetailsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">{subject.name}</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{subjectClass.name}</h2>
           <p className="text-muted-foreground">
             {mode === 'faculty' 
               ? `Class attendance for ${new Date().toLocaleDateString()}` 
@@ -76,9 +93,9 @@ export default function SubjectDetailsPage() {
       </div>
 
       {mode === 'faculty' ? (
-        <FacultyAttendanceTable subject={subject} isAttendanceActive={isAttendanceActive} />
+        <FacultyAttendanceTable subject={subjectClass} isAttendanceActive={isAttendanceActive} />
       ) : (
-        <AttendanceTable subject={subject} records={subjectAttendance} />
+        <AttendanceTable subject={subjectClass} records={subjectAttendance} />
       )}
     </div>
   );

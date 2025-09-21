@@ -5,7 +5,7 @@ import { AttendanceCharts } from "@/components/visuals/attendance-charts";
 import { AttendanceByDay } from "@/components/visuals/attendance-by-day";
 import { OverallAttendanceSummary } from "@/components/visuals/overall-attendance-summary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, PieChart, LineChart, Briefcase, GraduationCap, UserCheck, BookOpen } from "lucide-react";
+import { BarChart, PieChart, LineChart, Briefcase, GraduationCap, UserCheck, BookOpen, Download } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import {
   Card,
@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMemo, useState } from "react";
+import { useMemo, useState }s from "react";
 import type { Class, Department, Program, Student } from "@/lib/types";
 import {
   Select,
@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 interface FacultyClassInfo {
   class: Class;
@@ -96,6 +97,28 @@ function FacultyAttendancePage() {
     if (percentage < 85) return "bg-status-orange";
     return "bg-status-green";
   };
+  
+  const handleDownloadReport = () => {
+    if (!selectedClassInfo) return;
+
+    const headers = ["Student Name", "Roll Number", "Attendance Percentage"];
+    const rows = selectedClassInfo.class.students.map(student => {
+        const percentage = studentAttendancePercentages[student.id] || 0;
+        return [student.name, student.rollNo, `${percentage}%`];
+    });
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+        + headers.join(",") + "\n" 
+        + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${selectedClassInfo.class.name}-Attendance.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   return (
     <div className="space-y-6">
@@ -151,24 +174,32 @@ function FacultyAttendancePage() {
                     <div>
                         <CardTitle>Class-wise Attendance</CardTitle>
                         <CardDescription>
-                            Select a class to view individual student attendance.
+                            Select a class to view and download individual student attendance.
                         </CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                 {facultyClasses.length > 0 ? (
-                    <Select onValueChange={setSelectedClassId}>
-                        <SelectTrigger className="w-full md:w-1/2 lg:w-1/3">
-                            <SelectValue placeholder="Select a class..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {facultyClasses.map(info => (
-                                <SelectItem key={info.class.id} value={info.class.id}>{info.class.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                 ) : null}
+                 <div className="flex flex-col sm:flex-row gap-4">
+                    {facultyClasses.length > 0 && (
+                        <Select onValueChange={setSelectedClassId}>
+                            <SelectTrigger className="w-full sm:w-auto sm:flex-1">
+                                <SelectValue placeholder="Select a class..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {facultyClasses.map(info => (
+                                    <SelectItem key={info.class.id} value={info.class.id}>{info.class.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                    {selectedClassInfo && (
+                        <Button onClick={handleDownloadReport} variant="outline">
+                            <Download /> Download Report
+                        </Button>
+                    )}
+                 </div>
+
 
                 {selectedClassInfo ? (
                     <Table>
@@ -308,4 +339,3 @@ export default function AttendanceVisualsPage() {
     </div>
   );
 }
-

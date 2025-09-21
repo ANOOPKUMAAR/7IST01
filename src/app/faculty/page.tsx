@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase, Upload, BookPlus } from "lucide-react";
+import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase, Upload, BookPlus, BookCopy } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import { FacultyFormDialog } from "@/components/admin/faculty-form-dialog";
 import { FacultyDetailsDialog } from "@/components/admin/faculty-details-dialog";
@@ -50,12 +50,14 @@ import type { Faculty } from "@/lib/types";
 import { UploadFacultyListDialog } from "@/components/admin/upload-faculty-list-dialog";
 import { UploadFacultyTimetableDialog } from "@/components/admin/upload-faculty-timetable-dialog";
 import { AssignClassDialog } from "@/components/admin/assign-class-dialog";
+import { FacultyClassesDialog } from "@/components/admin/faculty-classes-dialog";
 
 
 function FacultyRow({ faculty }: { faculty: Faculty }) {
   const { mode, deleteFaculty } = useAppContext();
   const [isEditOpen, setEditOpen] = useState(false);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
+  const [isClassesOpen, setClassesOpen] = useState(false);
   const [isUploadTimetableOpen, setUploadTimetableOpen] = useState(false);
   const [isAssignClassOpen, setAssignClassOpen] = useState(false);
 
@@ -94,6 +96,9 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
                   <DropdownMenuItem onClick={() => setEditOpen(true)}>
                     <Edit className="mr-2" /> Edit Details
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setClassesOpen(true)}>
+                    <BookCopy className="mr-2" /> View Classes
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setUploadTimetableOpen(true)}>
                     <Upload className="mr-2" /> Upload Timetable
                   </DropdownMenuItem>
@@ -121,6 +126,17 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
                   onDone={() => setEditOpen(false)}
                 />
               </DialogContent>
+            </Dialog>
+            <Dialog open={isClassesOpen} onOpenChange={setClassesOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Classes Taught by {faculty.name}</DialogTitle>
+                        <DialogDescription>
+                            A list of classes assigned to this faculty member and their student rosters.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <FacultyClassesDialog faculty={faculty} />
+                </DialogContent>
             </Dialog>
             <Dialog open={isUploadTimetableOpen} onOpenChange={setUploadTimetableOpen}>
                 <DialogContent>

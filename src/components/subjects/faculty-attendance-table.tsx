@@ -327,7 +327,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                      <div className="flex gap-2">
                          <Button variant="outline" onClick={handleWifiSync} disabled={isSyncingWifi}>
                             {isSyncingWifi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2"/>}
-                            Sync with Camera
+                            publish attendence
                         </Button>
                          <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>
                             {isVerifyingCamera ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2"/>}
@@ -410,5 +410,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+    
 
     

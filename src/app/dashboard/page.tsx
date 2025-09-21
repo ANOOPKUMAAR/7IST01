@@ -11,6 +11,7 @@ import {
   BookOpen,
   Building2,
   ArrowRight,
+  BookCopy,
 } from "lucide-react";
 import {
   Dialog,
@@ -26,6 +27,7 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
+  CardDescription,
 } from "@/components/ui/card";
 import { UploadTimetableDialog } from "@/components/dashboard/upload-timetable-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +35,7 @@ import { Timetable } from "@/components/dashboard/time-table";
 import { SubjectCardsView } from "@/components/dashboard/subject-cards-view";
 import { useAppContext } from "@/contexts/app-context";
 import Link from "next/link";
+import type { Class } from "@/lib/types";
 
 function StudentDashboard() {
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -178,15 +181,73 @@ function AdminDashboard() {
   );
 }
 
+function FacultyDashboard() {
+  const { facultyClasses } = useAppContext();
+
+  return (
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Faculty Dashboard</h2>
+        <p className="text-muted-foreground">
+          Here are the classes assigned to you.
+        </p>
+      </div>
+       {facultyClasses.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {facultyClasses.map((cls: Class) => (
+            <Card key={cls.id}>
+              <CardHeader>
+                <CardTitle>{cls.name}</CardTitle>
+                <CardDescription>
+                  {cls.day} from {cls.startTime} to {cls.endTime}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <GraduationCap className="mr-2" />
+                  <span>{cls.students.length} students</span>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" asChild>
+                  <Link href={`/faculty/classes/${cls.id}`}>
+                    Manage Attendance <ArrowRight className="ml-2" />
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <BookCopy className="h-12 w-12 text-muted-foreground" />
+              <p className="text-muted-foreground">
+                You are not assigned to any classes yet.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+
 export default function DashboardPage() {
   const { mode } = useAppContext();
 
   if (mode === "student") {
     return <StudentDashboard />;
   }
-  
-  if (mode === 'admin') {
+
+  if (mode === "admin") {
     return <AdminDashboard />;
+  }
+
+  if (mode === "faculty") {
+    return <FacultyDashboard />;
   }
 
   return (

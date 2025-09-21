@@ -46,6 +46,7 @@ interface AppContextType {
   programsBySchool: Record<string, Program[]>;
   students: Student[];
   faculties: Faculty[];
+  facultyClasses: Class[];
   setMode: (mode: UserMode) => void;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
@@ -82,6 +83,11 @@ interface AppContextType {
   deleteFaculty: (facultyId: string) => void;
   addFacultyToClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
   removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
+  recordClassAttendance: (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => void;
+  requestCameraPermission: (videoRefCurrent: HTMLVideoElement | null, autoStart?: boolean) => Promise<MediaStream | null>;
+  stopCameraStream: (stream: MediaStream | null, videoRefCurrent: HTMLVideoElement | null) => void;
+  hasCameraPermission: boolean | null;
+  setHasCameraPermission: (hasPermission: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -163,6 +169,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   const [students, setStudents] = useState<Student[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
+
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   
   const appStateRef = useRef({
     subjects: subjectsState,
@@ -233,17 +241,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
       setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
-      const allStudents = [
-        { ...userDetailsData },
-        ...mockStudents
-      ];
-      setStudents(storedStudents ? JSON.parse(storedStudents) : allStudents);
+      const studentList = storedStudents ? JSON.parse(storedStudents) : mockStudents;
+      const studentMap = new Map<string, Student>();
+      // Ensure current user is in the list
+      studentMap.set(userDetailsData.id, userDetailsData);
+      studentList.forEach((s: Student) => studentMap.set(s.id, s));
+      setStudents(Array.from(studentMap.values()));
+      
       setFaculties(storedFaculties ? JSON.parse(storedFaculties) : mockFaculties);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       const deviceId = generateDeviceId();
-      setUserDetails({ ...initialUserDetails, deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` });
+      const currentUserDetails = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
+      setUserDetails(currentUserDetails);
       setSubjectsState(initialStudentSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
@@ -251,10 +262,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setModeState(null);
       setSchools(initialSchools);
       setProgramsBySchool(initialProgramsBySchool);
-      setStudents([
-        { ...userDetails, id: userDetails.rollNo},
-        ...mockStudents
-      ]);
+      setStudents([currentUserDetails, ...mockStudents]);
       setFaculties(mockFaculties);
     }
     setIsLoaded(true);
@@ -340,6 +348,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     return subjectsState;
   }, [mode, userDetails.id, programsBySchool, subjectsState]);
+  
+  const facultyClasses = useMemo(() => {
+    if (mode !== 'faculty') return [];
+    
+    // For demo purposes, let's assume the first faculty member is the one logged in.
+    const facultyId = faculties[0]?.id;
+    if (!facultyId) return [];
+
+    const assignedClasses: Class[] = [];
+    Object.values(programsBySchool).flat().forEach(program => {
+        program.departments.forEach(department => {
+            department.classes.forEach(cls => {
+                if(cls.faculties.some(f => f.id === facultyId)) {
+                    assignedClasses.push(cls);
+                }
+            })
+        })
+    });
+    return assignedClasses;
+
+  }, [mode, faculties, programsBySchool]);
 
 
   const addSubject = (subject: Omit<Subject, "id">) => {
@@ -571,7 +600,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const bulkAddStudents = (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => {
     const studentMap = new Map<string, Student>();
     
-    students.forEach(s => studentMap.set(s.rollNo, s));
+    // Keep the currently logged-in user
+    if (mode === 'student') {
+        studentMap.set(userDetails.rollNo, userDetails);
+    }
     
     newStudents.forEach(s => {
       studentMap.set(s.rollNo, {
@@ -751,6 +783,70 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }));
       toast({ title: "Faculty Removed from Class", variant: "destructive" });
   };
+  
+  const recordClassAttendance = (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => {
+      const today = new Date().toISOString();
+      const newAttendance = { ...attendance };
+
+      presentStudentIds.forEach(studentId => {
+          if (!newAttendance[cls.id]) {
+              newAttendance[cls.id] = [];
+          }
+          const existingRecord = newAttendance[cls.id].find(rec => rec.studentId === studentId && new Date(rec.date).toDateString() === new Date(today).toDateString());
+
+          if (!existingRecord) {
+              const checkInTime = new Date();
+              const [startHour, startMinute] = cls.startTime.split(':').map(Number);
+              checkInTime.setHours(startHour, startMinute, 0, 0);
+
+              const checkOutTime = new Date();
+              const [endHour, endMinute] = cls.endTime.split(':').map(Number);
+              checkOutTime.setHours(endHour, endMinute, 0, 0);
+
+              newAttendance[cls.id].push({
+                  id: `att_${studentId}_${Date.now()}`,
+                  date: today,
+                  checkIn: checkInTime.toISOString(),
+                  checkOut: checkOutTime.toISOString(),
+                  isAnomaly: false,
+                  anomalyReason: '',
+                  studentId: studentId,
+              });
+          }
+      });
+      setAttendance(newAttendance);
+  }
+  
+  const requestCameraPermission = async (videoRefCurrent: HTMLVideoElement | null, autoStart = false) => {
+    let stream: MediaStream | null = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+        if (autoStart && videoRefCurrent) {
+            videoRefCurrent.srcObject = stream;
+        }
+        return stream;
+    } catch (error) {
+        console.error("Error accessing camera:", error);
+        setHasCameraPermission(false);
+        toast({
+            variant: "destructive",
+            title: "Camera Access Denied",
+            description: "Please enable camera permissions in your browser settings.",
+        });
+        return null;
+    }
+  };
+
+  const stopCameraStream = (stream: MediaStream | null, videoRefCurrent: HTMLVideoElement | null) => {
+      if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+      }
+      if (videoRefCurrent) {
+          videoRefCurrent.srcObject = null;
+      }
+  }
+
 
   const value: AppContextType = {
     subjects,
@@ -764,6 +860,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     programsBySchool,
     students,
     faculties,
+    facultyClasses,
     setMode,
     logout,
     addSubject,
@@ -772,7 +869,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteSubject,
     addWifiZone,
     deleteWifiZone,
-checkIn,
+    checkIn,
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails: updateUserDetails as any,
@@ -800,6 +897,11 @@ checkIn,
     deleteFaculty,
     addFacultyToClass,
     removeFacultyFromClass,
+    recordClassAttendance,
+    requestCameraPermission,
+    stopCameraStream,
+    hasCameraPermission,
+    setHasCameraPermission
   };
 
   return <AppContext.Provider value={value}>

@@ -15,19 +15,38 @@ import type { Class, Subject } from "@/lib/types";
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { subjects, attendance, isLoaded, mode } = useAppContext();
+  const { subjects, attendance, isLoaded, mode, programsBySchool, subjects: subjectsState } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   const subjectOrClass = useMemo(() => {
     if (!isLoaded) return undefined;
+    
+    // First, search within the main hierarchical data
+    for (const schoolId in programsBySchool) {
+      for (const program of programsBySchool[schoolId]) {
+        for (const department of program.departments) {
+          const foundClass = department.classes.find(c => c.id === id);
+          if (foundClass) return foundClass;
+        }
+      }
+    }
+
+    // If not found and user is a student, check manually added subjects
+    if (mode === 'student') {
+        const manualSubject = subjectsState.find(s => s.id === id);
+        if (manualSubject && !('coordinator' in manualSubject)) {
+             return manualSubject;
+        }
+    }
+
     return subjects.find(s => s.id === id);
-  }, [id, isLoaded, subjects]);
+  }, [id, isLoaded, subjects, programsBySchool, mode, subjectsState]);
 
   const subjectAsClass = useMemo((): Class | undefined => {
     if (!subjectOrClass) return undefined;
     
     // Check if it's already a Class object (duck typing)
-    if ('coordinator' in subjectOrClass && 'students' in subjectOrClass) {
+    if ('coordinator' in subjectOrClass) {
         return subjectOrClass as Class;
     }
 

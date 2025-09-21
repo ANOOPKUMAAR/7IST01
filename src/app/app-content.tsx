@@ -5,20 +5,21 @@ import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
 import { BottomNav } from "@/components/bottom-nav";
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from "react";
 
 export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
   const router = useRouter();
+  const pathname = usePathname();
 
-   useEffect(() => {
-    if (isLoaded && !mode) {
+  useEffect(() => {
+    if (isLoaded && !mode && pathname !== '/select-role') {
       router.replace('/select-role');
     }
-  }, [isLoaded, mode, router]);
+  }, [isLoaded, mode, router, pathname]);
 
-  if (!isLoaded || !mode) {
+  if (!isLoaded || (pathname !== '/select-role' && !mode)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center justify-center space-y-6 text-center">
@@ -27,6 +28,10 @@ export function AppContent({ children }: { children: ReactNode }) {
         </div>
       </div>
     );
+  }
+  
+  if (pathname === '/select-role') {
+    return <>{children}</>;
   }
 
   return (

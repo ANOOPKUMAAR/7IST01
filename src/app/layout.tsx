@@ -22,7 +22,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         <AppProvider>
-          {children}
+            <AppContent>
+                {children}
+            </AppContent>
           <Toaster />
         </AppProvider>
       </body>

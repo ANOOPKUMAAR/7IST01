@@ -167,17 +167,7 @@ function StudentDashboard() {
 
 
 export default function DashboardPage() {
-    const { mode, isLoaded } = useAppContext();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (isLoaded && !mode) {
-            router.replace('/select-role');
-        }
-    }, [isLoaded, mode, router]);
-
-
-    if (!isLoaded || !mode) return null; // Or a loading skeleton
+    const { mode } = useAppContext();
 
     if (mode === 'admin') {
         return <AdminDashboard />;

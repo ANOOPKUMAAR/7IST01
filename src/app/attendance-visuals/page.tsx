@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { Class, Department, Program, Student } from "@/lib/types";
 import {
   Select,
@@ -44,6 +44,8 @@ function FacultyAttendancePage() {
   const { programsBySchool, isLoaded } = useAppContext();
   const facultyName = "Prof. Ada Lovelace"; // Simulating the current faculty user
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [taughtCount, setTaughtCount] = useState<Record<string, number>>({});
+  const [studentAttendancePercentages, setStudentAttendancePercentages] = useState<Record<string, number>>({});
 
   const facultyClasses = useMemo(() => {
     if (!isLoaded) return [];
@@ -59,15 +61,7 @@ function FacultyAttendancePage() {
     });
     return classes;
   }, [programsBySchool, isLoaded, facultyName]);
-
-  const taughtCount = useMemo(() => {
-      const counts: Record<string, number> = {};
-      facultyClasses.forEach(info => {
-          counts[info.class.id] = Math.floor(Math.random() * 5 + 12); // Simulate 12-16 classes taught
-      });
-      return counts;
-  }, [facultyClasses]);
-
+  
   const uniqueStudents = useMemo(() => {
     const studentMap = new Map<string, Student>();
     facultyClasses.forEach(info => {
@@ -77,15 +71,28 @@ function FacultyAttendancePage() {
     });
     return Array.from(studentMap.values());
   }, [facultyClasses]);
-  
-  const studentAttendancePercentages = useMemo(() => {
-    const percentages: Record<string, number> = {};
-    uniqueStudents.forEach(student => {
-        // Simulate a realistic attendance percentage between 65% and 98%
-        percentages[student.id] = Math.floor(Math.random() * (98 - 65 + 1) + 65);
-    });
-    return percentages;
+
+  useEffect(() => {
+    if (facultyClasses.length > 0) {
+        const counts: Record<string, number> = {};
+        facultyClasses.forEach(info => {
+            counts[info.class.id] = Math.floor(Math.random() * 5 + 12); // Simulate 12-16 classes taught
+        });
+        setTaughtCount(counts);
+    }
+  }, [facultyClasses]);
+
+  useEffect(() => {
+    if (uniqueStudents.length > 0) {
+        const percentages: Record<string, number> = {};
+        uniqueStudents.forEach(student => {
+            // Simulate a realistic attendance percentage between 65% and 98%
+            percentages[student.id] = Math.floor(Math.random() * (98 - 65 + 1) + 65);
+        });
+        setStudentAttendancePercentages(percentages);
+    }
   }, [uniqueStudents]);
+
 
   const selectedClassInfo = useMemo(() => {
     if (!selectedClassId) return null;

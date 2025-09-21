@@ -8,7 +8,7 @@ import { SidebarTrigger } from "./sidebar";
 
 export function Header() {
   const pathname = usePathname();
-  const { subjects, mode } = useAppContext();
+  const { subjects, mode, userDetails } = useAppContext();
   const segments = pathname.split("/").filter(Boolean);
   
   let title;
@@ -18,15 +18,18 @@ export function Header() {
     title = subject ? subject.name : "Subject Details";
   } else if (segments[0] === 'dashboard') {
      title = mode === 'student' ? 'Student Dashboard' : mode === 'faculty' ? 'Faculty Dashboard' : 'Admin Dashboard';
-  } else {
+  } else if (segments[0] === 'profile') {
+      title = userDetails.name;
+  }
+  else {
     title = segments.length > 0 ? capitalize(segments[segments.length - 1].replace(/-/g, ' ')) : "Dashboard";
   }
   
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
+    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
        <SidebarTrigger />
       <div className="flex items-center gap-2">
-        <Icons.logo className="h-6 w-6 text-primary hidden md:block"/>
+        <Icons.logo className="h-6 w-6 text-primary "/>
         <h1 className="text-lg font-semibold md:text-xl">{title}</h1>
       </div>
     </header>

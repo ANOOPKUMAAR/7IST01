@@ -25,6 +25,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { Header } from "./header";
+import { BottomNav } from "./bottom-nav";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 function MainSidebar() {
   const { mode, userDetails, logout } = useAppContext();
@@ -84,18 +86,22 @@ function MainSidebar() {
 }
 
 export function SidebarTrigger() {
+    const isMobile = useIsMobile();
+    if(isMobile) return null;
     return <SidebarTriggerPrimitive className="md:hidden" />;
 }
 
 export function MainLayout({children}: {children: ReactNode}) {
+    const isMobile = useIsMobile();
     return (
         <SidebarProvider>
-            <MainSidebar />
+            {!isMobile && <MainSidebar />}
             <SidebarInset>
                 <Header />
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
                     {children}
                 </main>
+                {isMobile && <BottomNav />}
             </SidebarInset>
         </SidebarProvider>
     )

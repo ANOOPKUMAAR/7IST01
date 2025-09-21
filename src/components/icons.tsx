@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 
 export const Icons = {
@@ -5,22 +7,16 @@ export const Icons = {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      fill="currentColor"
       className={cn("h-6 w-6", className)}
       {...props}
     >
-      {/* Graduation Cap */}
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-      
-      {/* Wifi Symbol */}
-      <path d="M5 12.55a11 11 0 0 1 14.08 0" />
-      <path d="M1.42 9a16 16 0 0 1 21.16 0" />
-      <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
-      <line x1="12" y1="20" x2="12.01" y2="20" />
+      <path d="M4.27 10.73A12.5 12.5 0 0 1 12 4.5a12.5 12.5 0 0 1 7.73 6.23L12 14Z" />
+      <path d="M12 15.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
+      <path d="M19.07 12.94a8.5 8.5 0 0 0-14.14 0" />
+      <path d="M16.24 15.76a4.5 4.5 0 0 0-8.48 0" />
+      <path d="M22 10v2.36a.64.64 0 0 1-1.2.4L18 11l-6 3.5-6-3.5-2.8 1.76a.64.64 0 0 1-1.2-.4V10l10-5Z" />
+      <path d="M17.5 10.5V14l.5.5.5-.5V11" />
     </svg>
   ),
 };

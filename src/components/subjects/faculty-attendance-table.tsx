@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { Subject, Student } from "@/lib/types";
+import type { Subject, Student, Class } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye } from 'lucide-react';
@@ -85,8 +85,8 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
     )
 }
 
-export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subject: Subject; isAttendanceActive: boolean }) {
-  const { students, requestCameraPermission, hasCameraPermission, stopCameraStream, recordClassAttendance } = useAppContext();
+export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subject: Class; isAttendanceActive: boolean }) {
+  const { requestCameraPermission, hasCameraPermission, stopCameraStream, recordClassAttendance } = useAppContext();
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
@@ -95,6 +95,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const students = subject.students || [];
 
   const presentCount = useMemo(() => {
     return Object.values(attendance).filter(s => s === 'present').length;

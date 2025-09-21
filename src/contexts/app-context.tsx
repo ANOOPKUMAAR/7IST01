@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type {
   Subject,
@@ -101,7 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjectsState, setSubjectsState] = useState<Subject[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
@@ -113,7 +113,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
   const appStateRef = useRef({
-    subjects,
+    subjects: subjectsState,
     attendance,
     wifiZones,
     activeCheckIn,
@@ -126,7 +126,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     appStateRef.current = {
-      subjects,
+      subjects: subjectsState,
       attendance,
       wifiZones,
       activeCheckIn,
@@ -136,7 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       schools,
       programsBySchool,
     };
-  }, [subjects, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool]);
+  }, [subjectsState, attendance, wifiZones, activeCheckIn, userDetails, students, mode, schools, programsBySchool]);
   
   // Load from localStorage on mount
   useEffect(() => {
@@ -166,7 +166,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setUserDetails(userDetailsData);
       
-      setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
+      setSubjectsState(storedSubjects ? JSON.parse(storedSubjects) : initialSubjects);
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
@@ -179,7 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Failed to load data from localStorage", error);
       const deviceId = generateDeviceId();
       setUserDetails({ ...initialUserDetails, deviceId, avatar: `https://picsum.photos/seed/${Math.random()}/200` });
-      setSubjects(initialSubjects);
+      setSubjectsState(initialSubjects);
       setAttendance(generateInitialAttendance());
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
@@ -190,6 +190,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setIsLoaded(true);
   }, []);
+
+  const subjects = useMemo(() => {
+    if (mode === 'faculty') {
+      const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
+      const taughtClasses: Class[] = [];
+      Object.values(programsBySchool).flat().forEach(program => {
+        program.departments.forEach(department => {
+          department.classes.forEach(cls => {
+            if (cls.faculties.includes(facultyName)) {
+              taughtClasses.push(cls);
+            }
+          });
+        });
+      });
+      const facultySubjects: Subject[] = taughtClasses.map(cls => {
+        const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+        return {
+          id: cls.id,
+          name: cls.name,
+          expectedCheckIn: cls.startTime,
+          expectedCheckOut: cls.endTime,
+          dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
+          totalClasses: 20 // Placeholder
+        }
+      })
+      return facultySubjects;
+    }
+    return subjectsState;
+  }, [mode, programsBySchool, subjectsState]);
 
   // Save to localStorage when the user is about to leave the page
   useEffect(() => {
@@ -266,24 +295,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addSubject = (subject: Omit<Subject, "id">) => {
     const newSubject = { ...subject, id: `subj_${Date.now()}` };
-    setSubjects((prev) => [...prev, newSubject]);
+    setSubjectsState((prev) => [...prev, newSubject]);
     toast({ title: "Subject Added", description: `${subject.name} has been added.` });
   };
 
   const bulkAddSubjects = (newSubjects: Omit<Subject, 'id'>[]) => {
     const subjectsToAdd = newSubjects.map(s => ({ ...s, id: `subj_${Date.now()}_${Math.random()}` }));
-    setSubjects(subjectsToAdd);
+    setSubjectsState(subjectsToAdd);
     setAttendance({}); // Clear old attendance records
     toast({ title: "Timetable Replaced", description: `${subjectsToAdd.length} new subjects have been imported.` });
   };
 
   const updateSubject = (updatedSubject: Subject) => {
-    setSubjects((prev) => prev.map((s) => (s.id === updatedSubject.id ? updatedSubject : s)));
+    setSubjectsState((prev) => prev.map((s) => (s.id === updatedSubject.id ? updatedSubject : s)));
     toast({ title: "Subject Updated", description: `${updatedSubject.name} has been updated.` });
   };
   
   const deleteSubject = (subjectId: string) => {
-    setSubjects((prev) => prev.filter((s) => s.id !== subjectId));
+    setSubjectsState((prev) => prev.filter((s) => s.id !== subjectId));
     setAttendance(prev => {
         const newAttendance = {...prev};
         delete newAttendance[subjectId];
@@ -678,7 +707,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     hasCameraPermission,
     setHasCameraPermission,
     requestCameraPermission,
-stopCameraStream,
+    stopCameraStream,
     // Admin functions
     addSchool,
     updateSchool,

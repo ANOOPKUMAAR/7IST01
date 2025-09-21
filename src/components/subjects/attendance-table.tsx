@@ -31,9 +31,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Trash } from "lucide-react";
-import type { Subject, AttendanceRecord } from "@/lib/types";
+import type { Subject, AttendanceRecord, Class } from "@/lib/types";
 
-export function AttendanceTable({ subject, records }: { subject: Subject; records: AttendanceRecord[] }) {
+export function AttendanceTable({ subject, records }: { subject: Class; records: AttendanceRecord[] }) {
   const { deleteAttendanceRecord, userDetails } = useAppContext();
 
   // Filter records for the current student

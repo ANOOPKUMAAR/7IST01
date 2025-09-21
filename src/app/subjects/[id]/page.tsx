@@ -8,11 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Play, Pause } from "lucide-react";
+import type { Class } from "@/lib/types";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { subjects, attendance, isLoaded, mode } = useAppContext();
+  const { subjects, attendance, isLoaded, mode, programsBySchool } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   if (!isLoaded) {
@@ -27,7 +28,7 @@ export default function SubjectDetailsPage() {
     )
   }
   
-  const subject = subjects.find(s => s.id === id);
+  const subject = subjects.find(s => s.id === id) as Class | undefined;
   
   if (!subject) {
     notFound();
@@ -43,7 +44,7 @@ export default function SubjectDetailsPage() {
           <p className="text-muted-foreground">
             {mode === 'faculty' 
               ? `Class attendance for ${new Date().toLocaleDateString()}` 
-              : `Detailed attendance log. Total classes: ${subject.totalClasses}.`
+              : `Detailed attendance log. Total classes: ${subject.totalClasses || 'N/A'}.`
             }
           </p>
         </div>

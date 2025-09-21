@@ -13,37 +13,28 @@ import type { Class } from "@/lib/types";
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { subjects, attendance, isLoaded, mode, programsBySchool } = useAppContext();
+  const { attendance, isLoaded, mode, programsBySchool } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   const subject = useMemo(() => {
     if (!isLoaded) return undefined;
 
-    // The 'subjects' array from context is already correctly filtered for student/faculty.
-    // However, the 'Class' type is needed for faculty, which contains the student list.
-    // The base 'Subject' type doesn't. We need to find the full Class object.
-    
-    // First, try finding from the simple subjects list (for students or quick lookup)
-    const simpleSubject = subjects.find(s => s.id === id);
-
-    // If in faculty mode, we need the full Class object with students.
-    if (mode === 'faculty') {
-      for (const schoolId in programsBySchool) {
-        for (const program of programsBySchool[schoolId]) {
-          for (const department of program.departments) {
-            const foundClass = department.classes.find(c => c.id === id);
-            if (foundClass) {
-              return foundClass;
-            }
+    // Unified search for all modes. Always find the full `Class` object.
+    for (const schoolId in programsBySchool) {
+      for (const program of programsBySchool[schoolId]) {
+        for (const department of program.departments) {
+          const foundClass = department.classes.find(c => c.id === id);
+          if (foundClass) {
+            return foundClass;
           }
         }
       }
     }
     
-    // Fallback for student mode or if the full class object wasn't needed/found
-    return simpleSubject as Class | undefined;
+    // If not found in the detailed structure, return undefined
+    return undefined;
 
-  }, [id, isLoaded, subjects, mode, programsBySchool]);
+  }, [id, isLoaded, programsBySchool]);
 
 
   if (!isLoaded) {
@@ -72,7 +63,7 @@ export default function SubjectDetailsPage() {
           <p className="text-muted-foreground">
             {mode === 'faculty' 
               ? `Class attendance for ${new Date().toLocaleDateString()}` 
-              : `Detailed attendance log. Total classes: ${subject.totalClasses || 'N/A'}.`
+              : `Detailed attendance log for your enrollment in this class.`
             }
           </p>
         </div>

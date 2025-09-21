@@ -305,6 +305,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (newMode === 'student') {
         setSubjectsState(initialStudentSubjects);
         setAttendance(generateInitialAttendance());
+    } else if (newMode === 'faculty') {
+        setUserDetails({
+            id: 'faculty_4',
+            name: 'Dr. Geoffrey Hinton',
+            rollNo: 'faculty_4',
+            email: 'geoffrey.hinton@example.com',
+            phone: '123-456-7893',
+            department: 'Artificial Intelligence',
+            designation: 'Professor',
+            avatar: 'https://picsum.photos/seed/f4/200'
+        } as any);
+        setSubjectsState([]);
+        setAttendance({});
     } else {
         setSubjectsState([]);
         setAttendance({});
@@ -354,8 +367,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const facultyClasses = useMemo(() => {
     if (mode !== 'faculty') return [];
     
-    const faculty = faculties.find(f => f.name === 'Dr. Geoffrey Hinton');
-    const facultyId = faculty?.id;
+    const facultyId = userDetails.id;
     if (!facultyId) return [];
 
     const assignedClasses: Class[] = [];
@@ -370,7 +382,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     return assignedClasses;
 
-  }, [mode, faculties, programsBySchool]);
+  }, [mode, userDetails.id, programsBySchool]);
 
 
   const addSubject = (subject: Omit<Subject, "id">) => {
@@ -603,18 +615,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const studentMap = new Map<string, Student>();
     
     // Keep the currently logged-in user if they are in the list, otherwise add them.
-    const loggedInUserInList = newStudents.some(s => s.rollNo === userDetails.rollNo);
-    if (mode === 'student' && !loggedInUserInList) {
+    if (mode === 'student') {
         studentMap.set(userDetails.rollNo, userDetails);
     }
     
     newStudents.forEach(s => {
-      studentMap.set(s.rollNo, {
-        ...s,
-        id: s.rollNo,
-        deviceId: generateDeviceId(),
-        avatar: `https://picsum.photos/seed/${s.rollNo}/200`
-      });
+      if (s.rollNo !== userDetails.rollNo) {
+        studentMap.set(s.rollNo, {
+            ...s,
+            id: s.rollNo,
+            deviceId: generateDeviceId(),
+            avatar: `https://picsum.photos/seed/${s.rollNo}/200`
+        });
+      }
     });
 
     const studentsToSet = Array.from(studentMap.values());

@@ -5,21 +5,15 @@ import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
 import { BottomNav } from "@/components/bottom-nav";
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from "react";
+import { usePathname } from 'next/navigation';
 
 export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
-  const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (isLoaded && pathname === '/') {
-        router.replace('/select-role');
-    }
-  }, [isLoaded, router, pathname]);
+  const isAuthPage = pathname === '/select-role';
 
-  if (pathname === '/select-role') {
+  if (isAuthPage) {
     return <>{children}</>;
   }
 

@@ -24,7 +24,6 @@ import type { UserDetails } from "@/lib/types";
 import { User, Edit, Briefcase, GraduationCap, Database, Upload, Camera } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 
 function InfoRow({ label, value }: { label: string, value: string | undefined }) {
@@ -168,7 +167,7 @@ function EditAvatarDialog({ onDone }: { onDone: () => void }) {
 }
 
 export default function ProfilePage() {
-  const { subjects, attendance, isLoaded, userDetails, mode, setMode } = useAppContext();
+  const { subjects, attendance, isLoaded, userDetails, mode } = useAppContext();
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [isAvatarDialogOpen, setAvatarDialogOpen] = useState(false);
 
@@ -206,32 +205,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-6">
-        <Card>
-            <CardHeader>
-                <CardTitle>User Mode</CardTitle>
-                <CardDescription>Switch between student, faculty, and admin views.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <RadioGroup value={mode} onValueChange={(value) => setMode(value as any)} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <Label className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 [&:has([data-state=checked])]:bg-accent">
-                        <RadioGroupItem value="student" id="student-mode" />
-                        <GraduationCap className="h-6 w-6" />
-                        <span>Student</span>
-                    </Label>
-                     <Label className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 [&:has([data-state=checked])]:bg-accent">
-                        <RadioGroupItem value="faculty" id="faculty-mode" />
-                        <Briefcase className="h-6 w-6" />
-                        <span>Faculty</span>
-                    </Label>
-                     <Label className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 [&:has([data-state=checked])]:bg-accent">
-                        <RadioGroupItem value="admin" id="admin-mode" />
-                        <Database className="h-6 w-6" />
-                        <span>Admin</span>
-                    </Label>
-                </RadioGroup>
-            </CardContent>
-        </Card>
-
+        
       {mode === 'student' ? (
         <>
             <div className="flex items-center justify-between">
@@ -350,7 +324,7 @@ export default function ProfilePage() {
             <CardHeader className="items-center text-center">
                 <Briefcase className="h-12 w-12 text-muted-foreground mb-2"/>
                 <CardTitle>Faculty Mode</CardTitle>
-                <CardDescription>This is the faculty dashboard view. More features coming soon!</CardDescription>
+                <CardDescription>This is the faculty dashboard view. You can switch to other modes from this page if needed.</CardDescription>
             </CardHeader>
             <CardContent>
                  <p className="text-center text-muted-foreground">You can manage your courses and view student attendance from the main dashboard.</p>
@@ -361,13 +335,26 @@ export default function ProfilePage() {
             <CardHeader className="items-center text-center">
                 <Database className="h-12 w-12 text-muted-foreground mb-2"/>
                 <CardTitle>Admin Mode</CardTitle>
-                <CardDescription>This is the admin dashboard view. More features coming soon!</CardDescription>
+                <CardDescription>This is the admin dashboard view. You can switch to other modes from this page if needed.</CardDescription>
             </CardHeader>
             <CardContent>
                  <p className="text-center text-muted-foreground">You can manage all app data and settings from here.</p>
             </CardContent>
         </Card>
       )}
+       <Card>
+            <CardHeader>
+                <CardTitle>Switch Role</CardTitle>
+                <CardDescription>
+                Change your user role to access different features.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button onClick={() => (window.location.href = "/select-role")}>
+                    Go to Role Selection
+                </Button>
+            </CardContent>
+        </Card>
 
     </div>
   );

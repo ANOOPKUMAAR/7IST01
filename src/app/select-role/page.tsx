@@ -6,6 +6,7 @@ import { useAppContext } from '@/contexts/app-context';
 import type { UserMode } from '@/lib/types';
 import { Icons } from '@/components/icons';
 import { Card, CardContent } from '@/components/ui/card';
+import { GraduationCap, Briefcase, Database } from 'lucide-react';
 
 export default function SelectRolePage() {
     const { setMode } = useAppContext();
@@ -13,7 +14,7 @@ export default function SelectRolePage() {
 
     const handleSelectRole = (mode: UserMode) => {
         setMode(mode);
-        router.push('/');
+        router.push('/dashboard');
     };
 
     return (
@@ -26,9 +27,15 @@ export default function SelectRolePage() {
                 </div>
                  <Card>
                     <CardContent className="p-6 flex flex-col gap-4">
-                        <Button size="lg" onClick={() => handleSelectRole('faculty')}>Faculty Login</Button>
-                        <Button size="lg" variant="secondary" onClick={() => handleSelectRole('student')}>Student Login</Button>
-                         <Button size="lg" variant="secondary" onClick={() => handleSelectRole('admin')}>Admin Login</Button>
+                        <Button size="lg" onClick={() => handleSelectRole('student')}>
+                            <GraduationCap className="mr-2"/> Student Login
+                        </Button>
+                        <Button size="lg" variant="secondary" onClick={() => handleSelectRole('faculty')}>
+                            <Briefcase className="mr-2"/> Faculty Login
+                        </Button>
+                         <Button size="lg" variant="secondary" onClick={() => handleSelectRole('admin')}>
+                            <Database className="mr-2"/> Admin Login
+                         </Button>
                     </CardContent>
                 </Card>
             </div>

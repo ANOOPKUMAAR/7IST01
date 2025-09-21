@@ -44,10 +44,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAppContext } from "@/contexts/app-context";
 import { useState } from "react";
-import type { Student } from "@/lib/types";
+import type { Student, Faculty } from "@/lib/types";
 import { ClassFormDialog } from "@/components/admin/class-form-dialog";
 
 function InfoRow({
@@ -102,12 +102,12 @@ function AddStudentDialog({ onAdd, availableStudents, onDone }: { onAdd: (studen
     )
 }
 
-function AddFacultyDialog({ onAdd, onDone }: { onAdd: (name: string) => void, onDone: () => void }) {
-    const [facultyName, setFacultyName] = useState('');
+function AddFacultyDialog({ onAdd, availableFaculty, onDone }: { onAdd: (facultyId: string) => void, availableFaculty: Faculty[], onDone: () => void }) {
+    const [selectedFaculty, setSelectedFaculty] = useState('');
 
     const handleAdd = () => {
-        if(facultyName.trim()) {
-            onAdd(facultyName.trim());
+        if(selectedFaculty) {
+            onAdd(selectedFaculty);
             onDone();
         }
     }
@@ -116,15 +116,24 @@ function AddFacultyDialog({ onAdd, onDone }: { onAdd: (name: string) => void, on
         <>
             <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                    <Label htmlFor="faculty-name">Faculty Name</Label>
-                    <Input id="faculty-name" value={facultyName} onChange={(e) => setFacultyName(e.target.value)} placeholder="e.g., Dr. Alan Turing" />
+                    <Label htmlFor="faculty-select">Select Faculty</Label>
+                    <Select onValueChange={setSelectedFaculty}>
+                        <SelectTrigger id="faculty-select">
+                            <SelectValue placeholder="Select a faculty to assign" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableFaculty.map(faculty => (
+                                <SelectItem key={faculty.id} value={faculty.id}>{faculty.name} ({faculty.designation})</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
             <DialogFooter>
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button onClick={handleAdd} disabled={!facultyName.trim()}>Add Faculty</Button>
+                <Button onClick={handleAdd} disabled={!selectedFaculty}>Add Faculty</Button>
             </DialogFooter>
         </>
     )
@@ -142,7 +151,7 @@ export default function ClassDetailsPage() {
   const [isEditClassOpen, setEditClassOpen] = useState(false);
 
 
-  const { schools, programsBySchool, mode, students: allStudents, addStudentToClass, removeStudentFromClass, addFacultyToClass, removeFacultyFromClass } = useAppContext();
+  const { schools, programsBySchool, mode, students: allStudents, faculties: allFaculties, addStudentToClass, removeStudentFromClass, addFacultyToClass, removeFacultyFromClass } = useAppContext();
 
   const school = schools.find((s) => s.id === schoolId);
   const program = programsBySchool[schoolId]?.find((p) => p.id === programId);
@@ -157,6 +166,7 @@ export default function ClassDetailsPage() {
   const faculties = cls.faculties || [];
 
   const availableStudents = allStudents.filter(s => !students.some(es => es.id === s.id));
+  const availableFaculty = allFaculties.filter(f => !faculties.some(ef => ef.id === f.id));
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -312,9 +322,13 @@ export default function ClassDetailsPage() {
                           <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Add Faculty</DialogTitle>
-                                <DialogDescription>Enter the name of the faculty member to assign to {cls.name}.</DialogDescription>
+                                <DialogDescription>Assign a faculty member to {cls.name}.</DialogDescription>
                             </DialogHeader>
-                            <AddFacultyDialog onAdd={(name) => addFacultyToClass(schoolId, programId, departmentId, classId, name)} onDone={() => setAddFacultyOpen(false)} />
+                            <AddFacultyDialog 
+                                onAdd={(facultyId) => addFacultyToClass(schoolId, programId, departmentId, classId, facultyId)} 
+                                availableFaculty={availableFaculty}
+                                onDone={() => setAddFacultyOpen(false)} 
+                            />
                           </DialogContent>
                         </Dialog>
                       </div>
@@ -325,12 +339,16 @@ export default function ClassDetailsPage() {
                         <div key={index} className="flex items-center justify-between rounded-lg border p-3">
                           <div className="flex items-center gap-4">
                               <Avatar>
-                                <AvatarFallback>{faculty.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={faculty.avatar} />
+                                <AvatarFallback>{faculty.name.charAt(0)}</AvatarFallback>
                               </Avatar>
-                              <p className="font-semibold">{faculty}</p>
+                              <div>
+                                  <p className="font-semibold">{faculty.name}</p>
+                                  <p className="text-sm text-muted-foreground">{faculty.designation}</p>
+                              </div>
                           </div>
                           {mode === 'admin' && (
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => removeFacultyFromClass(schoolId, programId, departmentId, classId, faculty)}>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => removeFacultyFromClass(schoolId, programId, departmentId, classId, faculty.id)}>
                                 <Trash className="h-4 w-4" />
                             </Button>
                           )}

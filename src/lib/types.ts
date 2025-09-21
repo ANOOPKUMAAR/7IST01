@@ -46,6 +46,16 @@ export interface Student extends UserDetails {
     id: string; // Should be the same as rollNo
 }
 
+export interface Faculty {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    department: string;
+    designation: string;
+    avatar?: string;
+}
+
 export interface Class {
     id: string;
     name: string;
@@ -54,7 +64,7 @@ export interface Class {
     day: string;
     startTime: string;
     endTime: string;
-    faculties: string[];
+    faculties: Faculty[];
 }
 
 export interface Department {

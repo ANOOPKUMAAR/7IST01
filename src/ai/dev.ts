@@ -8,3 +8,4 @@ import '@/ai/flows/get-camera-headcount-flow.ts';
 import '@/ai/flows/extract-classes-flow.ts';
 import '@/ai/flows/get-headcount-flow.ts';
 import '@/ai/flows/extract-students-flow.ts';
+import '@/ai/flows/extract-faculty-flow.ts';

@@ -23,6 +23,7 @@ import type {
   Department,
   Class,
   Student,
+  Faculty,
 } from "@/lib/types";
 import { checkAttendanceAnomaly } from "@/actions/attendance-actions";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ import {
   initialProgramsBySchool,
   mockStudents,
 } from "@/lib/school-data";
+import { mockFaculties } from "@/lib/faculty-data";
 
 interface AppContextType {
   subjects: Subject[];
@@ -43,6 +45,7 @@ interface AppContextType {
   schools: School[];
   programsBySchool: Record<string, Program[]>;
   students: Student[];
+  faculties: Faculty[];
   setMode: (mode: UserMode) => void;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
@@ -73,8 +76,12 @@ interface AppContextType {
   deleteStudent: (studentId: string) => void;
   addStudentToClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
   removeStudentFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
-  addFacultyToClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => void;
-  removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => void;
+  addFaculty: (faculty: Omit<Faculty, "id">) => void;
+  bulkAddFaculty: (newFaculty: Omit<Faculty, "id" | "avatar">[]) => void;
+  updateFaculty: (faculty: Faculty) => void;
+  deleteFaculty: (facultyId: string) => void;
+  addFacultyToClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
+  removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -155,6 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [schools, setSchools] = useState<School[]>([]);
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   const [students, setStudents] = useState<Student[]>([]);
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
   
   const appStateRef = useRef({
     subjects: subjectsState,
@@ -166,6 +174,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     schools,
     programsBySchool,
     students,
+    faculties,
   });
 
   useEffect(() => {
@@ -179,8 +188,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       schools,
       programsBySchool,
       students,
+      faculties,
     };
-  }, [subjectsState, attendance, wifiZones, activeCheckIn, userDetails, mode, schools, programsBySchool, students]);
+  }, [subjectsState, attendance, wifiZones, activeCheckIn, userDetails, mode, schools, programsBySchool, students, faculties]);
   
   // Load from localStorage on mount
   useEffect(() => {
@@ -194,6 +204,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedSchools = localStorage.getItem("witrack_schools");
       const storedPrograms = localStorage.getItem("witrack_programs");
       const storedStudents = localStorage.getItem("witrack_students");
+      const storedFaculties = localStorage.getItem("witrack_faculties");
 
       let storedUserDetails = localStorage.getItem("witrack_userDetails");
       let userDetailsData;
@@ -227,6 +238,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...mockStudents
       ];
       setStudents(storedStudents ? JSON.parse(storedStudents) : allStudents);
+      setFaculties(storedFaculties ? JSON.parse(storedFaculties) : mockFaculties);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -243,6 +255,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { ...userDetails, id: userDetails.rollNo},
         ...mockStudents
       ]);
+      setFaculties(mockFaculties);
     }
     setIsLoaded(true);
   }, []);
@@ -260,6 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_schools", JSON.stringify(stateToSave.schools));
         localStorage.setItem("witrack_programs", JSON.stringify(stateToSave.programsBySchool));
         localStorage.setItem("witrack_students", JSON.stringify(stateToSave.students));
+        localStorage.setItem("witrack_faculties", JSON.stringify(stateToSave.faculties));
         if (stateToSave.mode) {
             localStorage.setItem("witrack_mode", JSON.stringify(stateToSave.mode));
         } else {
@@ -557,15 +571,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const bulkAddStudents = (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => {
     const studentMap = new Map<string, Student>();
     
-    // Always keep the currently logged-in user if their details are in the list or not
-    if (mode === 'admin') {
-      studentMap.set(userDetails.rollNo, userDetails);
-    }
+    students.forEach(s => studentMap.set(s.rollNo, s));
     
     newStudents.forEach(s => {
-      // Don't overwrite the logged-in user's details if they happen to be in the list
-      if (s.rollNo === userDetails.rollNo && mode === 'admin') return;
-
       studentMap.set(s.rollNo, {
         ...s,
         id: s.rollNo,
@@ -578,8 +586,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setStudents(studentsToSet);
 
     toast({
-      title: "Student List Replaced",
-      description: `${studentsToSet.length} students are now in the system.`,
+      title: "Student List Updated",
+      description: `${newStudents.length} students were added or updated.`,
     });
   };
 
@@ -657,31 +665,91 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }));
       toast({ title: "Student Removed from Class", variant: "destructive" });
   };
+  
+  const addFaculty = (facultyData: Omit<Faculty, 'id'>) => {
+      if (faculties.some(f => f.email.toLowerCase() === facultyData.email.toLowerCase())) {
+          toast({ title: "Faculty Exists", description: "A faculty member with this email already exists.", variant: "destructive" });
+          return;
+      }
+      const newFaculty: Faculty = { ...facultyData, id: `faculty_${Date.now()}` };
+      setFaculties(prev => [...prev, newFaculty]);
+      toast({ title: "Faculty Member Added" });
+  };
+  
+  const bulkAddFaculty = (newFaculty: Omit<Faculty, "id" | "avatar">[]) => {
+    const facultyMap = new Map<string, Faculty>();
+    faculties.forEach(f => facultyMap.set(f.email.toLowerCase(), f));
 
-  const addFacultyToClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => {
-      setProgramsBySchool(prev => {
-        const newProgramsBySchool = { ...prev };
-        const program = newProgramsBySchool[schoolId]?.find(p => p.id === programId);
-        const department = program?.departments.find(d => d.id === departmentId);
-        const cls = department?.classes.find(c => c.id === classId);
-        if (cls) {
-            if (!cls.faculties.includes(facultyName)) {
-                cls.faculties.push(facultyName);
-                toast({ title: "Faculty Assigned" });
-            } else {
-                toast({ title: "Faculty already assigned", variant: "destructive" });
-            }
-        }
-        return { ...newProgramsBySchool };
-      });
+    newFaculty.forEach(f => {
+        facultyMap.set(f.email.toLowerCase(), {
+            ...f,
+            id: `faculty_${Date.now()}_${Math.random()}`,
+            avatar: `https://picsum.photos/seed/${f.email}/200`
+        });
+    });
+
+    setFaculties(Array.from(facultyMap.values()));
+    toast({
+      title: "Faculty List Updated",
+      description: `${newFaculty.length} faculty members were added or updated.`,
+    });
   };
 
-  const removeFacultyFromClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyName: string) => {
+  const updateFaculty = (updatedFaculty: Faculty) => {
+      setFaculties(prev => prev.map(f => f.id === updatedFaculty.id ? updatedFaculty : f));
+      toast({ title: "Faculty Member Updated" });
+  };
+  
+  const deleteFaculty = (facultyId: string) => {
+      setFaculties(prev => prev.filter(f => f.id !== facultyId));
+      // Also remove from all classes
+      setProgramsBySchool(prev => {
+          const newProgramsBySchool = { ...prev };
+          for (const schoolId in newProgramsBySchool) {
+              newProgramsBySchool[schoolId] = newProgramsBySchool[schoolId].map(program => ({
+                  ...program,
+                  departments: program.departments.map(department => ({
+                      ...department,
+                      classes: department.classes.map(cls => ({
+                          ...cls,
+                          faculties: cls.faculties.filter(f => f.id !== facultyId),
+                      })),
+                  })),
+              }));
+          }
+          return newProgramsBySchool;
+      });
+      toast({ title: "Faculty Member Deleted", variant: "destructive" });
+  };
+  
+  const addFacultyToClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => {
+    const faculty = faculties.find(f => f.id === facultyId);
+    if (!faculty) return;
+
+    setProgramsBySchool(prev => {
+        const newPrograms = {...prev};
+        const program = newPrograms[schoolId]?.find(p => p.id === programId);
+        const department = program?.departments.find(d => d.id === departmentId);
+        const cls = department?.classes.find(c => c.id === classId);
+
+        if (cls) {
+            if (cls.faculties.some(f => f.id === facultyId)) {
+                toast({ title: "Faculty already assigned", variant: "destructive" });
+                return prev;
+            }
+            cls.faculties.push(faculty);
+            toast({ title: "Faculty Assigned to Class" });
+        }
+        return newPrograms;
+    });
+  };
+
+  const removeFacultyFromClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => {
       setProgramsBySchool(prev => ({
         ...prev,
-        [schoolId]: prev[schoolId].map(p => p.id === programId ? { ...p, departments: p.departments.map(d => d.id === departmentId ? { ...d, classes: d.classes.map(c => c.id === classId ? { ...c, faculties: c.faculties.filter(f => f !== facultyName) } : c) } : d) } : p),
+        [schoolId]: prev[schoolId].map(p => p.id === programId ? { ...p, departments: p.departments.map(d => d.id === departmentId ? { ...d, classes: d.classes.map(c => c.id === classId ? { ...c, faculties: c.faculties.filter(f => f.id !== facultyId) } : c) } : d) } : p),
       }));
-      toast({ title: "Faculty Removed", variant: "destructive" });
+      toast({ title: "Faculty Removed from Class", variant: "destructive" });
   };
 
   const value: AppContextType = {
@@ -695,6 +763,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     schools,
     programsBySchool,
     students,
+    faculties,
     setMode,
     logout,
     addSubject,
@@ -725,6 +794,10 @@ checkIn,
     deleteStudent,
     addStudentToClass,
     removeStudentFromClass,
+    addFaculty,
+    bulkAddFaculty: bulkAddFaculty as any,
+    updateFaculty,
+    deleteFaculty,
     addFacultyToClass,
     removeFacultyFromClass,
   };

@@ -25,7 +25,6 @@ export const adminNavLinks: NavLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/schools", label: "Schools", icon: Building },
     { href: "/students", label: "Students", icon: GraduationCap },
-    { href: "/database", label: "Database", icon: Database },
     { href: "/profile", label: "Profile", icon: User },
 ];
 

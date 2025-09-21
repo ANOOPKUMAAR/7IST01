@@ -1,4 +1,4 @@
-import { Home, BarChart3, Settings, User, GraduationCap, Briefcase, Building, Fingerprint } from 'lucide-react';
+import { Home, BarChart3, Settings, User, GraduationCap, Briefcase, Building, Fingerprint, ClipboardList } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { UserMode } from './types';
 
@@ -18,6 +18,7 @@ export const studentNavLinks: NavLink[] = [
 
 export const facultyNavLinks: NavLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/faculty/attendance", label: "Attendance", icon: ClipboardList },
     { href: "/profile", label: "Profile", icon: Briefcase },
 ];
 

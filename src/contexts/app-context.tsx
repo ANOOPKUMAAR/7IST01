@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -71,10 +72,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const initialSubjects: Subject[] = [
-    { id: 'cs101', name: 'Intro to CS', expectedCheckIn: '09:00', expectedCheckOut: '10:30', totalClasses: 20, dayOfWeek: 1 },
-    { id: 'ma201', name: 'Calculus II', expectedCheckIn: '11:00', expectedCheckOut: '12:30', totalClasses: 24, dayOfWeek: 2 },
-];
+const initialSubjects: Subject[] = [];
 
 const generateInitialAttendance = (): Record<string, AttendanceRecord[]> => { return {} };
 
@@ -114,7 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
   const appStateRef = useRef({
-    subjectsState, // Use subjectsState for saving manually added subjects
+    subjectsState,
     attendance,
     wifiZones,
     activeCheckIn,
@@ -193,37 +191,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const subjects = useMemo(() => {
-    const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
-
     if (!isLoaded || !mode) return [];
 
-    let allSubjects: Subject[] = [];
+    const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
 
     if (mode === 'faculty') {
-      const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
-      Object.values(programsBySchool).flat().forEach(program => {
-        program.departments.forEach(department => {
-          department.classes.forEach(cls => {
-            if (cls.faculties.includes(facultyName)) {
-              allSubjects.push({
-                id: cls.id,
-                name: cls.name,
-                expectedCheckIn: cls.startTime,
-                expectedCheckOut: cls.endTime,
-                dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
-                totalClasses: 20 // Placeholder
-              });
-            }
-          });
-        });
-      });
-    } else if (mode === 'student') {
-        // Add classes student is enrolled in
+        const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
+        const facultyClasses: Subject[] = [];
         Object.values(programsBySchool).flat().forEach(program => {
             program.departments.forEach(department => {
                 department.classes.forEach(cls => {
-                    if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
-                        allSubjects.push({
+                    if (cls.faculties.includes(facultyName)) {
+                        facultyClasses.push({
                             id: cls.id,
                             name: cls.name,
                             expectedCheckIn: cls.startTime,
@@ -235,15 +214,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 });
             });
         });
+        return facultyClasses;
+    } 
+    
+    if (mode === 'student') {
+        const enrolledSubjects: Subject[] = [];
+        // Add classes student is enrolled in
+        Object.values(programsBySchool).flat().forEach(program => {
+            program.departments.forEach(department => {
+                department.classes.forEach(cls => {
+                    if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
+                        enrolledSubjects.push({
+                            id: cls.id,
+                            name: cls.name,
+                            expectedCheckIn: cls.startTime,
+                            expectedCheckOut: cls.endTime,
+                            dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
+                            totalClasses: 20 // Placeholder
+                        });
+                    }
+                });
+            });
+        });
+
         // Add manually added subjects, ensuring no duplicates by ID
+        const finalSubjects = [...enrolledSubjects];
         subjectsState.forEach(manualSubject => {
-            if (!allSubjects.some(s => s.id === manualSubject.id)) {
-                allSubjects.push(manualSubject);
+            if (!finalSubjects.some(s => s.id === manualSubject.id)) {
+                finalSubjects.push(manualSubject);
             }
         });
+        
+        return finalSubjects;
     }
 
-    return allSubjects;
+    return [];
   }, [mode, isLoaded, programsBySchool, userDetails.rollNo, subjectsState]);
 
   // Save to localStorage when the user is about to leave the page
@@ -310,7 +315,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
-  }
+    if (newMode === 'student') {
+        setSubjectsState(initialSubjects);
+    }
+  };
 
   const logout = () => {
     setModeState(null);

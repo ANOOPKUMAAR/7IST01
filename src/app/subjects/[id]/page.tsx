@@ -13,7 +13,7 @@ import type { Class } from "@/lib/types";
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { attendance, isLoaded, mode, programsBySchool, subjects: contextSubjects, userDetails } = useAppContext();
+  const { attendance, isLoaded, mode, programsBySchool, subjects } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   const subjectClass = useMemo(() => {
@@ -30,28 +30,9 @@ export default function SubjectDetailsPage() {
         }
       }
     }
-    
-    // Fallback for manually added student subjects that might not be in the main school structure.
-    if (mode === 'student') {
-        const manualSubject = contextSubjects.find(s => s.id === id);
-        if (manualSubject) {
-            // Create a minimal Class object for the table components
-            return {
-                id: manualSubject.id,
-                name: manualSubject.name,
-                students: [userDetails as any], // The table expects a student list
-                coordinator: 'N/A',
-                day: '',
-                startTime: manualSubject.expectedCheckIn,
-                endTime: manualSubject.expectedCheckOut,
-                faculties: []
-            };
-        }
-    }
-
     return undefined;
 
-  }, [id, isLoaded, programsBySchool, mode, contextSubjects, userDetails]);
+  }, [id, isLoaded, programsBySchool]);
 
 
   if (!isLoaded) {

@@ -77,7 +77,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
 }
 
 export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subject: Subject; isAttendanceActive: boolean }) {
-  const { students, requestCameraPermission, hasCameraPermission, stopCameraStream } = useAppContext();
+  const { students, requestCameraPermission, hasCameraPermission, stopCameraStream, recordClassAttendance } = useAppContext();
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
@@ -244,6 +244,16 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
         });
         return;
     }
+
+    const presentStudentIds = Object.entries(attendance)
+      .filter(([, status]) => status === 'present')
+      .map(([studentId]) => studentId);
+
+    const absentStudentIds = Object.entries(attendance)
+      .filter(([, status]) => status === 'absent')
+      .map(([studentId]) => studentId);
+      
+    recordClassAttendance(subject, presentStudentIds, absentStudentIds);
 
     toast({
       title: "Attendance Saved",

@@ -44,6 +44,7 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: Partial<Omit<UserDetails, 'deviceId'>>) => void;
+  recordClassAttendance: (subject: Subject, presentStudentIds: string[], absentStudentIds: string[]) => void;
   hasCameraPermission: boolean | null;
   setHasCameraPermission: (hasPermission: boolean | null) => void;
   requestCameraPermission: (videoEl: HTMLVideoElement | null, showToast?: boolean) => Promise<MediaStream | null>;
@@ -254,11 +255,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
-    localStorage.setItem("witrack_mode", JSON.stringify(newMode));
-    let modeName = "Student";
-    if (newMode === 'faculty') modeName = "Faculty";
-    if (newMode === 'admin') modeName = "Admin";
-    toast({ title: `Switched to ${modeName} Mode`});
   }
 
   const logout = () => {
@@ -345,7 +341,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!subject) return;
   
     const checkOutTime = new Date().toISOString();
-    const newRecord: Omit<AttendanceRecord, 'isAnomaly' | 'anomalyReason'> = {
+    const newRecord: Omit<AttendanceRecord, 'isAnomaly' | 'anomalyReason' | 'studentId'> = {
       id: `att_${Date.now()}`,
       date: new Date().toISOString(),
       checkIn: activeCheckIn.checkInTime,
@@ -359,7 +355,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         history: attendance[subjectId] || [],
     });
 
-    const finalRecord = { ...newRecord, ...anomalyResult };
+    const finalRecord: AttendanceRecord = { ...newRecord, ...anomalyResult, studentId: userDetails.rollNo };
   
     setAttendance(prev => ({
       ...prev,
@@ -399,6 +395,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
     
     toast({ title: "Profile Updated", description: "Your details have been saved across the app." });
+  };
+  
+  const recordClassAttendance = (subject: Subject, presentStudentIds: string[], absentStudentIds: string[]) => {
+    const now = new Date();
+    const startTime = new Date(now);
+    startTime.setHours(Number(subject.expectedCheckIn.split(':')[0]), Number(subject.expectedCheckIn.split(':')[1]), 0, 0);
+
+    const endTime = new Date(now);
+    endTime.setHours(Number(subject.expectedCheckOut.split(':')[0]), Number(subject.expectedCheckOut.split(':')[1]), 0, 0);
+
+    const newAttendanceRecords: Record<string, AttendanceRecord[]> = {};
+
+    presentStudentIds.forEach(studentId => {
+        const student = students.find(s => s.id === studentId);
+        if (!student) return;
+
+        const presentRecord: AttendanceRecord = {
+            id: `att_${Date.now()}_${studentId}`,
+            date: now.toISOString(),
+            checkIn: startTime.toISOString(),
+            checkOut: endTime.toISOString(),
+            isAnomaly: false,
+            anomalyReason: '',
+            studentId: student.rollNo,
+        };
+        
+        if (!newAttendanceRecords[subject.id]) {
+            newAttendanceRecords[subject.id] = [];
+        }
+        newAttendanceRecords[subject.id].push(presentRecord);
+    });
+    
+    setAttendance(prev => {
+        const updatedAttendance = { ...prev };
+        Object.keys(newAttendanceRecords).forEach(subjectId => {
+            // Filter out any existing records for these students on this day to avoid duplicates
+            const existingRecords = updatedAttendance[subjectId] || [];
+            const otherStudentRecords = existingRecords.filter(rec => !presentStudentIds.includes(rec.studentId) && !absentStudentIds.includes(rec.studentId));
+            updatedAttendance[subjectId] = [...otherStudentRecords, ...newAttendanceRecords[subjectId]];
+        });
+        return updatedAttendance;
+    });
+
+    toast({
+        title: "Attendance Recorded",
+        description: `Marked ${presentStudentIds.length} present and ${absentStudentIds.length} absent for ${subject.name}.`
+    });
   };
 
   const findClassAndUpdate = (
@@ -631,6 +674,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkOut,
     deleteAttendanceRecord,
     updateUserDetails: updateUserDetails as (details: Partial<Omit<UserDetails, 'deviceId'>>) => void,
+    recordClassAttendance,
     hasCameraPermission,
     setHasCameraPermission,
     requestCameraPermission,

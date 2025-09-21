@@ -34,9 +34,12 @@ import { AlertTriangle, Trash } from "lucide-react";
 import type { Subject, AttendanceRecord } from "@/lib/types";
 
 export function AttendanceTable({ subject, records }: { subject: Subject; records: AttendanceRecord[] }) {
-  const { deleteAttendanceRecord } = useAppContext();
+  const { deleteAttendanceRecord, userDetails } = useAppContext();
 
-  const sortedRecords = records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Filter records for the current student
+  const studentRecords = records.filter(rec => rec.studentId === userDetails.rollNo);
+
+  const sortedRecords = studentRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Card>

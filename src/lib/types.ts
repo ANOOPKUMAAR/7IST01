@@ -14,6 +14,7 @@ export interface AttendanceRecord {
   checkOut: string | null;
   isAnomaly: boolean;
   anomalyReason: string;
+  studentId: string; // To associate record with a student
 }
 
 export interface WifiZone {

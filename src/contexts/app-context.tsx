@@ -24,7 +24,7 @@ import { initialSchools, initialProgramsBySchool, mockStudents } from "@/lib/sch
 import { useRouter } from "next/navigation";
 
 interface AppContextType {
-  subjects: Subject[];
+  subjects: Array<Subject | Class>;
   attendance: Record<string, AttendanceRecord[]>;
   wifiZones: WifiZone[];
   activeCheckIn: ActiveCheckIn | null;
@@ -190,26 +190,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  const subjects = useMemo(() => {
+  const subjects = useMemo((): Array<Subject | Class> => {
     if (!isLoaded || !mode) return [];
 
     const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
 
     if (mode === 'faculty') {
         const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
-        const facultyClasses: Subject[] = [];
+        const facultyClasses: Class[] = [];
         Object.values(programsBySchool).flat().forEach(program => {
             program.departments.forEach(department => {
                 department.classes.forEach(cls => {
                     if (cls.faculties.includes(facultyName)) {
-                        facultyClasses.push({
-                            id: cls.id,
-                            name: cls.name,
-                            expectedCheckIn: cls.startTime,
-                            expectedCheckOut: cls.endTime,
-                            dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
-                            totalClasses: 20 // Placeholder
-                        });
+                        facultyClasses.push(cls);
                     }
                 });
             });
@@ -218,30 +211,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } 
     
     if (mode === 'student') {
-        const enrolledSubjects: Subject[] = [];
+        const enrolledClasses: Class[] = [];
+        const enrolledClassIds = new Set<string>();
+
         Object.values(programsBySchool).flat().forEach(program => {
             program.departments.forEach(department => {
                 department.classes.forEach(cls => {
                     if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
-                        enrolledSubjects.push({
-                            id: cls.id,
-                            name: cls.name,
-                            expectedCheckIn: cls.startTime,
-                            expectedCheckOut: cls.endTime,
-                            dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
-                            totalClasses: 20 // Placeholder, can be improved
-                        });
+                        enrolledClasses.push(cls);
+                        enrolledClassIds.add(cls.id);
                     }
                 });
             });
         });
-        // This is where manually-added subjects would be combined, if desired.
-        // For now, it only returns subjects the student is officially enrolled in.
-        return enrolledSubjects;
+        
+        // Filter out manually added subjects that are already part of the enrolled classes
+        const manualSubjects = subjectsState.filter(manualSubj => !enrolledClassIds.has(manualSubj.id));
+        
+        return [...enrolledClasses, ...manualSubjects];
     }
 
     return [];
-  }, [mode, isLoaded, programsBySchool, userDetails.rollNo]);
+  }, [mode, isLoaded, programsBySchool, userDetails.rollNo, subjectsState]);
 
   // Save to localStorage when the user is about to leave the page
   useEffect(() => {
@@ -396,6 +387,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     const subject = subjects.find(s => s.id === subjectId);
     if (!subject) return;
+
+    // To use checkAttendanceAnomaly, we need a Subject, not a Class object.
+    const simpleSubject: Subject = {
+      id: subject.id,
+      name: subject.name,
+      expectedCheckIn: 'expectedCheckIn' in subject ? subject.expectedCheckIn : subject.startTime,
+      expectedCheckOut: 'expectedCheckOut' in subject ? subject.expectedCheckOut : subject.endTime,
+      totalClasses: 'totalClasses' in subject ? subject.totalClasses : 20,
+      dayOfWeek: 'dayOfWeek' in subject ? subject.dayOfWeek : (Object.values({ 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 })['day' in subject ? subject.day.toLowerCase() : 1] || 1),
+    };
   
     const checkOutTime = new Date().toISOString();
     const newRecord: Omit<AttendanceRecord, 'isAnomaly' | 'anomalyReason' | 'studentId'> = {
@@ -408,7 +409,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const anomalyResult = await checkAttendanceAnomaly({
         checkInTime: newRecord.checkIn,
         checkOutTime: newRecord.checkOut!,
-        subject: subject,
+        subject: simpleSubject,
         history: attendance[subjectId] || [],
     });
 

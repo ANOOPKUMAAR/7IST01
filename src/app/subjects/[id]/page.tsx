@@ -15,50 +15,35 @@ import type { Class, Subject } from "@/lib/types";
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { subjects, attendance, isLoaded, mode, programsBySchool } = useAppContext();
+  const { subjects, attendance, isLoaded, mode } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
-  const subjectClass = useMemo(() => {
+  const subjectOrClass = useMemo(() => {
     if (!isLoaded) return undefined;
+    return subjects.find(s => s.id === id);
+  }, [id, isLoaded, subjects]);
 
-    let foundClass: Class | undefined;
-    const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
-
-
-    for (const schoolId in programsBySchool) {
-      for (const program of programsBySchool[schoolId]) {
-        for (const department of program.departments) {
-          const matchedClass = department.classes.find(c => c.id === id);
-          if (matchedClass) {
-            foundClass = matchedClass;
-            break;
-          }
-        }
-        if (foundClass) break;
-      }
-      if (foundClass) break;
-    }
+  const subjectAsClass = useMemo((): Class | undefined => {
+    if (!subjectOrClass) return undefined;
     
-    if (!foundClass && mode === 'student') {
-        const manualSubject = subjects.find(s => s.id === id);
-        if (manualSubject) {
-             // Create a Class-like object from a Subject
-             foundClass = {
-                id: manualSubject.id,
-                name: manualSubject.name,
-                startTime: manualSubject.expectedCheckIn,
-                endTime: manualSubject.expectedCheckOut,
-                day: Object.keys(dayMap).find(key => dayMap[key] === manualSubject.dayOfWeek) || 'Monday',
-                coordinator: 'N/A',
-                students: [], // Manual subjects don't have a roster
-                faculties: []
-            };
-        }
+    // Check if it's already a Class object (duck typing)
+    if ('coordinator' in subjectOrClass && 'students' in subjectOrClass) {
+        return subjectOrClass as Class;
     }
-    
-    return foundClass;
 
-  }, [id, isLoaded, programsBySchool, mode, subjects]);
+    // If it's a simple Subject, convert it to a Class-like object
+    const dayMap: { [key: number]: string } = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 0: 'Sunday' };
+    return {
+        id: subjectOrClass.id,
+        name: subjectOrClass.name,
+        startTime: subjectOrClass.expectedCheckIn,
+        endTime: subjectOrClass.expectedCheckOut,
+        day: dayMap[subjectOrClass.dayOfWeek] || 'N/A',
+        coordinator: 'N/A',
+        students: [], // Manual subjects don't have a roster
+        faculties: []
+    };
+  }, [subjectOrClass]);
 
 
   if (!isLoaded) {
@@ -73,7 +58,7 @@ export default function SubjectDetailsPage() {
     )
   }
   
-  if (!subjectClass) {
+  if (!subjectAsClass) {
     notFound();
   }
   
@@ -83,7 +68,7 @@ export default function SubjectDetailsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">{subjectClass.name}</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{subjectAsClass.name}</h2>
           <p className="text-muted-foreground">
             {mode === 'faculty' 
               ? `Class attendance for ${new Date().toLocaleDateString()}` 
@@ -100,9 +85,9 @@ export default function SubjectDetailsPage() {
       </div>
 
       {mode === 'faculty' ? (
-        <FacultyAttendanceTable subject={subjectClass} isAttendanceActive={isAttendanceActive} />
+        <FacultyAttendanceTable subject={subjectAsClass} isAttendanceActive={isAttendanceActive} />
       ) : (
-        <AttendanceTable subject={subjectClass} records={subjectAttendance} />
+        <AttendanceTable subject={subjectAsClass} records={subjectAttendance} />
       )}
     </div>
   );

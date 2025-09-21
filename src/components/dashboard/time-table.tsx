@@ -7,9 +7,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import type { Subject } from "@/lib/types";
+import type { Subject, Class } from "@/lib/types";
 
 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function getSubjectProps(subject: Subject | Class) {
+    const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+
+    if ('coordinator' in subject) { // It's a Class
+        return {
+            checkIn: subject.startTime,
+            checkOut: subject.endTime,
+            day: dayMap[subject.day.toLowerCase()] ?? 1,
+        };
+    }
+    // It's a Subject
+    return {
+        checkIn: subject.expectedCheckIn,
+        checkOut: subject.expectedCheckOut,
+        day: subject.dayOfWeek,
+    };
+}
 
 export function Timetable() {
   const { subjects, isLoaded } = useAppContext();
@@ -24,12 +42,13 @@ export function Timetable() {
     
     const allTimes = new Set<string>();
     subjects.forEach(subject => {
-        allTimes.add(subject.expectedCheckIn);
+        const { checkIn } = getSubjectProps(subject);
+        allTimes.add(checkIn);
     });
 
     const timeSlots = Array.from(allTimes).sort();
 
-    const subjectsByTimeAndDay: { [time: string]: { [day: number]: Subject[] } } = {};
+    const subjectsByTimeAndDay: { [time: string]: { [day: number]: Array<Subject | Class> } } = {};
 
     timeSlots.forEach(time => {
         subjectsByTimeAndDay[time] = {};
@@ -39,9 +58,10 @@ export function Timetable() {
     });
 
     subjects.forEach(subject => {
-        if (subjectsByTimeAndDay[subject.expectedCheckIn]) {
-            if(subjectsByTimeAndDay[subject.expectedCheckIn][subject.dayOfWeek]){
-                subjectsByTimeAndDay[subject.expectedCheckIn][subject.dayOfWeek].push(subject);
+        const { checkIn, day } = getSubjectProps(subject);
+        if (subjectsByTimeAndDay[checkIn]) {
+            if(subjectsByTimeAndDay[checkIn][day]){
+                subjectsByTimeAndDay[checkIn][day].push(subject);
             }
         }
     });
@@ -90,12 +110,13 @@ export function Timetable() {
                                     <TableCell key={`${time}-${index}`} className={cn("h-24 align-top p-1", index === currentDay && "bg-muted/30")}>
                                         <div className="space-y-1">
                                             {daySubjects.map(subject => {
+                                                const { checkIn, checkOut } = getSubjectProps(subject);
                                                 const linkHref = `/subjects/${subject.id}`;
                                                 return (
                                                 <Link href={linkHref} key={subject.id} className="block">
                                                     <div className="p-2 rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors shadow-sm border">
                                                         <p className="font-semibold text-sm leading-tight">{subject.name}</p>
-                                                        <p className="text-xs text-muted-foreground mt-1">{subject.expectedCheckIn} - {subject.expectedCheckOut}</p>
+                                                        <p className="text-xs text-muted-foreground mt-1">{checkIn} - {checkOut}</p>
                                                     </div>
                                                 </Link>
                                             )})}

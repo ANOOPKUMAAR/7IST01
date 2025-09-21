@@ -219,33 +219,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     if (mode === 'student') {
         const enrolledSubjects: Subject[] = [];
-        // Add classes student is enrolled in
+        const subjectMap = new Map<string, Subject>();
+
+        // Add classes student is enrolled in from the main data structure
         Object.values(programsBySchool).flat().forEach(program => {
             program.departments.forEach(department => {
                 department.classes.forEach(cls => {
                     if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
-                        enrolledSubjects.push({
+                        const subject: Subject = {
                             id: cls.id,
                             name: cls.name,
                             expectedCheckIn: cls.startTime,
                             expectedCheckOut: cls.endTime,
                             dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
-                            totalClasses: 20 // Placeholder
-                        });
+                            totalClasses: 20 // Placeholder, can be improved
+                        };
+                        if (!subjectMap.has(subject.id)) {
+                            subjectMap.set(subject.id, subject);
+                        }
                     }
                 });
             });
         });
 
-        // Add manually added subjects, ensuring no duplicates by ID
-        const finalSubjects = [...enrolledSubjects];
+        // Add manually added/uploaded subjects, ensuring no duplicates by ID
         subjectsState.forEach(manualSubject => {
-            if (!finalSubjects.some(s => s.id === manualSubject.id)) {
-                finalSubjects.push(manualSubject);
+            if (!subjectMap.has(manualSubject.id)) {
+                subjectMap.set(manualSubject.id, manualSubject);
             }
         });
         
-        return finalSubjects;
+        return Array.from(subjectMap.values());
     }
 
     return [];
@@ -316,7 +320,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
     if (newMode === 'student') {
-        setSubjectsState(initialSubjects);
+        // We shouldn't clear subjectsState on mode switch, 
+        // as it holds the student's manually added timetable.
+        // setSubjectsState(initialSubjects); 
     }
   };
 

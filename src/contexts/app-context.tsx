@@ -848,27 +848,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const newState = JSON.parse(JSON.stringify(prev));
 
       // Step 1: Un-assign the faculty member from all classes.
-      for (const school of Object.values(newState)) {
-        for (const program of school) {
-          for (const department of program.departments) {
-            for (const cls of department.classes) {
+      for (const schoolId in newState) {
+        newState[schoolId].forEach((program: Program) => {
+          program.departments.forEach(department => {
+            department.classes.forEach(cls => {
               const facultyIndex = cls.faculties.findIndex(
                 (f: Faculty) => f.id === faculty.id
               );
               if (facultyIndex !== -1) {
                 cls.faculties.splice(facultyIndex, 1);
               }
-            }
-          }
-        }
+            });
+          });
+        });
       }
 
       // Step 2: Assign faculty to new classes based on flexible matching.
       for (const newClassData of classes) {
         let classAssigned = false;
-        for (const school of Object.values(newState)) {
+        for (const schoolId in newState) {
           if (classAssigned) break;
-          for (const program of school) {
+          for (const program of newState[schoolId]) {
             if (classAssigned) break;
             for (const department of program.departments) {
               if (classAssigned) break;

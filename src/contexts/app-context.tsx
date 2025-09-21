@@ -303,22 +303,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
     if (newMode === 'student') {
+        setUserDetails({ ...initialUserDetails, deviceId: userDetails.deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` });
         setSubjectsState(initialStudentSubjects);
         setAttendance(generateInitialAttendance());
     } else if (newMode === 'faculty') {
-        setUserDetails({
-            id: 'faculty_4',
-            name: 'Dr. Geoffrey Hinton',
-            rollNo: 'faculty_4',
-            email: 'geoffrey.hinton@example.com',
-            phone: '123-456-7893',
-            department: 'Artificial Intelligence',
-            designation: 'Professor',
-            avatar: 'https://picsum.photos/seed/f4/200'
-        } as any);
+        const facultyUser = mockFaculties.find(f => f.id === 'faculty_4');
+        if (facultyUser) {
+            setUserDetails({
+                id: facultyUser.id,
+                name: facultyUser.name,
+                rollNo: facultyUser.id,
+                email: facultyUser.email,
+                phone: facultyUser.phone,
+                department: facultyUser.department,
+                designation: facultyUser.designation,
+                avatar: facultyUser.avatar
+            } as any);
+        }
         setSubjectsState([]);
         setAttendance({});
     } else {
+        setUserDetails({ ...initialUserDetails, deviceId: userDetails.deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` });
         setSubjectsState([]);
         setAttendance({});
     }
@@ -614,21 +619,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const bulkAddStudents = (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => {
     const studentMap = new Map<string, Student>();
     
-    // Keep the currently logged-in user if they are in the list, otherwise add them.
-    if (mode === 'student') {
+    newStudents.forEach(s => {
+      studentMap.set(s.rollNo, {
+          ...s,
+          id: s.rollNo,
+          deviceId: generateDeviceId(),
+          avatar: `https://picsum.photos/seed/${s.rollNo}/200`
+      });
+    });
+
+    if (mode === 'student' && !studentMap.has(userDetails.rollNo)) {
         studentMap.set(userDetails.rollNo, userDetails);
     }
-    
-    newStudents.forEach(s => {
-      if (s.rollNo !== userDetails.rollNo) {
-        studentMap.set(s.rollNo, {
-            ...s,
-            id: s.rollNo,
-            deviceId: generateDeviceId(),
-            avatar: `https://picsum.photos/seed/${s.rollNo}/200`
-        });
-      }
-    });
 
     const studentsToSet = Array.from(studentMap.values());
     setStudents(studentsToSet);

@@ -101,7 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [attendance, setAttendance] = useState<Record<string, AttendanceRecord[]>>({});
   const [wifiZones, setWifiZones] = useState<WifiZone[]>([]);
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
-  const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, deviceId: '', avatar: `https://picsum.photos/seed/${Math.random()}/200` });
+  const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, deviceId: '', avatar: '' });
   const [students, setStudents] = useState<Student[]>(mockStudents);
   const [mode, setModeState] = useState<UserMode>('student');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -296,7 +296,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Wi-Fi Zone Removed", variant: "destructive" });
   };
 
-  const checkIn = async (subjectId: string) => {
+  const checkIn = (subjectId: string) => {
     if (activeCheckIn) {
       toast({ title: "Already Checked In", description: "You must check out from your current session first.", variant: "destructive" });
       return;
@@ -367,27 +367,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserDetails = (details: Partial<Omit<UserDetails, 'deviceId'>>) => {
-    // Update the main userDetails state for the current user's view
     const updatedUserDetails = { ...userDetails, ...details };
     setUserDetails(updatedUserDetails);
 
-    // Find the corresponding student in the master `students` list and update them
     setStudents(prevStudents => 
         prevStudents.map(student => {
             if (student.rollNo === userDetails.rollNo) {
                 return { 
                     ...student,
                     name: updatedUserDetails.name,
-                    // any other fields on the `Student` type can be updated here
+                    deviceId: updatedUserDetails.deviceId, // Ensure deviceId is also updated in the master list
                 };
             }
             return student;
         })
     );
-    
-    // The change to the `students` array will automatically be reflected in any
-    // class rosters because they share the same object references.
-    // No need to manually update `programsBySchool` state.
     
     toast({ title: "Profile Updated", description: "Your details have been saved across the app." });
   };
@@ -620,11 +614,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkIn,
     checkOut,
     deleteAttendanceRecord,
-    updateUserDetails: updateUserDetails as (details: UserDetails) => void,
+    updateUserDetails: updateUserDetails as (details: Partial<Omit<UserDetails, 'deviceId'>>) => void,
     hasCameraPermission,
     setHasCameraPermission,
     requestCameraPermission,
-    stopCameraStream,
+stopCameraStream,
     // Admin functions
     addSchool,
     updateSchool,
@@ -656,3 +650,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

@@ -68,6 +68,7 @@ interface AppContextType {
   updateClass: (schoolId: string, programId: string, departmentId: string, cls: Class) => void;
   deleteClass: (schoolId: string, programId: string, departmentId: string, classId: string) => void;
   addStudent: (student: Omit<Student, "id">) => void;
+  bulkAddStudents: (newStudents: Omit<Student, "id">[]) => void;
   updateStudent: (student: Student) => void;
   deleteStudent: (studentId: string) => void;
   addStudentToClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
@@ -543,6 +544,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Student Added" });
   };
 
+  const bulkAddStudents = (newStudents: Omit<Student, "id">[]) => {
+    const studentsToAdd = newStudents.map(s => ({
+      ...s,
+      id: `stu_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      deviceId: generateDeviceId(),
+      avatar: `https://picsum.photos/seed/${s.rollNo}/200`
+    }));
+    setStudents(prev => [...prev, ...studentsToAdd]);
+    toast({ title: "Students Imported", description: `${studentsToAdd.length} new students have been imported.` });
+  };
+
   const updateStudent = (updatedStudent: Student) => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
     if (updatedStudent.id === userDetails.id) {
@@ -668,10 +680,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addDepartment,
     updateDepartment,
     deleteDepartment,
-    addClass,
+addClass,
     updateClass,
     deleteClass,
     addStudent,
+    bulkAddStudents,
     updateStudent,
     deleteStudent,
     addStudentToClass,

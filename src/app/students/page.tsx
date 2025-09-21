@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, Trash, Edit, MoreVertical } from "lucide-react";
+import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import { StudentFormDialog } from "@/components/admin/student-form-dialog";
 import { StudentDetailsDialog } from "@/components/admin/student-details-dialog";
@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import type { Student } from "@/lib/types";
+import { UploadStudentListDialog } from "@/components/admin/upload-student-list-dialog";
 
 function StudentRow({ student }: { student: Student }) {
   const { mode, deleteStudent } = useAppContext();
@@ -107,6 +108,7 @@ function StudentRow({ student }: { student: Student }) {
 export default function StudentsPage() {
   const { students, mode } = useAppContext();
   const [isAddOpen, setAddOpen] = useState(false);
+  const [isUploadOpen, setUploadOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredStudents = students.filter(
@@ -133,6 +135,23 @@ export default function StudentsPage() {
             </div>
         </div>
         {mode === 'admin' && (
+          <div className="flex gap-2">
+            <Dialog open={isUploadOpen} onOpenChange={setUploadOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <FileUp /> Upload List
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Student List</DialogTitle>
+                  <DialogDescription>
+                    Upload a CSV or text file to bulk-import students.
+                  </DialogDescription>
+                </DialogHeader>
+                <UploadStudentListDialog onDone={() => setUploadOpen(false)} />
+              </DialogContent>
+            </Dialog>
             <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
                 <DialogTrigger asChild>
                     <Button>
@@ -149,6 +168,7 @@ export default function StudentsPage() {
                     <StudentFormDialog onDone={() => setAddOpen(false)} />
                 </DialogContent>
             </Dialog>
+          </div>
         )}
       </div>
       <Card>

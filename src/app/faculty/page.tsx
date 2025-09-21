@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase, Upload } from "lucide-react";
+import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Briefcase, Upload, BookPlus } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import { FacultyFormDialog } from "@/components/admin/faculty-form-dialog";
 import { FacultyDetailsDialog } from "@/components/admin/faculty-details-dialog";
@@ -48,6 +49,7 @@ import Link from "next/link";
 import type { Faculty } from "@/lib/types";
 import { UploadFacultyListDialog } from "@/components/admin/upload-faculty-list-dialog";
 import { UploadFacultyTimetableDialog } from "@/components/admin/upload-faculty-timetable-dialog";
+import { AssignClassDialog } from "@/components/admin/assign-class-dialog";
 
 
 function FacultyRow({ faculty }: { faculty: Faculty }) {
@@ -55,6 +57,8 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
   const [isEditOpen, setEditOpen] = useState(false);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
   const [isUploadTimetableOpen, setUploadTimetableOpen] = useState(false);
+  const [isAssignClassOpen, setAssignClassOpen] = useState(false);
+
 
   return (
     <TableRow>
@@ -90,9 +94,12 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
                   <DropdownMenuItem onClick={() => setEditOpen(true)}>
                     <Edit className="mr-2" /> Edit Details
                   </DropdownMenuItem>
-                   <DropdownMenuItem onClick={() => setUploadTimetableOpen(true)}>
+                  <DropdownMenuItem onClick={() => setUploadTimetableOpen(true)}>
                     <Upload className="mr-2" /> Upload Timetable
                   </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => setAssignClassOpen(true)}>
+                        <BookPlus className="mr-2" /> Assign Class
+                    </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive"
@@ -115,7 +122,7 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
                 />
               </DialogContent>
             </Dialog>
-             <Dialog open={isUploadTimetableOpen} onOpenChange={setUploadTimetableOpen}>
+            <Dialog open={isUploadTimetableOpen} onOpenChange={setUploadTimetableOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Upload Timetable for {faculty.name}</DialogTitle>
@@ -126,6 +133,20 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
                     <UploadFacultyTimetableDialog
                         faculty={faculty}
                         onDone={() => setUploadTimetableOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isAssignClassOpen} onOpenChange={setAssignClassOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Assign Class to {faculty.name}</DialogTitle>
+                        <DialogDescription>
+                            Select a class from the list to assign this faculty member to.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <AssignClassDialog
+                        faculty={faculty}
+                        onDone={() => setAssignClassOpen(false)}
                     />
                 </DialogContent>
             </Dialog>

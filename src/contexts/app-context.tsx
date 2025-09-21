@@ -83,6 +83,7 @@ interface AppContextType {
   updateFaculty: (faculty: Faculty) => void;
   deleteFaculty: (facultyId: string) => void;
   addFacultyToClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
+  addFacultyToClassById: (classId: string, facultyId: string) => void;
   removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
   assignFacultyToClassesFromTimetable: (faculty: Faculty, classes: Partial<Class>[]) => void;
   recordClassAttendance: (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => void;
@@ -794,6 +795,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const addFacultyToClassById = (classId: string, facultyId: string) => {
+    const faculty = faculties.find(f => f.id === facultyId);
+    if (!faculty) return;
+
+    setProgramsBySchool(prev => {
+        const newState = { ...prev };
+        let classFound = false;
+
+        for (const schoolId in newState) {
+            if(classFound) break;
+            for (const program of newState[schoolId]) {
+                if(classFound) break;
+                for (const department of program.departments) {
+                    if(classFound) break;
+                    const cls = department.classes.find(c => c.id === classId);
+                    if (cls) {
+                        if (cls.faculties.some(f => f.id === facultyId)) {
+                            toast({ title: "Faculty already assigned to this class.", variant: "destructive" });
+                        } else {
+                            cls.faculties.push(faculty);
+                            toast({ title: "Faculty Assigned", description: `${faculty.name} assigned to ${cls.name}.` });
+                        }
+                        classFound = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return newState;
+    });
+  };
+
   const removeFacultyFromClass = (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => {
       setProgramsBySchool(prev => ({
         ...prev,
@@ -987,6 +1020,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateFaculty,
     deleteFaculty,
     addFacultyToClass,
+    addFacultyToClassById,
     removeFacultyFromClass,
     assignFacultyToClassesFromTimetable,
     recordClassAttendance,

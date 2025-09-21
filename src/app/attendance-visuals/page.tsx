@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMemo, useState }s from "react";
+import { useMemo, useState } from "react";
 import type { Class, Department, Program, Student } from "@/lib/types";
 import {
   Select,

@@ -6,7 +6,7 @@ import { FacultyAttendanceTable } from "@/components/subjects/faculty-attendance
 import { notFound, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Play, Pause } from "lucide-react";
 import type { Class } from "@/lib/types";
 
@@ -16,6 +16,36 @@ export default function SubjectDetailsPage() {
   const { subjects, attendance, isLoaded, mode, programsBySchool } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
+  const subject = useMemo(() => {
+    if (!isLoaded) return undefined;
+
+    // The 'subjects' array from context is already correctly filtered for student/faculty.
+    // However, the 'Class' type is needed for faculty, which contains the student list.
+    // The base 'Subject' type doesn't. We need to find the full Class object.
+    
+    // First, try finding from the simple subjects list (for students or quick lookup)
+    const simpleSubject = subjects.find(s => s.id === id);
+
+    // If in faculty mode, we need the full Class object with students.
+    if (mode === 'faculty') {
+      for (const schoolId in programsBySchool) {
+        for (const program of programsBySchool[schoolId]) {
+          for (const department of program.departments) {
+            const foundClass = department.classes.find(c => c.id === id);
+            if (foundClass) {
+              return foundClass;
+            }
+          }
+        }
+      }
+    }
+    
+    // Fallback for student mode or if the full class object wasn't needed/found
+    return simpleSubject as Class | undefined;
+
+  }, [id, isLoaded, subjects, mode, programsBySchool]);
+
+
   if (!isLoaded) {
     return (
       <div className="space-y-6">
@@ -27,8 +57,6 @@ export default function SubjectDetailsPage() {
       </div>
     )
   }
-  
-  const subject = subjects.find(s => s.id === id) as Class | undefined;
   
   if (!subject) {
     notFound();

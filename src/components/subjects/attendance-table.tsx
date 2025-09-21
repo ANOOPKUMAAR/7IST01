@@ -121,7 +121,7 @@ export function AttendanceTable({ subject, records }: { subject: Class; records:
                 ) : (
                 <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                    No attendance records found.
+                    No attendance records found for this subject.
                     </TableCell>
                 </TableRow>
                 )}

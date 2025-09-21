@@ -120,7 +120,7 @@ function FacultyRow({ faculty }: { faculty: Faculty }) {
                     <DialogHeader>
                         <DialogTitle>Upload Timetable for {faculty.name}</DialogTitle>
                         <DialogDescription>
-                            Upload a timetable file to automatically assign this faculty member to classes.
+                            Upload a timetable file. This will replace their current schedule by un-assigning them from all classes and re-assigning them based on the file.
                         </DialogDescription>
                     </DialogHeader>
                     <UploadFacultyTimetableDialog

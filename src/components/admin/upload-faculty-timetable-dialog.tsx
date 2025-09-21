@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -91,8 +92,7 @@ export function UploadFacultyTimetableDialog({
           />
           <p className="text-xs text-muted-foreground">
             Upload an image or PDF of the faculty's schedule. This will replace
-            the current timetable. The system will match classes by name, day,
-            and time.
+            the current timetable by finding matching classes and re-assigning the faculty.
           </p>
         </div>
       </div>

@@ -8,7 +8,12 @@ export interface NavLink {
     icon: LucideIcon;
 }
 
-export const studentNavLinks: NavLink[] = [];
+export const studentNavLinks: NavLink[] = [
+    { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
+    { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/profile", label: "Profile", icon: User },
+];
 
 export const facultyNavLinks: NavLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: Home },

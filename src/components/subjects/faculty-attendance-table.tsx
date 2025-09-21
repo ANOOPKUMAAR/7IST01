@@ -15,12 +15,14 @@ import { Badge } from "@/components/ui/badge";
 import type { Subject, Student } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX } from 'lucide-react';
+import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye } from 'lucide-react';
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
+import { StudentDetailsDialog } from "@/components/admin/student-details-dialog";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
 
 function StudentAttendanceCard({ student, status, onStatusChange }: { student: Student, status: AttendanceStatus, onStatusChange: (studentId: string, status: AttendanceStatus) => void }) {
+    const [isDetailsOpen, setDetailsOpen] = useState(false);
     
     const getStatusBadge = () => {
         switch (status) {
@@ -54,6 +56,13 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                 </div>
                 {getStatusBadge()}
             </CardHeader>
+            <CardContent>
+                <StudentDetailsDialog student={student} open={isDetailsOpen} onOpenChange={setDetailsOpen}>
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => setDetailsOpen(true)}>
+                        <Eye className={cn("h-5 w-5", (status === 'present' || status === 'absent') && 'text-primary-foreground')} />
+                    </Button>
+                </StudentDetailsDialog>
+            </CardContent>
             <CardFooter className="gap-2">
                 <Button 
                     className="w-full"

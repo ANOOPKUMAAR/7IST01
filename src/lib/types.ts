@@ -42,11 +42,8 @@ export interface UserDetails {
   avatar?: string;
 }
 
-export interface Student {
+export interface Student extends UserDetails {
     id: string;
-    name: string;
-    rollNo: string;
-    deviceId: string;
 }
 
 export interface Class {

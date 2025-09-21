@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, User, LogOut } from "lucide-react";
@@ -138,14 +139,12 @@ export function Header() {
                      </div>
                 </div>
             </div>
-            <div className="flex md:hidden flex-1 justify-end">
-                <UserMenu />
+            <div className="flex-1 flex justify-end items-center gap-4">
+                <div className="hidden md:block">
+                     <UserMenu />
+                </div>
+                <MobileNav links={links} />
             </div>
-            <div className="hidden md:block">
-                 <UserMenu />
-            </div>
-
-            <MobileNav links={links} />
       </header>
     );
 }

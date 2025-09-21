@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import type { UserDetails } from "@/lib/types";
+import type { UserDetails, Faculty } from "@/lib/types";
 import { User, Edit, Briefcase, GraduationCap, Database, Upload, Camera } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,7 +35,7 @@ function InfoRow({ label, value }: { label: string, value: string | undefined })
     )
 }
 
-function EditProfileDialog({ onDone }: { onDone: () => void }) {
+function EditStudentProfileDialog({ onDone }: { onDone: () => void }) {
     const { userDetails, updateUserDetails } = useAppContext();
     const { register, handleSubmit } = useForm<Omit<UserDetails, 'deviceId' | 'avatar'>>({
         defaultValues: userDetails
@@ -95,6 +95,58 @@ function EditProfileDialog({ onDone }: { onDone: () => void }) {
         </form>
     )
 }
+
+function EditFacultyProfileDialog({ onDone }: { onDone: () => void }) {
+    const { userDetails, updateUserDetails } = useAppContext();
+    const { register, handleSubmit } = useForm<Partial<Faculty>>({
+        defaultValues: {
+            name: userDetails.name,
+            email: (userDetails as any).email,
+            phone: userDetails.phone,
+            department: userDetails.department,
+            designation: (userDetails as any).designation,
+        }
+    });
+
+    const onSubmit: SubmitHandler<Partial<Faculty>> = (data) => {
+        updateUserDetails(data);
+        onDone();
+    };
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" {...register("name")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" {...register("email")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="designation">Designation</Label>
+                    <Input id="designation" {...register("designation")} />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="department">Department</Label>
+                    <Input id="department" {...register("department")} />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" {...register("phone")} />
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+        </form>
+    )
+}
+
 
 function EditAvatarDialog({ onDone }: { onDone: () => void }) {
     const { updateUserDetails } = useAppContext();
@@ -170,6 +222,7 @@ export default function ProfilePage() {
   const { subjects, attendance, isLoaded, userDetails, mode, logout } = useAppContext();
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [isAvatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const facultyDetails = userDetails as any;
 
   const { totalAttended, totalMissed, pieData } = useMemo(() => {
     let totalAttended = 0;
@@ -247,7 +300,7 @@ export default function ProfilePage() {
                             <DialogTitle>Edit Profile</DialogTitle>
                             <DialogDescription>Update the student's information. Click save when you're done.</DialogDescription>
                         </DialogHeader>
-                        <EditProfileDialog onDone={() => setEditDialogOpen(false)} />
+                        <EditStudentProfileDialog onDone={() => setEditDialogOpen(false)} />
                     </DialogContent>
                 </Dialog>
             </div>
@@ -320,16 +373,66 @@ export default function ProfilePage() {
             </Card>
         </>
     ) : mode === 'faculty' ? (
+        <>
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div className="relative group">
+                    <Avatar className="h-24 w-24 border">
+                        <AvatarImage src={facultyDetails.avatar} data-ai-hint="faculty avatar" />
+                        <AvatarFallback>
+                            <Briefcase className="h-12 w-12 text-muted-foreground" />
+                        </AvatarFallback>
+                    </Avatar>
+                    <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button size="icon" className="absolute bottom-0 right-0 rounded-full h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit Avatar</span>
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Change Profile Picture</DialogTitle>
+                            </DialogHeader>
+                            <EditAvatarDialog onDone={() => setAvatarDialogOpen(false)} />
+                        </DialogContent>
+                    </Dialog>
+                </div>
+                <div>
+                    <h2 className="text-3xl font-bold">{facultyDetails.name}</h2>
+                    <p className="text-muted-foreground">{facultyDetails.designation}</p>
+                </div>
+            </div>
+            
+            <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline"><Edit className="mr-2"/> Edit Profile</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Profile</DialogTitle>
+                        <DialogDescription>Update your faculty information. Click save when you're done.</DialogDescription>
+                    </DialogHeader>
+                    <EditFacultyProfileDialog onDone={() => setEditDialogOpen(false)} />
+                </DialogContent>
+            </Dialog>
+        </div>
+
         <Card>
-            <CardHeader className="items-center text-center">
-                <Briefcase className="h-12 w-12 text-muted-foreground mb-2"/>
-                <CardTitle>Faculty Mode</CardTitle>
-                <CardDescription>This is the faculty dashboard view. You can switch to other modes from this page if needed.</CardDescription>
+            <CardHeader>
+                <CardTitle>Faculty Information</CardTitle>
+                <CardDescription>Your professional details as recorded in the system.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-center text-muted-foreground">You can manage your courses and view student attendance from the main dashboard.</p>
+                 <div className="grid gap-y-2 gap-x-8 md:grid-cols-2">
+                    <InfoRow label="Department" value={facultyDetails.department} />
+                    <InfoRow label="Designation" value={facultyDetails.designation} />
+                    <InfoRow label="Email" value={facultyDetails.email} />
+                    <InfoRow label="Phone Number" value={facultyDetails.phone} />
+                </div>
             </CardContent>
         </Card>
+    </>
     ) : (
         <Card>
             <CardHeader className="items-center text-center">

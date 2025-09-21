@@ -114,7 +114,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
   
   const appStateRef = useRef({
-    subjects: subjectsState,
+    subjectsState, // Use subjectsState for saving manually added subjects
     attendance,
     wifiZones,
     activeCheckIn,
@@ -127,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     appStateRef.current = {
-      subjects: subjectsState,
+      subjectsState,
       attendance,
       wifiZones,
       activeCheckIn,
@@ -195,71 +195,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const subjects = useMemo(() => {
     const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
 
+    if (!isLoaded || !mode) return [];
+
+    let allSubjects: Subject[] = [];
+
     if (mode === 'faculty') {
       const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
-      const taughtClasses: Class[] = [];
       Object.values(programsBySchool).flat().forEach(program => {
         program.departments.forEach(department => {
           department.classes.forEach(cls => {
             if (cls.faculties.includes(facultyName)) {
-              taughtClasses.push(cls);
+              allSubjects.push({
+                id: cls.id,
+                name: cls.name,
+                expectedCheckIn: cls.startTime,
+                expectedCheckOut: cls.endTime,
+                dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
+                totalClasses: 20 // Placeholder
+              });
             }
           });
         });
       });
-      const facultySubjects: Subject[] = taughtClasses.map(cls => {
-        return {
-          id: cls.id,
-          name: cls.name,
-          expectedCheckIn: cls.startTime,
-          expectedCheckOut: cls.endTime,
-          dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
-          totalClasses: 20 // Placeholder
-        }
-      })
-      return facultySubjects;
-    }
-
-    if (mode === 'student') {
-        const enrolledClasses: Class[] = [];
+    } else if (mode === 'student') {
+        // Add classes student is enrolled in
         Object.values(programsBySchool).flat().forEach(program => {
             program.departments.forEach(department => {
                 department.classes.forEach(cls => {
                     if (cls.students.some(s => s.rollNo === userDetails.rollNo)) {
-                        enrolledClasses.push(cls);
+                        allSubjects.push({
+                            id: cls.id,
+                            name: cls.name,
+                            expectedCheckIn: cls.startTime,
+                            expectedCheckOut: cls.endTime,
+                            dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
+                            totalClasses: 20 // Placeholder
+                        });
                     }
                 });
             });
         });
-
-        const studentSubjects: Subject[] = enrolledClasses.map(cls => ({
-            id: cls.id,
-            name: cls.name,
-            expectedCheckIn: cls.startTime,
-            expectedCheckOut: cls.endTime,
-            dayOfWeek: dayMap[cls.day.toLowerCase()] ?? 1,
-            totalClasses: 20 // Placeholder, could be dynamic in a real app
-        }));
-
-        // Combine with manually added subjects, avoiding duplicates
-        const combinedSubjects = [...studentSubjects];
+        // Add manually added subjects, ensuring no duplicates by ID
         subjectsState.forEach(manualSubject => {
-            if (!combinedSubjects.some(s => s.id === manualSubject.id)) {
-                combinedSubjects.push(manualSubject);
+            if (!allSubjects.some(s => s.id === manualSubject.id)) {
+                allSubjects.push(manualSubject);
             }
         });
-        return combinedSubjects;
     }
 
-    return []; // Default to empty array if no mode
-  }, [mode, programsBySchool, subjectsState, userDetails.rollNo]);
+    return allSubjects;
+  }, [mode, isLoaded, programsBySchool, userDetails.rollNo, subjectsState]);
 
   // Save to localStorage when the user is about to leave the page
   useEffect(() => {
     const handleBeforeUnload = () => {
       try {
         const stateToSave = appStateRef.current;
-        localStorage.setItem("witrack_subjects", JSON.stringify(stateToSave.subjects));
+        localStorage.setItem("witrack_subjects", JSON.stringify(stateToSave.subjectsState));
         localStorage.setItem("witrack_attendance", JSON.stringify(stateToSave.attendance));
         localStorage.setItem("witrack_wifiZones", JSON.stringify(stateToSave.wifiZones));
         localStorage.setItem("witrack_activeCheckIn", JSON.stringify(stateToSave.activeCheckIn));

@@ -9,18 +9,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { Play, Pause } from "lucide-react";
-import type { Class, Subject } from "@/lib/types";
+import type { Class } from "@/lib/types";
 
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { attendance, isLoaded, mode, programsBySchool, subjects: contextSubjects, students, userDetails } = useAppContext();
+  const { attendance, isLoaded, mode, programsBySchool } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   const subjectClass = useMemo(() => {
     if (!isLoaded) return undefined;
 
     let foundClass: Class | undefined;
+    const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+
 
     for (const schoolId in programsBySchool) {
       for (const program of programsBySchool[schoolId]) {
@@ -36,32 +38,9 @@ export default function SubjectDetailsPage() {
       if (foundClass) break;
     }
     
-    if (foundClass) {
-      return foundClass;
-    }
+    return foundClass;
 
-    // Fallback for manually added student subjects
-    if (mode === 'student') {
-        const manualSubject = contextSubjects.find(s => s.id === id);
-        if(manualSubject) {
-            // Convert a Subject to a Class-like object for compatibility
-            const studentDetails = students.find(s => s.rollNo === userDetails.rollNo);
-            return {
-                id: manualSubject.id,
-                name: manualSubject.name,
-                coordinator: 'N/A',
-                students: studentDetails ? [studentDetails] : [],
-                day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][manualSubject.dayOfWeek],
-                startTime: manualSubject.expectedCheckIn,
-                endTime: manualSubject.expectedCheckOut,
-                faculties: [],
-            };
-        }
-    }
-
-    return undefined;
-
-  }, [id, isLoaded, programsBySchool, mode, contextSubjects, students, userDetails]);
+  }, [id, isLoaded, programsBySchool]);
 
 
   if (!isLoaded) {

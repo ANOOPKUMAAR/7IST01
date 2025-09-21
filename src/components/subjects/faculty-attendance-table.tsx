@@ -115,41 +115,41 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
         return;
     }
 
+    if (isMismatch) {
+        toast({
+            title: "Headcount Mismatch",
+            description: `The AI camera headcount (${cameraHeadcount}) does not match the number of students marked as present (${presentCount}). Please review attendance before saving.`,
+            variant: "destructive",
+            duration: 8000,
+        });
+        return;
+    }
+
     setIsSyncingWifi(true);
+    
+    const presentStudentIds = Object.entries(attendance)
+      .filter(([, status]) => status === 'present')
+      .map(([studentId]) => studentId);
+
+    const absentStudentIds = Object.entries(attendance)
+      .filter(([, status]) => status === 'absent')
+      .map(([studentId]) => studentId);
+      
+    recordClassAttendance(subject, presentStudentIds, absentStudentIds);
+
     toast({
-        title: "Syncing with Camera Headcount...",
-        description: `Marking ${cameraHeadcount} students as present based on the camera's count.`
+      title: "Attendance Published",
+      description: "The attendance record for today's class has been saved and verified by camera.",
+      action: (
+        <div className="flex items-center text-primary-foreground">
+          <Check className="mr-2"/>
+          <span>Verified by AI Camera</span>
+        </div>
+      ),
+      variant: "success"
     });
 
-    try {
-        const newAttendance: Record<string, AttendanceStatus> = {};
-        const shuffledStudents = [...students].sort(() => 0.5 - Math.random());
-        
-        shuffledStudents.forEach((student, index) => {
-            if(index < cameraHeadcount) {
-                newAttendance[student.id] = 'present';
-            } else {
-                newAttendance[student.id] = 'unmarked';
-            }
-        });
-
-        setAttendance(newAttendance);
-        toast({
-            title: "Sync Complete",
-            description: `Attendance roster updated based on the camera's headcount of ${cameraHeadcount}.`,
-            variant: "success"
-        });
-
-    } catch (error) {
-        console.error("Error with camera headcount sync:", error);
-        toast({
-            title: "Sync Failed",
-            description: "An unexpected error occurred while updating the roster.",
-            variant: "destructive"
-        });
-    } finally {
-        setIsSyncingWifi(false);
-    }
+    setIsSyncingWifi(false);
   }
 
   const fetchCameraHeadcount = useCallback(async () => {

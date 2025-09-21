@@ -83,11 +83,11 @@ export function UploadStudentListDialog({ onDone }: UploadStudentListDialogProps
           <Input
             id="student-list-file"
             type="file"
-            accept=".csv, .txt"
+            accept=".csv, .txt, .xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             onChange={handleFileChange}
           />
           <p className="text-xs text-muted-foreground">
-            Upload a CSV or TXT file. The file should contain at least a name and roll number for each student.
+            Upload a CSV, TXT, or Excel file. The file should contain at least a name and roll number for each student.
           </p>
         </div>
       </div>

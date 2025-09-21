@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
@@ -12,43 +12,31 @@ export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
   const pathname = usePathname();
   const router = useRouter();
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      if (!mode) {
-        if (pathname !== '/select-role') {
-          router.replace('/select-role');
-        }
-      } else {
+    if (isLoaded && mode) {
         if (pathname === '/select-role' || pathname === '/') {
-          router.replace('/dashboard');
+            router.replace('/dashboard');
         }
-      }
     }
   }, [isLoaded, mode, pathname, router]);
-  
-  const isAuthPage = pathname === '/select-role';
-  const showLoading = !isClient || !isLoaded || (!mode && !isAuthPage);
 
-  if (showLoading) {
+  if (!isLoaded && pathname !== '/select-role') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center justify-center space-y-6 text-center">
-          <Icons.logo className="h-24 w-24 text-primary animate-spin" />
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="text-center space-y-2">
+            <Icons.logo className="h-16 w-16 text-primary mx-auto animate-spin" />
+            <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (isAuthPage) {
+  if (pathname === '/select-role') {
     return <>{children}</>;
   }
+  
+  if (!mode) return null;
 
   return (
     <div className="flex flex-col h-screen">

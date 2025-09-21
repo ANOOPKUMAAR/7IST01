@@ -19,6 +19,7 @@ export const studentNavLinks: NavLink[] = [
 export const facultyNavLinks: NavLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/faculty/attendance", label: "Attendance", icon: ClipboardList },
+    { href: "/settings", label: "Settings", icon: Settings },
     { href: "/profile", label: "Profile", icon: Briefcase },
 ];
 

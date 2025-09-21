@@ -555,28 +555,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const bulkAddStudents = (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => {
-    const studentsToAdd: Student[] = [];
-    const existingRollNos = new Set(students.map(s => s.rollNo));
-
+    const studentMap = new Map<string, Student>();
+    
+    // Always keep the currently logged-in user if their details are in the list or not
+    if (mode === 'admin') {
+      studentMap.set(userDetails.rollNo, userDetails);
+    }
+    
     newStudents.forEach(s => {
-        if (!existingRollNos.has(s.rollNo)) {
-            studentsToAdd.push({
-                ...s,
-                id: s.rollNo,
-                deviceId: generateDeviceId(),
-                avatar: `https://picsum.photos/seed/${s.rollNo}/200`
-            });
-            existingRollNos.add(s.rollNo);
-        }
+      // Don't overwrite the logged-in user's details if they happen to be in the list
+      if (s.rollNo === userDetails.rollNo && mode === 'admin') return;
+
+      studentMap.set(s.rollNo, {
+        ...s,
+        id: s.rollNo,
+        deviceId: generateDeviceId(),
+        avatar: `https://picsum.photos/seed/${s.rollNo}/200`
+      });
     });
 
-    setStudents(prev => [...prev, ...studentsToAdd]);
-    
-    if (studentsToAdd.length > 0) {
-        toast({ title: "Students Imported", description: `${studentsToAdd.length} new students have been imported.` });
-    } else {
-        toast({ title: "No New Students", description: "All students in the file already exist in the system." });
-    }
+    const studentsToSet = Array.from(studentMap.values());
+    setStudents(studentsToSet);
+
+    toast({
+      title: "Student List Replaced",
+      description: `${studentsToSet.length} students are now in the system.`,
+    });
   };
 
   const updateStudent = (updatedStudent: Student) => {

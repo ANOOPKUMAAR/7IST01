@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -24,9 +25,15 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp } from "lucide-react";
+import { Home, PlusCircle, Trash, Edit, MoreVertical, FileUp, Users } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import { StudentFormDialog } from "@/components/admin/student-form-dialog";
 import { StudentDetailsDialog } from "@/components/admin/student-details-dialog";
@@ -64,7 +71,7 @@ function StudentRow({ student }: { student: Student }) {
       </TableCell>
       <TableCell>{student.rollNo}</TableCell>
       <TableCell>{student.program}</TableCell>
-      <TableCell>{student.department}</TableCell>
+      <TableCell>{student.branch}</TableCell>
       <TableCell className="text-right">
         {mode === 'admin' && (
           <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
@@ -111,11 +118,35 @@ export default function StudentsPage() {
   const [isUploadOpen, setUploadOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const groupedStudents = useMemo(() => {
+    const groups: Record<string, Record<string, Student[]>> = {};
+
+    const filtered = students.filter(
+      (student) =>
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    filtered.forEach(student => {
+      try {
+        const batchYear = student.rollNo.substring(0, 5);
+        const departmentCode = student.rollNo.substring(5, 8);
+
+        if (!groups[batchYear]) {
+          groups[batchYear] = {};
+        }
+        if (!groups[batchYear][departmentCode]) {
+          groups[batchYear][departmentCode] = [];
+        }
+        groups[batchYear][departmentCode].push(student);
+      } catch (e) {
+        // Ignore students with invalid roll numbers
+      }
+    });
+
+    return groups;
+  }, [students, searchTerm]);
+
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -175,7 +206,7 @@ export default function StudentsPage() {
         <CardHeader>
           <CardTitle>Student List</CardTitle>
           <CardDescription>
-            A list of all students currently in the system.
+            A list of all students currently in the system, organized by batch and department.
           </CardDescription>
           <div className="pt-2">
             <Input
@@ -187,30 +218,55 @@ export default function StudentsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Roll No.</TableHead>
-                <TableHead>Program</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStudents.length > 0 ? (
-                filteredStudents.map((student) => (
-                  <StudentRow key={student.id} student={student} />
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    {searchTerm ? "No students found." : "No students in the system."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          {Object.keys(groupedStudents).length > 0 ? (
+            <Accordion type="multiple" className="w-full">
+              {Object.entries(groupedStudents).sort(([a], [b]) => b.localeCompare(a)).map(([batchYear, departments]) => (
+                <AccordionItem value={batchYear} key={batchYear}>
+                  <AccordionTrigger className="text-lg font-semibold">
+                    Batch {batchYear}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <Accordion type="multiple" className="w-full pl-4">
+                      {Object.entries(departments).sort(([a], [b]) => a.localeCompare(b)).map(([deptCode, deptStudents]) => (
+                        <AccordionItem value={`${batchYear}-${deptCode}`} key={`${batchYear}-${deptCode}`}>
+                          <AccordionTrigger>
+                            <div className="flex items-center gap-2">
+                                <Users className="h-5 w-5" />
+                                <span>Department: {deptCode} ({deptStudents.length} students)</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Name</TableHead>
+                                  <TableHead>Roll No.</TableHead>
+                                  <TableHead>Program</TableHead>
+                                  <TableHead>Branch</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {deptStudents.map((student) => (
+                                  <StudentRow key={student.id} student={student} />
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          ) : (
+            <div className="h-24 text-center flex items-center justify-center">
+              <p className="text-muted-foreground">
+                {searchTerm ? "No students found." : "No students in the system."}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

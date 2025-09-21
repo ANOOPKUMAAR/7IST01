@@ -88,7 +88,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
 }
 
 export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subject: Class; isAttendanceActive: boolean }) {
-  const { requestCameraPermission, hasCameraPermission, stopCameraStream, recordClassAttendance, startClassAttendance, attendance: allAttendance } = useAppContext();
+  const { requestCameraPermission, hasCameraPermission, stopCameraStream, recordClassAttendance, startClassAttendance } = useAppContext();
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
@@ -212,6 +212,13 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   useEffect(() => {
     const startAttendanceSystems = async () => {
       startClassAttendance(subject);
+      
+      const newAttendanceState: Record<string, AttendanceStatus> = {};
+      students.forEach(student => {
+        newAttendanceState[student.id] = 'unmarked';
+      });
+      setAttendance(newAttendanceState);
+      
       streamRef.current = await requestCameraPermission(videoRef.current, true);
       if(streamRef.current){
         fetchCameraHeadcount();
@@ -222,6 +229,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       startAttendanceSystems();
     } else {
       setCameraHeadcount(null);
+      setAttendance({});
       stopCameraStream(streamRef.current, videoRef.current);
       streamRef.current = null;
     }
@@ -231,26 +239,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       streamRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAttendanceActive]);
-
-  useEffect(() => {
-    // Sync local attendance state with global context
-    const today = new Date().toDateString();
-    const classAttendanceToday = allAttendance[subject.id]?.filter(rec => new Date(rec.date).toDateString() === today) || [];
-    
-    const newAttendanceState: Record<string, AttendanceStatus> = {};
-    students.forEach(student => {
-        const record = classAttendanceToday.find(rec => rec.studentId === student.id);
-        if (record) {
-            newAttendanceState[student.id] = 'present'; // Assuming all records are 'present'
-        } else {
-            newAttendanceState[student.id] = 'unmarked';
-        }
-    });
-    setAttendance(newAttendanceState);
-
-  }, [allAttendance, subject.id, students]);
-
+  }, [isAttendanceActive, subject.id]);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendance(prev => ({ ...prev, [studentId]: status }));

@@ -813,10 +813,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     const cls = department.classes.find(c => c.id === classId);
                     if (cls) {
                         if (cls.faculties.some(f => f.id === facultyId)) {
-                            setTimeout(() => toast({ title: "Faculty already assigned to this class.", variant: "destructive" }), 0);
+                            setTimeout(() => {
+                                toast({ title: "Faculty already assigned to this class.", variant: "destructive" });
+                            }, 0);
                         } else {
                             cls.faculties.push(faculty);
-                            setTimeout(() => toast({ title: "Faculty Assigned", description: `${faculty.name} assigned to ${cls.name}.` }), 0);
+                            setTimeout(() => {
+                                toast({ title: "Faculty Assigned", description: `${faculty.name} assigned to ${cls.name}.` });
+                            }, 0);
                         }
                         classFound = true;
                         break;
@@ -944,59 +948,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const startClassAttendance = (cls: Class) => {
-    setTimeout(() => {
-      const today = new Date().toISOString();
-      
-      // Simulate check-in only for the current user, as if they are the one on the Wi-Fi
-      const student = cls.students.find(s => s.id === userDetails.id);
-      if (!student) {
-          setTimeout(() => {
-              toast({
-                  title: "Not Enrolled",
-                  description: `You are not enrolled in ${cls.name}.`,
-                  variant: "destructive"
-              });
-          }, 0);
-          return;
-      }
-  
-      setAttendance(prev => {
-          const newAttendance = { ...prev };
-          if (!newAttendance[cls.id]) {
-              newAttendance[cls.id] = [];
-          }
-  
-          const alreadyMarked = newAttendance[cls.id].some(rec => rec.studentId === student.id && new Date(rec.date).toDateString() === new Date(today).toDateString());
-          if (!alreadyMarked) {
-              const checkInTime = new Date();
-              const [startHour, startMinute] = cls.startTime.split(':').map(Number);
-              checkInTime.setHours(startHour, startMinute, 0, 0);
-  
-              const checkOutTime = new Date();
-              const [endHour, endMinute] = cls.endTime.split(':').map(Number);
-              checkOutTime.setHours(endHour, endMinute, 0, 0);
-  
-              newAttendance[cls.id].push({
-                  id: `att_${student.id}_${Date.now()}`,
-                  date: today,
-                  checkIn: checkInTime.toISOString(),
-                  checkOut: checkOutTime.toISOString(),
-                  isAnomaly: false,
-                  anomalyReason: '',
-                  studentId: student.id,
-              });
-          }
-          return newAttendance;
-      });
-  
-      setTimeout(() => {
-          toast({
-              title: "Attendance Started",
-              description: `You have been marked present for ${cls.name}.`,
-              variant: "success",
-          });
-      }, 0);
-    }, 3000);
+    toast({
+      title: "Attendance Session Started",
+      description: `You can now mark attendance for ${cls.name}.`,
+    });
   };
   
   const requestCameraPermission = async (videoRefCurrent: HTMLVideoElement | null, autoStart = false) => {
@@ -1111,3 +1066,4 @@ export function useAppContext(): AppContextType {
     
 
     
+

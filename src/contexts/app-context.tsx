@@ -803,7 +803,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const assignFacultyToClassesFromTimetable = (faculty: Faculty, classes: Partial<Class>[]) => {
-    let assignedCount = 0;
     setProgramsBySchool(prev => {
         const newState = JSON.parse(JSON.stringify(prev));
         
@@ -821,36 +820,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
         }
         
-        // Step 2: Assign the faculty to the new classes from the uploaded timetable.
-        for (const timetableClass of classes) {
-             for (const school of Object.values(newState)) {
+        // Step 2: Create the new classes and assign the faculty.
+        classes.forEach(newClassData => {
+            // Find a department to put the class in. For simplicity, we'll find the first one.
+            // A more robust solution might require department info in the timetable.
+            let added = false;
+            for (const school of Object.values(newState)) {
+                if (added) break;
                 for (const program of school) {
+                    if (added) break;
                     for (const department of program.departments) {
-                        for (const cls of department.classes) {
-                            const isMatch = timetableClass.name &&
-                                cls.name.toLowerCase().includes(timetableClass.name.toLowerCase()) &&
-                                timetableClass.day?.toLowerCase() === cls.day.toLowerCase() &&
-                                timetableClass.startTime === cls.startTime;
-
-                            if (isMatch) {
-                                if (!cls.faculties.some((f: Faculty) => f.id === faculty.id)) {
-                                    cls.faculties.push(faculty);
-                                    assignedCount++;
-                                }
-                            }
-                        }
+                        const newClass = {
+                            id: `cls_${Date.now()}_${Math.random()}`,
+                            name: newClassData.name!,
+                            coordinator: newClassData.coordinator || 'N/A',
+                            day: newClassData.day!,
+                            startTime: newClassData.startTime!,
+                            endTime: newClassData.endTime!,
+                            students: mockStudents.slice(0, 5), // Assign some default students
+                            faculties: [faculty]
+                        };
+                        department.classes.push(newClass);
+                        added = true;
+                        break;
                     }
                 }
             }
-        }
+        });
+
+        toast({
+            title: "Timetable Replaced",
+            description: `${faculty.name}'s schedule has been completely updated with ${classes.length} new classes.`,
+        });
+
         return newState;
     });
-
-    if (assignedCount > 0) {
-        toast({ title: 'Timetable Updated', description: `${faculty.name} has been assigned to ${assignedCount} new classes.` });
-    } else {
-        toast({ title: 'No Matching Classes Found', description: `Could not find any existing classes that match the uploaded timetable for ${faculty.name}. Please ensure classes are created first by an admin.`, variant: 'destructive', duration: 8000 });
-    }
   };
   
   const recordClassAttendance = (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => {
@@ -990,4 +994,3 @@ export function useAppContext(): AppContextType {
     
 
     
-

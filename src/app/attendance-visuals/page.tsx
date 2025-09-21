@@ -1,10 +1,11 @@
+
 "use client";
 
 import { AttendanceCharts } from "@/components/visuals/attendance-charts";
 import { AttendanceByDay } from "@/components/visuals/attendance-by-day";
 import { OverallAttendanceSummary } from "@/components/visuals/overall-attendance-summary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, PieChart, LineChart, Briefcase, GraduationCap, UserCheck } from "lucide-react";
+import { BarChart, PieChart, LineChart, Briefcase, GraduationCap, UserCheck, BookOpen } from "lucide-react";
 import { useAppContext } from "@/contexts/app-context";
 import {
   Card,
@@ -21,9 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Class, Department, Program, Student } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 
 interface FacultyClassInfo {
@@ -35,6 +42,7 @@ interface FacultyClassInfo {
 function FacultyAttendancePage() {
   const { programsBySchool, isLoaded } = useAppContext();
   const facultyName = "Prof. Ada Lovelace"; // Simulating the current faculty user
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   const facultyClasses = useMemo(() => {
     if (!isLoaded) return [];
@@ -77,6 +85,11 @@ function FacultyAttendancePage() {
     });
     return percentages;
   }, [uniqueStudents]);
+
+  const selectedClassInfo = useMemo(() => {
+    if (!selectedClassId) return null;
+    return facultyClasses.find(info => info.class.id === selectedClassId);
+  }, [selectedClassId, facultyClasses]);
 
   const getProgressColor = (percentage: number) => {
     if (percentage < 75) return "bg-status-red";
@@ -134,11 +147,74 @@ function FacultyAttendancePage() {
         <Card>
             <CardHeader>
                 <div className="flex items-center gap-3">
+                    <BookOpen className="h-8 w-8 text-primary"/>
+                    <div>
+                        <CardTitle>Class-wise Attendance</CardTitle>
+                        <CardDescription>
+                            Select a class to view individual student attendance.
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 {facultyClasses.length > 0 ? (
+                    <Select onValueChange={setSelectedClassId}>
+                        <SelectTrigger className="w-full md:w-1/2 lg:w-1/3">
+                            <SelectValue placeholder="Select a class..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {facultyClasses.map(info => (
+                                <SelectItem key={info.class.id} value={info.class.id}>{info.class.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                 ) : null}
+
+                {selectedClassInfo ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Student Name</TableHead>
+                                <TableHead>Roll Number</TableHead>
+                                <TableHead className="w-[200px]">Attendance %</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {selectedClassInfo.class.students.map(student => {
+                                const percentage = studentAttendancePercentages[student.id] || 0;
+                                return (
+                                <TableRow key={student.id}>
+                                    <TableCell className="font-medium">{student.name}</TableCell>
+                                    <TableCell className="font-mono text-xs">{student.rollNo}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <Progress value={percentage} indicatorClassName={getProgressColor(percentage)} className="h-2"/>
+                                            <span className="font-mono text-xs w-10 text-right">{percentage}%</span>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )})}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <div className="flex flex-col items-center text-center gap-4 p-8">
+                        <UserCheck className="h-16 w-16 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                            {facultyClasses.length > 0 ? "Select a class to see student attendance." : "No classes to display."}
+                        </p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-3">
                     <GraduationCap className="h-8 w-8 text-primary"/>
                     <div>
-                        <CardTitle>Student Attendance Summary</CardTitle>
+                        <CardTitle>Overall Student Summary</CardTitle>
                         <CardDescription>
-                            Overall attendance for all students in your classes.
+                            Aggregate attendance for all students you teach.
                         </CardDescription>
                     </div>
                 </div>
@@ -150,7 +226,7 @@ function FacultyAttendancePage() {
                             <TableRow>
                                 <TableHead>Student Name</TableHead>
                                 <TableHead>Roll Number</TableHead>
-                                <TableHead className="w-[200px]">Attendance %</TableHead>
+                                <TableHead className="w-[200px]">Overall Attendance %</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -232,3 +308,4 @@ export default function AttendanceVisualsPage() {
     </div>
   );
 }
+

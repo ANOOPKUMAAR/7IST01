@@ -1,14 +1,7 @@
 "use client"
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
+// This component is intentionally left blank.
+// The redirection logic is handled in AppContent to ensure the app state is loaded.
 export default function HomePage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/select-role');
-  }, [router]);
-
   return null;
 }

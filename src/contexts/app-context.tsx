@@ -307,7 +307,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSubjectsState(initialStudentSubjects);
         setAttendance(generateInitialAttendance());
     } else if (newMode === 'faculty') {
-        const facultyUser = mockFaculties.find(f => f.id === 'faculty_4');
+        const facultyUser = faculties.find(f => f.name === 'Dr. Geoffrey Hinton');
         if (facultyUser) {
             setUserDetails({
                 id: facultyUser.id,
@@ -804,29 +804,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const assignFacultyToClassesFromTimetable = (faculty: Faculty, classes: Partial<Class>[]) => {
     let assignedCount = 0;
-    const newProgramsBySchool = { ...programsBySchool };
+    setProgramsBySchool(prev => {
+        const newState = JSON.parse(JSON.stringify(prev)); // Deep copy to avoid mutation issues
+        
+        for (const schoolId in newState) {
+            for (const program of newState[schoolId]) {
+                for (const department of program.departments) {
+                    for (const cls of department.classes) {
+                        const isMatch = classes.some(timetableClass => 
+                            timetableClass.name?.toLowerCase() === cls.name.toLowerCase() &&
+                            timetableClass.day?.toLowerCase() === cls.day.toLowerCase() &&
+                            timetableClass.startTime === cls.startTime
+                        );
 
-    for (const school of Object.values(newProgramsBySchool)) {
-        for (const program of school) {
-            for (const department of program.departments) {
-                for (const cls of department.classes) {
-                    const matchedClass = classes.find(c => c.name === cls.name && c.day === cls.day && c.startTime === cls.startTime);
-                    if (matchedClass) {
-                        if (!cls.faculties.some(f => f.id === faculty.id)) {
-                            cls.faculties.push(faculty);
-                            assignedCount++;
+                        if (isMatch) {
+                            if (!cls.faculties.some((f: Faculty) => f.id === faculty.id)) {
+                                cls.faculties.push(faculty);
+                                assignedCount++;
+                            }
                         }
                     }
                 }
             }
         }
-    }
+        return newState;
+    });
 
-    setProgramsBySchool(newProgramsBySchool);
     if (assignedCount > 0) {
         toast({ title: 'Assignments Successful', description: `${faculty.name} has been assigned to ${assignedCount} classes.` });
     } else {
-        toast({ title: 'No New Assignments', description: `No matching classes found for ${faculty.name} in the timetable provided.`, variant: 'destructive' });
+        toast({ title: 'No New Assignments', description: `No matching classes found to assign for ${faculty.name}. Please ensure classes exist before assigning a faculty timetable.`, variant: 'destructive' });
     }
   };
   

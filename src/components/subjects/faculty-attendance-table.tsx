@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -87,7 +88,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
 }
 
 export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subject: Class; isAttendanceActive: boolean }) {
-  const { requestCameraPermission, hasCameraPermission, stopCameraStream, recordClassAttendance } = useAppContext();
+  const { requestCameraPermission, hasCameraPermission, stopCameraStream, recordClassAttendance, startClassAttendance, attendance: allAttendance } = useAppContext();
   const { toast } = useToast();
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
@@ -209,8 +210,8 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   }, [toast]);
 
   useEffect(() => {
-    
     const startAttendanceSystems = async () => {
+      startClassAttendance(subject);
       streamRef.current = await requestCameraPermission(videoRef.current, true);
       if(streamRef.current){
         fetchCameraHeadcount();
@@ -231,6 +232,24 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAttendanceActive]);
+
+  useEffect(() => {
+    // Sync local attendance state with global context
+    const today = new Date().toDateString();
+    const classAttendanceToday = allAttendance[subject.id]?.filter(rec => new Date(rec.date).toDateString() === today) || [];
+    
+    const newAttendanceState: Record<string, AttendanceStatus> = {};
+    students.forEach(student => {
+        const record = classAttendanceToday.find(rec => rec.studentId === student.id);
+        if (record) {
+            newAttendanceState[student.id] = 'present'; // Assuming all records are 'present'
+        } else {
+            newAttendanceState[student.id] = 'unmarked';
+        }
+    });
+    setAttendance(newAttendanceState);
+
+  }, [allAttendance, subject.id, students]);
 
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {

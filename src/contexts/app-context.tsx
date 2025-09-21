@@ -87,6 +87,7 @@ interface AppContextType {
   removeFacultyFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, facultyId: string) => void;
   assignFacultyToClassesFromTimetable: (faculty: Faculty, classes: Partial<Class>[]) => void;
   recordClassAttendance: (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => void;
+  startClassAttendance: (cls: Class) => void;
   requestCameraPermission: (videoRefCurrent: HTMLVideoElement | null, autoStart?: boolean) => Promise<MediaStream | null>;
   stopCameraStream: (stream: MediaStream | null, videoRefCurrent: HTMLVideoElement | null) => void;
   hasCameraPermission: boolean | null;
@@ -912,34 +913,76 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const today = new Date().toISOString();
       const newAttendance = { ...attendance };
 
+      if (!newAttendance[cls.id]) {
+        newAttendance[cls.id] = [];
+      }
+      
+      // Remove today's records for all students in the class to handle updates
+      const otherDaysRecords = newAttendance[cls.id].filter(rec => new Date(rec.date).toDateString() !== new Date(today).toDateString());
+      newAttendance[cls.id] = otherDaysRecords;
+
       presentStudentIds.forEach(studentId => {
-          if (!newAttendance[cls.id]) {
-              newAttendance[cls.id] = [];
-          }
-          const existingRecord = newAttendance[cls.id].find(rec => rec.studentId === studentId && new Date(rec.date).toDateString() === new Date(today).toDateString());
+          const checkInTime = new Date();
+          const [startHour, startMinute] = cls.startTime.split(':').map(Number);
+          checkInTime.setHours(startHour, startMinute, 0, 0);
 
-          if (!existingRecord) {
-              const checkInTime = new Date();
-              const [startHour, startMinute] = cls.startTime.split(':').map(Number);
-              checkInTime.setHours(startHour, startMinute, 0, 0);
+          const checkOutTime = new Date();
+          const [endHour, endMinute] = cls.endTime.split(':').map(Number);
+          checkOutTime.setHours(endHour, endMinute, 0, 0);
 
-              const checkOutTime = new Date();
-              const [endHour, endMinute] = cls.endTime.split(':').map(Number);
-              checkOutTime.setHours(endHour, endMinute, 0, 0);
-
-              newAttendance[cls.id].push({
-                  id: `att_${studentId}_${Date.now()}`,
-                  date: today,
-                  checkIn: checkInTime.toISOString(),
-                  checkOut: checkOutTime.toISOString(),
-                  isAnomaly: false,
-                  anomalyReason: '',
-                  studentId: studentId,
-              });
-          }
+          newAttendance[cls.id].push({
+              id: `att_${studentId}_${Date.now()}`,
+              date: today,
+              checkIn: checkInTime.toISOString(),
+              checkOut: checkOutTime.toISOString(),
+              isAnomaly: false,
+              anomalyReason: '',
+              studentId: studentId,
+          });
       });
       setAttendance(newAttendance);
   }
+
+  const startClassAttendance = (cls: Class) => {
+    const today = new Date().toISOString();
+    setAttendance(prev => {
+        const newAttendance = { ...prev };
+        if (!newAttendance[cls.id]) {
+            newAttendance[cls.id] = [];
+        }
+
+        cls.students.forEach(student => {
+            const alreadyMarked = newAttendance[cls.id].some(rec => rec.studentId === student.id && new Date(rec.date).toDateString() === new Date(today).toDateString());
+            if (!alreadyMarked) {
+                const checkInTime = new Date();
+                const [startHour, startMinute] = cls.startTime.split(':').map(Number);
+                checkInTime.setHours(startHour, startMinute, 0, 0);
+
+                const checkOutTime = new Date();
+                const [endHour, endMinute] = cls.endTime.split(':').map(Number);
+                checkOutTime.setHours(endHour, endMinute, 0, 0);
+
+                newAttendance[cls.id].push({
+                    id: `att_${student.id}_${Date.now()}`,
+                    date: today,
+                    checkIn: checkInTime.toISOString(),
+                    checkOut: checkOutTime.toISOString(),
+                    isAnomaly: false,
+                    anomalyReason: '',
+                    studentId: student.id,
+                });
+            }
+        });
+        return newAttendance;
+    });
+    setTimeout(() => {
+        toast({
+            title: "Attendance Started",
+            description: `All ${cls.students.length} students in ${cls.name} have been marked as present.`,
+            variant: "success",
+        });
+    }, 0);
+  };
   
   const requestCameraPermission = async (videoRefCurrent: HTMLVideoElement | null, autoStart = false) => {
     let stream: MediaStream | null = null;
@@ -1024,6 +1067,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     removeFacultyFromClass,
     assignFacultyToClassesFromTimetable,
     recordClassAttendance,
+    startClassAttendance,
     requestCameraPermission,
     stopCameraStream,
     hasCameraPermission,

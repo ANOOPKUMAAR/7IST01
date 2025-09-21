@@ -28,7 +28,7 @@ import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-function MainSidebar() {
+function MainSidebar({ side }: { side: "left" | "right" }) {
   const { mode, userDetails, logout } = useAppContext();
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
@@ -40,7 +40,7 @@ function MainSidebar() {
   }
 
   return (
-    <SidebarPrimitive collapsible="icon">
+    <SidebarPrimitive collapsible="icon" side={side}>
       <SidebarHeader>
         <SidebarBrand>
           <Icons.logo />
@@ -54,7 +54,7 @@ function MainSidebar() {
             return (
               <SidebarMenuItem key={link.href}>
                 <Link href={link.href} onClick={handleLinkClick}>
-                  <SidebarMenuButton isActive={isActive} tooltip={link.label}>
+                  <SidebarMenuButton isActive={isActive} tooltip={{content: link.label, side: side === 'left' ? 'right' : 'left'}}>
                     <link.icon />
                     <span>{link.label}</span>
                   </SidebarMenuButton>
@@ -93,16 +93,30 @@ export function SidebarTrigger() {
 
 export function MainLayout({children}: {children: ReactNode}) {
     const isMobile = useIsMobile();
+    const sidebarSide = "right";
+
     return (
         <SidebarProvider>
-            {!isMobile && <MainSidebar />}
-            <SidebarInset>
-                <Header />
-                <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-                    {children}
-                </main>
-                {isMobile && <BottomNav />}
-            </SidebarInset>
+            {isMobile ? (
+                 <>
+                    <Header />
+                    <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+                        {children}
+                    </main>
+                    <BottomNav />
+                </>
+            ) : (
+                <>
+                    {sidebarSide === 'left' && <MainSidebar side="left" />}
+                    <SidebarInset>
+                        <Header />
+                        <main className="flex-1 overflow-y-auto">
+                            {children}
+                        </main>
+                    </SidebarInset>
+                    {sidebarSide === 'right' && <MainSidebar side="right" />}
+                </>
+            )}
         </SidebarProvider>
     )
 }

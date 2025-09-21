@@ -24,7 +24,7 @@ export function AppContent({ children }: { children: ReactNode }) {
     }
   }, [isLoaded, mode, pathname, router]);
 
-  if (!isLoaded && pathname !== '/select-role') {
+  if (!isLoaded || (!mode && pathname !== '/select-role')) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="text-center space-y-2">
@@ -34,8 +34,8 @@ export function AppContent({ children }: { children: ReactNode }) {
       </div>
     );
   }
-
-  if (!mode || pathname === '/select-role') {
+  
+  if (pathname === '/select-role') {
     return <>{children}</>;
   }
   

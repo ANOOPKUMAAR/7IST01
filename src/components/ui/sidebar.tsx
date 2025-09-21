@@ -228,9 +228,9 @@ const Sidebar = React.forwardRef<
         {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
-            "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
+            "duration-200 relative h-svh bg-transparent transition-[width] ease-linear",
+            side === 'left' ? 'w-0 peer-data-[state=expanded]:w-[--sidebar-width]' : 'w-0 peer-data-[state=expanded]:w-[--sidebar-width]',
             "group-data-[collapsible=offcanvas]:w-0",
-            "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
               ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
@@ -327,7 +327,14 @@ const SidebarInset = React.forwardRef<
       ref={ref}
       className={cn(
         "relative flex min-h-svh flex-1 flex-col bg-background",
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+        "md:peer-data-[side=left]:peer-data-[state=expanded]:pl-[--sidebar-width] md:peer-data-[side=left]:peer-data-[collapsible=icon]:pl-[--sidebar-width-icon]",
+        "md:peer-data-[side=right]:peer-data-[state=expanded]:pr-[--sidebar-width] md:peer-data-[side=right]:peer-data-[collapsible=icon]:pr-[--sidebar-width-icon]",
+        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+        "md:peer-data-[side=left]:peer-data-[variant=inset]:peer-data-[state=expanded]:ml-[--sidebar-width]",
+        "md:peer-data-[side=left]:peer-data-[variant=inset]:peer-data-[collapsible=icon]:ml-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]",
+        "md:peer-data-[side=right]:peer-data-[variant=inset]:peer-data-[state=expanded]:mr-[--sidebar-width]",
+        "md:peer-data-[side=right]:peer-data-[variant=inset]:peer-data-[collapsible=icon]:mr-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]",
+        "transition-[margin,padding] ease-linear duration-200",
         className
       )}
       {...props}
@@ -569,7 +576,7 @@ const SidebarMenuButton = React.forwardRef<
   React.ComponentProps<"button"> & {
     asChild?: boolean
     isActive?: boolean
-    tooltip?: string | React.ComponentProps<typeof TooltipContent>
+    tooltip?: string | Omit<React.ComponentProps<typeof TooltipContent>, 'children'> & { content: React.ReactNode }
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
@@ -602,11 +609,8 @@ const SidebarMenuButton = React.forwardRef<
       return button
     }
 
-    if (typeof tooltip === "string") {
-      tooltip = {
-        children: tooltip,
-      }
-    }
+    const { content, ...tooltipProps } =
+      typeof tooltip === "string" ? { content: tooltip } : tooltip;
 
     return (
       <Tooltip>
@@ -615,8 +619,10 @@ const SidebarMenuButton = React.forwardRef<
           side="right"
           align="center"
           hidden={state !== "collapsed" || isMobile}
-          {...tooltip}
-        />
+          {...tooltipProps}
+        >
+            {content}
+        </TooltipContent>
       </Tooltip>
     )
   }

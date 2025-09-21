@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/app-context";
 import { Icons } from "@/components/icons";
 import { Header } from "@/components/header";
+import { BottomNav } from "@/components/bottom-nav";
 
 export function AppContent({ children }: { children: ReactNode }) {
   const { isLoaded, mode } = useAppContext();
@@ -42,9 +43,10 @@ export function AppContent({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 pb-24">
         {children}
       </main>
+      <BottomNav />
     </div>
   );
 }

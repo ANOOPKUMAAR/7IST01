@@ -15,9 +15,12 @@ export function BottomNav() {
     return null;
   }
 
+  const numLinks = links.length;
+  const gridColsClass = `grid-cols-${numLinks}`;
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm md:hidden">
-      <div className="grid h-16 grid-cols-5 items-center justify-center text-xs">
+    <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm">
+      <div className={cn("grid h-16 items-center justify-center text-xs", `grid-cols-${numLinks}`)}>
         {links.map((link: NavLink) => {
           const isActive = pathname.startsWith(link.href) && (link.href !== "/dashboard" || pathname === "/dashboard");
           return (
@@ -25,12 +28,12 @@ export function BottomNav() {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 transition-colors",
+                "flex flex-col items-center justify-center gap-1 transition-colors h-full",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
               <link.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{link.label}</span>
+              <span className="text-sm font-medium">{link.label}</span>
             </Link>
           );
         })}

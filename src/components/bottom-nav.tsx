@@ -10,8 +10,8 @@ import { Icons } from "./icons";
 const studentNavItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
-  { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 const facultyNavItems = [

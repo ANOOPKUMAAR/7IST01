@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAppContext } from "@/contexts/app-context";
@@ -13,34 +14,43 @@ import type { Class, Subject } from "@/lib/types";
 export default function SubjectDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { attendance, isLoaded, mode, programsBySchool, subjects: contextSubjects, students } = useAppContext();
+  const { attendance, isLoaded, mode, programsBySchool, subjects: contextSubjects, students, userDetails } = useAppContext();
   const [isAttendanceActive, setIsAttendanceActive] = useState(false);
   
   const subjectClass = useMemo(() => {
     if (!isLoaded) return undefined;
 
-    // First, try to find the full `Class` object from the main data structure.
+    let foundClass: Class | undefined;
+
     for (const schoolId in programsBySchool) {
       for (const program of programsBySchool[schoolId]) {
         for (const department of program.departments) {
-          const foundClass = department.classes.find(c => c.id === id);
-          if (foundClass) {
-            return foundClass;
+          const matchedClass = department.classes.find(c => c.id === id);
+          if (matchedClass) {
+            foundClass = matchedClass;
+            break;
           }
         }
+        if (foundClass) break;
       }
+      if (foundClass) break;
     }
     
-    // If not found and user is a student, check manually added subjects.
+    if (foundClass) {
+      return foundClass;
+    }
+
+    // Fallback for manually added student subjects
     if (mode === 'student') {
         const manualSubject = contextSubjects.find(s => s.id === id);
         if(manualSubject) {
             // Convert a Subject to a Class-like object for compatibility
+            const studentDetails = students.find(s => s.rollNo === userDetails.rollNo);
             return {
                 id: manualSubject.id,
                 name: manualSubject.name,
                 coordinator: 'N/A',
-                students: students, // Show all students as a fallback
+                students: studentDetails ? [studentDetails] : [],
                 day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][manualSubject.dayOfWeek],
                 startTime: manualSubject.expectedCheckIn,
                 endTime: manualSubject.expectedCheckOut,
@@ -49,9 +59,9 @@ export default function SubjectDetailsPage() {
         }
     }
 
-    return undefined; // If no match is found anywhere.
+    return undefined;
 
-  }, [id, isLoaded, programsBySchool, mode, contextSubjects, students]);
+  }, [id, isLoaded, programsBySchool, mode, contextSubjects, students, userDetails]);
 
 
   if (!isLoaded) {
@@ -100,3 +110,5 @@ export default function SubjectDetailsPage() {
     </div>
   );
 }
+
+    

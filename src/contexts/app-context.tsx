@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -44,7 +45,7 @@ interface AppContextType {
   checkOut: (subjectId: string) => Promise<void>;
   deleteAttendanceRecord: (subjectId: string, recordId: string) => void;
   updateUserDetails: (details: Partial<Omit<UserDetails, 'deviceId'>>) => void;
-  recordClassAttendance: (subject: Subject, presentStudentIds: string[], absentStudentIds: string[]) => void;
+  recordClassAttendance: (subject: Class, presentStudentIds: string[], absentStudentIds: string[]) => void;
   hasCameraPermission: boolean | null;
   setHasCameraPermission: (hasPermission: boolean | null) => void;
   requestCameraPermission: (videoEl: HTMLVideoElement | null, showToast?: boolean) => Promise<MediaStream | null>;
@@ -250,7 +251,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return combinedSubjects;
     }
 
-    return subjectsState;
+    return []; // Default to empty array if no mode
   }, [mode, programsBySchool, subjectsState, userDetails.rollNo]);
 
   // Save to localStorage when the user is about to leave the page
@@ -459,13 +460,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast({ title: "Profile Updated", description: "Your details have been saved across the app." });
   };
   
-  const recordClassAttendance = (subject: Subject, presentStudentIds: string[], absentStudentIds: string[]) => {
+  const recordClassAttendance = (subject: Class, presentStudentIds: string[], absentStudentIds: string[]) => {
     const now = new Date();
     const startTime = new Date(now);
-    startTime.setHours(Number(subject.expectedCheckIn.split(':')[0]), Number(subject.expectedCheckIn.split(':')[1]), 0, 0);
+    startTime.setHours(Number(subject.startTime.split(':')[0]), Number(subject.startTime.split(':')[1]), 0, 0);
 
     const endTime = new Date(now);
-    endTime.setHours(Number(subject.expectedCheckOut.split(':')[0]), Number(subject.expectedCheckOut.split(':')[1]), 0, 0);
+    endTime.setHours(Number(subject.endTime.split(':')[0]), Number(subject.endTime.split(':')[1]), 0, 0);
 
     const newAttendanceRecords: Record<string, AttendanceRecord[]> = {};
 
@@ -494,7 +495,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         Object.keys(newAttendanceRecords).forEach(subjectId => {
             // Filter out any existing records for these students on this day to avoid duplicates
             const existingRecords = updatedAttendance[subjectId] || [];
-            const otherStudentRecords = existingRecords.filter(rec => !presentStudentIds.includes(rec.studentId) && !absentStudentIds.includes(rec.studentId));
+            const otherStudentRecords = existingRecords.filter(rec => {
+                const recDate = new Date(rec.date).toDateString();
+                const isToday = recDate === now.toDateString();
+                const isAffectedStudent = presentStudentIds.some(sid => students.find(s=>s.id===sid)?.rollNo === rec.studentId) || 
+                                      absentStudentIds.some(sid => students.find(s=>s.id===sid)?.rollNo === rec.studentId);
+                return !(isToday && isAffectedStudent);
+            });
             updatedAttendance[subjectId] = [...otherStudentRecords, ...newAttendanceRecords[subjectId]];
         });
         return updatedAttendance;
@@ -772,3 +779,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

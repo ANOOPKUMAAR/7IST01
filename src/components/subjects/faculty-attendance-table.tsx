@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -55,13 +56,14 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                     </CardDescription>
                 </div>
                 {getStatusBadge()}
-            </CardHeader>
-            <CardContent>
-                <StudentDetailsDialog student={student} open={isDetailsOpen} onOpenChange={setDetailsOpen}>
-                    <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => setDetailsOpen(true)}>
+                 <StudentDetailsDialog student={student} open={isDetailsOpen} onOpenChange={setDetailsOpen}>
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={(e) => { e.stopPropagation(); setDetailsOpen(true);}}>
                         <Eye className={cn("h-5 w-5", (status === 'present' || status === 'absent') && 'text-primary-foreground')} />
                     </Button>
                 </StudentDetailsDialog>
+            </CardHeader>
+            <CardContent>
+               
             </CardContent>
             <CardFooter className="gap-2">
                 <Button 
@@ -390,3 +392,5 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+    

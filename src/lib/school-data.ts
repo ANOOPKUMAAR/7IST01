@@ -12,11 +12,21 @@ const baseStudentDetails = {
 };
 
 export const mockStudents: Student[] = [
-    { ...baseStudentDetails, id: '20221IST0002', name: 'Bob Johnson', rollNo: '20221IST0002', deviceId: 'dev_abc123', avatar: `https://picsum.photos/seed/s1/200` },
-    { ...baseStudentDetails, id: '20221IST0003', name: 'Charlie Brown', rollNo: '20221IST0003', deviceId: 'dev_def456', avatar: `https://picsum.photos/seed/s2/200` },
-    { ...baseStudentDetails, id: '20221IST0004', name: 'Diana Prince', rollNo: '20221IST0004', deviceId: 'dev_ghi789', avatar: `https://picsum.photos/seed/s3/200` },
-    { ...baseStudentDetails, id: '20221IST0005', name: 'Ethan Hunt', rollNo: '20221IST0005', deviceId: 'dev_jkl012', avatar: `https://picsum.photos/seed/s4/200` },
-    { ...baseStudentDetails, id: '20221IST0006', name: 'Fiona Glenanne', rollNo: '20221IST0006', deviceId: 'dev_mno345', avatar: `https://picsum.photos/seed/s5/200` },
+    { ...baseStudentDetails, id: '20221IST0001', name: 'Aditya Sharma', rollNo: '20221IST0001', deviceId: 'dev_user', avatar: `https://picsum.photos/seed/s0/200` },
+    { ...baseStudentDetails, id: '20221IST0002', name: 'Priya Singh', rollNo: '20221IST0002', deviceId: 'dev_abc123', avatar: `https://picsum.photos/seed/s1/200` },
+    { ...baseStudentDetails, id: '20221IST0003', name: 'Rohan Gupta', rollNo: '20221IST0003', deviceId: 'dev_def456', avatar: `https://picsum.photos/seed/s2/200` },
+    { ...baseStudentDetails, id: '20221IST0004', name: 'Sneha Patel', rollNo: '20221IST0004', deviceId: 'dev_ghi789', avatar: `https://picsum.photos/seed/s3/200` },
+    { ...baseStudentDetails, id: '20221IST0005', name: 'Vikram Reddy', rollNo: '20221IST0005', deviceId: 'dev_jkl012', avatar: `https://picsum.photos/seed/s4/200` },
+    { ...baseStudentDetails, id: '20221IST0006', name: 'Anjali Desai', rollNo: '20221IST0006', deviceId: 'dev_mno345', avatar: `https://picsum.photos/seed/s5/200` },
+    { ...baseStudentDetails, id: '20221IST0007', name: 'Karan Kumar', rollNo: '20221IST0007', deviceId: 'dev_pqr678', avatar: `https://picsum.photos/seed/s6/200` },
+    { ...baseStudentDetails, id: '20221IST0008', name: 'Neha Joshi', rollNo: '20221IST0008', deviceId: 'dev_stu901', avatar: `https://picsum.photos/seed/s7/200` },
+    { ...baseStudentDetails, id: '20221IST0009', name: 'Sameer Verma', rollNo: '20221IST0009', deviceId: 'dev_vwx234', avatar: `https://picsum.photos/seed/s8/200` },
+    { ...baseStudentDetails, id: '20221IST0010', name: 'Pooja Mehta', rollNo: '20221IST0010', deviceId: 'dev_yza567', avatar: `https://picsum.photos/seed/s9/200` },
+    { ...baseStudentDetails, id: '20221IST0011', name: 'Arjun Nair', rollNo: '20221IST0011', deviceId: 'dev_bcd890', avatar: `https://picsum.photos/seed/s10/200` },
+    { ...baseStudentDetails, id: '20221IST0012', name: 'Divya Iyer', rollNo: '20221IST0012', deviceId: 'dev_efg123', avatar: `https://picsum.photos/seed/s11/200` },
+    { ...baseStudentDetails, id: '20221IST0013', name: 'Harish Singhania', rollNo: '20221IST0013', deviceId: 'dev_hij456', avatar: `https://picsum.photos/seed/s12/200` },
+    { ...baseStudentDetails, id: '20221IST0014', name: 'Ishita Chatterjee', rollNo: '20221IST0014', deviceId: 'dev_klm789', avatar: `https://picsum.photos/seed/s13/200` },
+    { ...baseStudentDetails, id: '20221IST0015', name: 'Manish Pandey', rollNo: '20221IST0015', deviceId: 'dev_nop012', avatar: `https://picsum.photos/seed/s14/200` },
 ];
 
 
@@ -44,7 +54,7 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
                 { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(3, 5), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [] },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]] },
+                 { id: 'ds301', name: '7IST01', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 15), day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]] },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },

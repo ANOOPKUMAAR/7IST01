@@ -30,7 +30,7 @@ interface AppContextType {
   schools: School[];
   programsBySchool: Record<string, Program[]>;
   isLoaded: boolean;
-  mode: UserMode;
+  mode: UserMode | null;
   setMode: (mode: UserMode) => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, 'id'>[]) => void;
@@ -103,7 +103,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeCheckIn, setActiveCheckIn] = useState<ActiveCheckIn | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails>({ ...initialUserDetails, deviceId: '', avatar: '' });
   const [students, setStudents] = useState<Student[]>(mockStudents);
-  const [mode, setModeState] = useState<UserMode>('student');
+  const [mode, setModeState] = useState<UserMode | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [schools, setSchools] = useState<School[]>([]);
   const [programsBySchool, setProgramsBySchool] = useState<Record<string, Program[]>>({});
@@ -167,7 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       setStudents(storedStudents ? JSON.parse(storedStudents) : mockStudents);
-      setModeState(storedMode ? JSON.parse(storedMode) : 'student');
+      setModeState(storedMode ? JSON.parse(storedMode) : null);
       setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
       setProgramsBySchool(storedProgramsBySchool ? JSON.parse(storedProgramsBySchool) : initialProgramsBySchool);
       
@@ -180,7 +180,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setWifiZones(initialWifiZones);
       setActiveCheckIn(null);
       setStudents(mockStudents);
-      setModeState('student');
+      setModeState(null);
       setSchools(initialSchools);
       setProgramsBySchool(initialProgramsBySchool);
     }
@@ -197,7 +197,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("witrack_wifiZones", JSON.stringify(stateToSave.wifiZones));
         localStorage.setItem("witrack_activeCheckIn", JSON.stringify(stateToSave.activeCheckIn));
         localStorage.setItem("witrack_userDetails", JSON.stringify(stateToSave.userDetails));
-        localStorage.setItem("witrack_mode", JSON.stringify(stateToSave.mode));
+        if (stateToSave.mode) {
+            localStorage.setItem("witrack_mode", JSON.stringify(stateToSave.mode));
+        }
         localStorage.setItem("witrack_students", JSON.stringify(stateToSave.students));
         localStorage.setItem("witrack_schools", JSON.stringify(stateToSave.schools));
         localStorage.setItem("witrack_programsBySchool", JSON.stringify(stateToSave.programsBySchool));
@@ -247,6 +249,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
+    localStorage.setItem("witrack_mode", JSON.stringify(newMode));
     let modeName = "Student";
     if (newMode === 'faculty') modeName = "Faculty";
     if (newMode === 'admin') modeName = "Admin";
@@ -650,5 +653,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    

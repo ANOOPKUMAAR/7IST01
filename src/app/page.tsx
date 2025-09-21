@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { FileUp, List, LayoutGrid, School, PlusCircle, Edit, Trash } from "lucide-react";
 import {
@@ -167,8 +168,16 @@ function StudentDashboard() {
 
 export default function DashboardPage() {
     const { mode, isLoaded } = useAppContext();
+    const router = useRouter();
 
-    if (!isLoaded) return null; // Or a loading skeleton
+    useEffect(() => {
+        if (isLoaded && !mode) {
+            router.replace('/select-role');
+        }
+    }, [isLoaded, mode, router]);
+
+
+    if (!isLoaded || !mode) return null; // Or a loading skeleton
 
     if (mode === 'admin') {
         return <AdminDashboard />;

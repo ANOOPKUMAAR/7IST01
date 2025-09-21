@@ -18,13 +18,11 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap"
           rel="stylesheet"
         />
-        <title>WiTrack</title>
+        <title>NetAttend</title>
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         <AppProvider>
-          <AppContent>
-            {children}
-          </AppContent>
+          {children}
           <Toaster />
         </AppProvider>
       </body>

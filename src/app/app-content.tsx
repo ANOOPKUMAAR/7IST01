@@ -5,11 +5,20 @@ import { useAppContext } from "@/contexts/app-context";
 import { Header } from "@/components/header";
 import { Icons } from "@/components/icons";
 import { BottomNav } from "@/components/bottom-nav";
+import { useRouter } from 'next/navigation';
+import { useEffect } from "react";
 
 export function AppContent({ children }: { children: ReactNode }) {
-  const { isLoaded } = useAppContext();
+  const { isLoaded, mode } = useAppContext();
+  const router = useRouter();
 
-  if (!isLoaded) {
+   useEffect(() => {
+    if (isLoaded && !mode) {
+      router.replace('/select-role');
+    }
+  }, [isLoaded, mode, router]);
+
+  if (!isLoaded || !mode) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center justify-center space-y-6 text-center">

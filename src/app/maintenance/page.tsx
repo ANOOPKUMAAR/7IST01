@@ -1,4 +1,3 @@
-
 import { HardHat } from 'lucide-react';
 
 export default function MaintenancePage() {

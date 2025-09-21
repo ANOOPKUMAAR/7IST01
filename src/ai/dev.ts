@@ -1,4 +1,3 @@
-
 import { config } from 'dotenv';
 config();
 
@@ -8,5 +7,3 @@ import '@/ai/flows/count-people-in-image-flow.ts';
 import '@/ai/flows/get-camera-headcount-flow.ts';
 import '@/ai/flows/extract-classes-flow.ts';
 import '@/ai/flows/get-headcount-flow.ts';
-
-    

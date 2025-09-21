@@ -1,4 +1,3 @@
-
 "use server";
 
 import type { AttendanceRecord, Subject } from "@/lib/types";
@@ -46,5 +45,3 @@ export async function checkAttendanceAnomaly({
     };
   }
 }
-
-    

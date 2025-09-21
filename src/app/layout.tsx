@@ -1,4 +1,3 @@
-
 import type { ReactNode } from "react";
 import { AppProvider } from "@/contexts/app-context";
 import { Toaster } from "@/components/ui/toaster";

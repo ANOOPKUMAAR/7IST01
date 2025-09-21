@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -192,8 +193,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const subjects = useMemo((): Array<Subject | Class> => {
     if (!isLoaded || !mode) return [];
-
-    const dayMap: { [key: string]: number } = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
 
     if (mode === 'faculty') {
         const facultyName = "Prof. Ada Lovelace"; // Simulating logged-in faculty
@@ -778,4 +777,5 @@ export function useAppContext() {
     
 
     
+
 

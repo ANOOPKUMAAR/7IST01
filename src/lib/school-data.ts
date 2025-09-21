@@ -37,8 +37,8 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
                 { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents.slice(2, 5), day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: [mockFaculties[2]] },
             ]},
             {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
-                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(1, 3), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [mockFaculties[3]] },
-                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(0, 4), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: mockFaculties.slice(3,5) },
+                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(1, 3), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [] },
+                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(0, 4), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[4]] },
             ]},
             {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
                 { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(3, 5), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [] },

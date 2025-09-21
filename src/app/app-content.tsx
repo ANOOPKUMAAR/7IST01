@@ -14,12 +14,16 @@ export function AppContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (isLoaded && !mode && pathname !== '/select-role') {
-      router.replace('/select-role');
+    if (isLoaded && pathname === '/') {
+        router.replace('/select-role');
     }
-  }, [isLoaded, mode, router, pathname]);
+  }, [isLoaded, router, pathname]);
 
-  if (!isLoaded || (pathname !== '/select-role' && !mode)) {
+  if (pathname === '/select-role') {
+    return <>{children}</>;
+  }
+
+  if (!isLoaded || !mode) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center justify-center space-y-6 text-center">
@@ -30,10 +34,6 @@ export function AppContent({ children }: { children: ReactNode }) {
     );
   }
   
-  if (pathname === '/select-role') {
-    return <>{children}</>;
-  }
-
   return (
     <div className="flex flex-col h-screen">
       <Header />

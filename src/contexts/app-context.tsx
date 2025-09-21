@@ -807,9 +807,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProgramsBySchool(prev => {
         const newState = JSON.parse(JSON.stringify(prev));
         
-        // First, remove the faculty member from all classes
-        for (const schoolId in newState) {
-            for (const program of newState[schoolId]) {
+        // Step 1: Un-assign the faculty member from all classes they are currently assigned to.
+        for (const school of Object.values(newState)) {
+            for (const program of school) {
                 for (const department of program.departments) {
                     for (const cls of department.classes) {
                         const facultyIndex = cls.faculties.findIndex((f: Faculty) => f.id === faculty.id);
@@ -821,22 +821,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
         }
         
-        // Then, assign the faculty to the new classes from the timetable
-        for (const schoolId in newState) {
-            for (const program of newState[schoolId]) {
-                for (const department of program.departments) {
-                    for (const cls of department.classes) {
-                        const isMatch = classes.some(timetableClass => 
-                            timetableClass.name &&
-                            cls.name.toLowerCase().includes(timetableClass.name.toLowerCase()) &&
-                            timetableClass.day?.toLowerCase() === cls.day.toLowerCase() &&
-                            timetableClass.startTime === timetableClass.startTime
-                        );
+        // Step 2: Assign the faculty to the new classes from the uploaded timetable.
+        for (const timetableClass of classes) {
+             for (const school of Object.values(newState)) {
+                for (const program of school) {
+                    for (const department of program.departments) {
+                        for (const cls of department.classes) {
+                            const isMatch = timetableClass.name &&
+                                cls.name.toLowerCase().includes(timetableClass.name.toLowerCase()) &&
+                                timetableClass.day?.toLowerCase() === cls.day.toLowerCase() &&
+                                timetableClass.startTime === cls.startTime;
 
-                        if (isMatch) {
-                            if (!cls.faculties.some((f: Faculty) => f.id === faculty.id)) {
-                                cls.faculties.push(faculty);
-                                assignedCount++;
+                            if (isMatch) {
+                                if (!cls.faculties.some((f: Faculty) => f.id === faculty.id)) {
+                                    cls.faculties.push(faculty);
+                                    assignedCount++;
+                                }
                             }
                         }
                     }
@@ -849,7 +849,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (assignedCount > 0) {
         toast({ title: 'Timetable Updated', description: `${faculty.name} has been assigned to ${assignedCount} new classes.` });
     } else {
-        toast({ title: 'No Matching Classes Found', description: `Could not find any existing classes that match the uploaded timetable for ${faculty.name}.`, variant: 'destructive' });
+        toast({ title: 'No Matching Classes Found', description: `Could not find any existing classes that match the uploaded timetable for ${faculty.name}. Please ensure classes are created first by an admin.`, variant: 'destructive', duration: 8000 });
     }
   };
   
@@ -990,3 +990,4 @@ export function useAppContext(): AppContextType {
     
 
     
+

@@ -11,6 +11,7 @@ import {
   BookOpen,
   Building2,
   ArrowRight,
+  Upload,
 } from "lucide-react";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import { SubjectCardsView } from "@/components/dashboard/subject-cards-view";
 import { useAppContext } from "@/contexts/app-context";
 import Link from "next/link";
 import { FacultyTimetable } from "@/components/dashboard/faculty-timetable";
+import { UploadFacultyTimetableDialog } from "@/components/admin/upload-faculty-timetable-dialog";
 
 function StudentDashboard() {
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -180,13 +182,41 @@ function AdminDashboard() {
 }
 
 function FacultyDashboard() {
+  const { userDetails } = useAppContext();
+  const [isUploadTimetableOpen, setUploadTimetableOpen] = useState(false);
+
+  // We need to cast the userDetails to a faculty type, or ensure it fits.
+  // For now, let's assume userDetails on faculty mode contains faculty data.
+  const faculty = userDetails as any;
+
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Faculty Dashboard</h2>
-        <p className="text-muted-foreground">
-          Here is your weekly class schedule. Click on a class to manage attendance.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+            <h2 className="text-2xl font-bold tracking-tight">Faculty Dashboard</h2>
+            <p className="text-muted-foreground">
+            Here is your weekly class schedule. Click on a class to manage attendance.
+            </p>
+        </div>
+         <Dialog open={isUploadTimetableOpen} onOpenChange={setUploadTimetableOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <Upload className="mr-2" /> Upload Timetable
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Upload Timetable for {faculty.name}</DialogTitle>
+                    <DialogDescription>
+                        Upload a new timetable file. This will replace your current schedule.
+                    </DialogDescription>
+                </DialogHeader>
+                <UploadFacultyTimetableDialog
+                    faculty={faculty}
+                    onDone={() => setUploadTimetableOpen(false)}
+                />
+            </DialogContent>
+        </Dialog>
       </div>
       <FacultyTimetable />
     </div>

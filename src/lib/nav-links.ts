@@ -11,6 +11,7 @@ export interface NavLink {
 export const studentNavLinks: NavLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
+    { href: "/students", label: "Students", icon: GraduationCap },
     { href: "/settings", label: "Settings", icon: Settings },
     { href: "/profile", label: "Profile", icon: User },
 ];

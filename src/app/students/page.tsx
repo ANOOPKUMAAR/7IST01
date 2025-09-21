@@ -40,7 +40,7 @@ import Link from "next/link";
 import type { Student } from "@/lib/types";
 
 function StudentRow({ student }: { student: Student }) {
-  const { deleteStudent } = useAppContext();
+  const { mode, deleteStudent } = useAppContext();
   const [isEditOpen, setEditOpen] = useState(false);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
 
@@ -65,38 +65,40 @@ function StudentRow({ student }: { student: Student }) {
       <TableCell>{student.program}</TableCell>
       <TableCell>{student.department}</TableCell>
       <TableCell className="text-right">
-        <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                <Edit className="mr-2" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => deleteStudent(student.id)}
-              >
-                <Trash className="mr-2" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Student</DialogTitle>
-              <DialogDescription>
-                Update the student's information.
-              </DialogDescription>
-            </DialogHeader>
-            <StudentFormDialog
-              student={student}
-              onDone={() => setEditOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        {mode === 'admin' && (
+          <Dialog open={isEditOpen} onOpenChange={setEditOpen}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                  <Edit className="mr-2" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => deleteStudent(student.id)}
+                >
+                  <Trash className="mr-2" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Student</DialogTitle>
+                <DialogDescription>
+                  Update the student's information.
+                </DialogDescription>
+              </DialogHeader>
+              <StudentFormDialog
+                student={student}
+                onDone={() => setEditOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </TableCell>
     </TableRow>
   );
@@ -113,16 +115,6 @@ export default function StudentsPage() {
       student.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (mode !== "admin") {
-    return (
-      <div className="flex items-center justify-center h-full p-4 sm:p-6">
-        <p className="text-muted-foreground">
-          This page is only available for admins.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div className="flex items-center justify-between">
@@ -136,26 +128,28 @@ export default function StudentsPage() {
             <div>
                 <h2 className="text-2xl font-bold tracking-tight">Manage Students</h2>
                 <p className="text-muted-foreground">
-                    Add, edit, or remove students from the system.
+                    A list of all students in the system.
                 </p>
             </div>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle /> Add Student
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Student</DialogTitle>
-              <DialogDescription>
-                Enter the student's details.
-              </DialogDescription>
-            </DialogHeader>
-            <StudentFormDialog onDone={() => setAddOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        {mode === 'admin' && (
+            <Dialog open={isAddOpen} onOpenChange={setAddOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                    <PlusCircle /> Add Student
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>Add New Student</DialogTitle>
+                    <DialogDescription>
+                        Enter the student's details.
+                    </DialogDescription>
+                    </DialogHeader>
+                    <StudentFormDialog onDone={() => setAddOpen(false)} />
+                </DialogContent>
+            </Dialog>
+        )}
       </div>
       <Card>
         <CardHeader>

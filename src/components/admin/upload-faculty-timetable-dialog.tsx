@@ -46,12 +46,13 @@ export function UploadFacultyTimetableDialog({
       try {
         const result = await extractClasses({ fileDataUri });
         if (result.classes && result.classes.length > 0) {
-            assignFacultyToClassesFromTimetable(faculty, result.classes);
-            onDone();
+          assignFacultyToClassesFromTimetable(faculty, result.classes);
+          onDone();
         } else {
           toast({
             title: "No classes found",
-            description: "The AI could not find any classes in the uploaded file.",
+            description:
+              "The AI could not find any classes in the uploaded file.",
             variant: "destructive",
           });
         }
@@ -59,7 +60,8 @@ export function UploadFacultyTimetableDialog({
         console.error("Error extracting classes: ", error);
         toast({
           title: "Error analyzing file",
-          description: "There was a problem processing your timetable. Please try another file.",
+          description:
+            "There was a problem processing your timetable. Please try another file.",
           variant: "destructive",
         });
       } finally {
@@ -88,7 +90,9 @@ export function UploadFacultyTimetableDialog({
             onChange={handleFileChange}
           />
           <p className="text-xs text-muted-foreground">
-            Upload an image or PDF of the faculty's schedule. The system will attempt to match the classes in the file with existing classes and assign the faculty member to them.
+            Upload an image or PDF of the faculty's schedule. This will replace
+            the current timetable. The system will match classes by name, day,
+            and time.
           </p>
         </div>
       </div>
@@ -101,7 +105,8 @@ export function UploadFacultyTimetableDialog({
         <Button onClick={handleUpload} disabled={isUploading || !file}>
           {isUploading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing & Assigning...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing &
+              Assigning...
             </>
           ) : (
             "Upload and Assign"

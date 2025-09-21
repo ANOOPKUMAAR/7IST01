@@ -1,4 +1,4 @@
-import { Home, BarChart3, Settings, User, GraduationCap, Briefcase, Building, Database } from 'lucide-react';
+import { Home, BarChart3, Settings, User, GraduationCap, Briefcase, Building } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { UserMode } from './types';
 
@@ -8,12 +8,7 @@ export interface NavLink {
     icon: LucideIcon;
 }
 
-export const studentNavLinks: NavLink[] = [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
-    { href: "/attendance-visuals", label: "Visuals", icon: BarChart3 },
-    { href: "/settings", label: "Settings", icon: Settings },
-    { href: "/profile", label: "Profile", icon: User },
-];
+export const studentNavLinks: NavLink[] = [];
 
 export const facultyNavLinks: NavLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: Home },

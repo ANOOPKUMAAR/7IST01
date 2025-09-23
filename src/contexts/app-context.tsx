@@ -233,7 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               userDetailsData.id = userDetailsData.rollNo;
           }
       } else {
-          userDetailsData = { ...initialUserDetails, deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
+          userDetailsData = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
       }
       setUserDetails(userDetailsData);
       
@@ -248,7 +248,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const studentList = storedStudents ? JSON.parse(storedStudents) : mockStudents;
       const studentMap = new Map<string, Student>();
       // Ensure current user is in the list
-      studentMap.set(userDetailsData.id, userDetailsData);
+      if(userDetailsData.id) {
+        studentMap.set(userDetailsData.id, userDetailsData);
+      }
       studentList.forEach((s: Student) => studentMap.set(s.id, s));
       setStudents(Array.from(studentMap.values()));
       
@@ -305,16 +307,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setMode = (newMode: UserMode) => {
     setModeState(newMode);
     if (newMode === 'student') {
-        setUserDetails({ ...initialUserDetails, deviceId: userDetails.deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` });
+        const studentUser = students.find(s => s.rollNo === '20221IST0001') || students[0];
+        if (studentUser) {
+            setUserDetails(studentUser);
+        }
         setSubjectsState(initialStudentSubjects);
         setAttendance(generateInitialAttendance());
     } else if (newMode === 'faculty') {
-        const facultyUser = faculties[0]; // Use the first faculty member
+        const facultyUser = faculties[0];
         if (facultyUser) {
             setUserDetails({
                 id: facultyUser.id,
                 name: facultyUser.name,
-                rollNo: facultyUser.id, // Using ID as rollNo for consistency
+                rollNo: facultyUser.id,
                 email: facultyUser.email,
                 phone: facultyUser.phone,
                 department: facultyUser.department,
@@ -324,8 +329,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         setSubjectsState([]);
         setAttendance({});
-    } else {
-        setUserDetails({ ...initialUserDetails, deviceId: userDetails.deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` });
+    } else { // admin
+        setUserDetails({
+            id: 'admin',
+            name: 'Admin User',
+            rollNo: 'admin',
+            avatar: `https://picsum.photos/seed/admin/200`
+        } as any);
         setSubjectsState([]);
         setAttendance({});
     }
@@ -612,13 +622,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toast({ title: "Student Exists", description: "A student with this roll number already exists.", variant: "destructive" });
         return;
     }
-    const newStudent: Student = { ...studentData, id: studentData.rollNo };
+    const newStudent: Student = { ...studentData, id: studentData.rollNo, deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${studentData.rollNo}/200` };
     setStudents(prev => [...prev, newStudent]);
     toast({ title: "Student Added" });
   };
 
   const bulkAddStudents = (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => {
     const studentMap = new Map<string, Student>();
+    
+    students.forEach(s => {
+      studentMap.set(s.rollNo, s);
+    });
     
     newStudents.forEach(s => {
       studentMap.set(s.rollNo, {
@@ -628,10 +642,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           avatar: `https://picsum.photos/seed/${s.rollNo}/200`
       });
     });
-
-    if (mode === 'student' && !studentMap.has(userDetails.rollNo)) {
-        studentMap.set(userDetails.rollNo, userDetails);
-    }
 
     const studentsToSet = Array.from(studentMap.values());
     setStudents(studentsToSet);
@@ -914,36 +924,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const recordClassAttendance = (cls: Class, presentStudentIds: string[], absentStudentIds: string[]) => {
       const today = new Date().toISOString();
-      const newAttendance = { ...attendance };
+      setAttendance(prev => {
+        const newAttendance = { ...prev };
 
-      if (!newAttendance[cls.id]) {
-        newAttendance[cls.id] = [];
-      }
-      
-      // Remove today's records for all students in the class to handle updates
-      const otherDaysRecords = newAttendance[cls.id].filter(rec => new Date(rec.date).toDateString() !== new Date(today).toDateString());
-      newAttendance[cls.id] = otherDaysRecords;
+        if (!newAttendance[cls.id]) {
+            newAttendance[cls.id] = [];
+        }
+        
+        const otherDaysRecords = newAttendance[cls.id].filter(rec => new Date(rec.date).toDateString() !== new Date(today).toDateString());
+        const todayRecords: AttendanceRecord[] = [];
 
-      presentStudentIds.forEach(studentId => {
-          const checkInTime = new Date();
-          const [startHour, startMinute] = cls.startTime.split(':').map(Number);
-          checkInTime.setHours(startHour, startMinute, 0, 0);
+        presentStudentIds.forEach(studentId => {
+            const checkInTime = new Date();
+            const [startHour, startMinute] = cls.startTime.split(':').map(Number);
+            checkInTime.setHours(startHour, startMinute, 0, 0);
 
-          const checkOutTime = new Date();
-          const [endHour, endMinute] = cls.endTime.split(':').map(Number);
-          checkOutTime.setHours(endHour, endMinute, 0, 0);
+            const checkOutTime = new Date();
+            const [endHour, endMinute] = cls.endTime.split(':').map(Number);
+            checkOutTime.setHours(endHour, endMinute, 0, 0);
 
-          newAttendance[cls.id].push({
-              id: `att_${studentId}_${Date.now()}`,
-              date: today,
-              checkIn: checkInTime.toISOString(),
-              checkOut: checkOutTime.toISOString(),
-              isAnomaly: false,
-              anomalyReason: '',
-              studentId: studentId,
-          });
+            todayRecords.push({
+                id: `att_${studentId}_${Date.now()}`,
+                date: today,
+                checkIn: checkInTime.toISOString(),
+                checkOut: checkOutTime.toISOString(),
+                isAnomaly: false,
+                anomalyReason: '',
+                studentId: studentId,
+            });
+        });
+        
+        newAttendance[cls.id] = [...otherDaysRecords, ...todayRecords];
+        return newAttendance;
       });
-      setAttendance(newAttendance);
   }
 
   const startClassAttendance = (cls: Class) => {

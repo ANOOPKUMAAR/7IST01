@@ -309,12 +309,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSubjectsState(initialStudentSubjects);
         setAttendance(generateInitialAttendance());
     } else if (newMode === 'faculty') {
-        const facultyUser = faculties.find(f => f.name === 'Dr. Geoffrey Hinton');
+        const facultyUser = faculties[0]; // Use the first faculty member
         if (facultyUser) {
             setUserDetails({
                 id: facultyUser.id,
                 name: facultyUser.name,
-                rollNo: facultyUser.id,
+                rollNo: facultyUser.id, // Using ID as rollNo for consistency
                 email: facultyUser.email,
                 phone: facultyUser.phone,
                 department: facultyUser.department,

@@ -224,16 +224,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (storedUserDetails) {
           userDetailsData = JSON.parse(storedUserDetails);
           if (!userDetailsData.deviceId) {
-              userDetailsData.deviceId = generateDeviceId();
+              userDetailsData.deviceId = 'dev_placeholder';
           }
           if (!userDetailsData.avatar) {
-              userDetailsData.avatar = `https://picsum.photos/seed/${Math.random()}/200`;
+              userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo}/200`;
           }
            if (!userDetailsData.id) {
               userDetailsData.id = userDetailsData.rollNo;
           }
       } else {
-          userDetailsData = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
+          userDetailsData = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId: 'dev_placeholder', avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
       }
       setUserDetails(userDetailsData);
       
@@ -258,7 +258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      const deviceId = generateDeviceId();
+      const deviceId = 'dev_placeholder';
       const currentUserDetails = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
       setUserDetails(currentUserDetails);
       setSubjectsState(initialStudentSubjects);

@@ -963,7 +963,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             
             const schoolIndex = newState[targetSchoolId].findIndex((p: Program) => p.id === targetProgramId);
             if(schoolIndex !== -1) {
-                const programIndex = newState[targetSchoolId][schoolIndex].departments.findIndex((d: Department) => d.id === targetDepartment.id);
+                const programIndex = newState[targetSchoolId][schoolIndex].departments.findIndex((d: Department) => d.id === targetDepartment!.id);
                 if(programIndex !== -1) {
                      newState[targetSchoolId][schoolIndex].departments[programIndex].classes.push(newClass);
                      createdCount++;

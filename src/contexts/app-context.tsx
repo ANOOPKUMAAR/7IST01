@@ -223,17 +223,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (storedUserDetails) {
           userDetailsData = JSON.parse(storedUserDetails);
-          if (!userDetailsData.deviceId) {
-              userDetailsData.deviceId = 'dev_placeholder';
-          }
-          if (!userDetailsData.avatar) {
-              userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo}/200`;
-          }
-           if (!userDetailsData.id) {
-              userDetailsData.id = userDetailsData.rollNo;
-          }
       } else {
-          userDetailsData = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId: 'dev_placeholder', avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
+          userDetailsData = { ...initialUserDetails, id: initialUserDetails.rollNo };
+      }
+      
+      if (!userDetailsData.deviceId) {
+          userDetailsData.deviceId = generateDeviceId();
+      }
+      if (!userDetailsData.avatar) {
+          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo}/200`;
+      }
+      if (!userDetailsData.id) {
+          userDetailsData.id = userDetailsData.rollNo;
       }
       setUserDetails(userDetailsData);
       
@@ -247,7 +248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
       const studentList = storedStudents ? JSON.parse(storedStudents) : mockStudents;
       const studentMap = new Map<string, Student>();
-      // Ensure current user is in the list
+      
       if(userDetailsData.id) {
         studentMap.set(userDetailsData.id, userDetailsData);
       }
@@ -258,7 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      const deviceId = 'dev_placeholder';
+      const deviceId = generateDeviceId();
       const currentUserDetails = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
       setUserDetails(currentUserDetails);
       setSubjectsState(initialStudentSubjects);
@@ -272,6 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFaculties(mockFaculties);
     }
     setIsLoaded(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save to localStorage when the user is about to leave the page
@@ -1092,3 +1094,5 @@ export function useAppContext(): AppContextType {
   }
   return context;
 }
+
+    

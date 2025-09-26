@@ -1,7 +1,8 @@
+
 "use client";
 
+import { useEffect } from "react";
 import { useAppContext } from "@/contexts/app-context";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,11 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Nfc, HelpCircle, Fingerprint } from "lucide-react";
+import { Wifi, WifiOff, CheckCircle2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AttendancePage() {
-  const { subjects, activeCheckIn, checkIn, checkOut, isLoaded } = useAppContext();
+export default function WifiAttendancePage() {
+  const { subjects, activeCheckIn, checkIn, checkOut, isLoaded, wifiZones } = useAppContext();
   const { toast } = useToast();
 
   const currentSubject = (() => {
@@ -37,69 +38,82 @@ export default function AttendancePage() {
         return nowTime >= startTime && nowTime <= endTime;
     });
   })();
+  
+  // Simulate being in a valid Wi-Fi zone
+  const isInZone = wifiZones.length > 0;
 
-  const handleNfcScan = () => {
-    if (activeCheckIn) {
-      // If we are checked in for any subject, scan will check out.
-      checkOut(activeCheckIn.subjectId);
-    } else if (currentSubject) {
-      // If we are not checked in, and there's a class now, check in.
+  useEffect(() => {
+    if (isLoaded && isInZone && currentSubject && !activeCheckIn) {
       checkIn(currentSubject.id);
-    } else {
-      // Otherwise, no class is scheduled.
-      toast({
-        title: "No Class Scheduled",
-        description: "There is no class scheduled at the current time.",
-        variant: "destructive",
-      });
     }
-  };
+  }, [isLoaded, isInZone, currentSubject, activeCheckIn, checkIn]);
+  
+  const handleManualCheckout = () => {
+    if (activeCheckIn) {
+        checkOut(activeCheckIn.subjectId);
+    }
+  }
+
+  const getStatusContent = () => {
+      if (!isLoaded) {
+          return {
+              icon: <Wifi className="h-20 w-20 text-muted-foreground animate-pulse" />,
+              title: "Initializing...",
+              description: "Getting things ready for you.",
+          }
+      }
+      if (!isInZone) {
+        return {
+            icon: <WifiOff className="h-20 w-20 text-destructive" />,
+            title: "Outside Wi-Fi Zone",
+            description: "Please connect to a designated campus Wi-Fi network to mark your attendance.",
+        }
+      }
+      if (activeCheckIn && currentSubject) {
+        return {
+            icon: <CheckCircle2 className="h-20 w-20 text-status-green" />,
+            title: "You are Checked In!",
+            description: `Your attendance for ${subjects.find(s => s.id === activeCheckIn.subjectId)?.name} is being recorded.`,
+        }
+      }
+      if (currentSubject) {
+        return {
+            icon: <Wifi className="h-20 w-20 text-primary animate-pulse" />,
+            title: "Connecting...",
+            description: "You are in a valid Wi-Fi zone. Attempting to check you in automatically.",
+        }
+      }
+      return {
+        icon: <XCircle className="h-20 w-20 text-muted-foreground" />,
+        title: "No Class Scheduled",
+        description: "There are no classes scheduled at this time. Check your timetable for more details.",
+      }
+  }
+
+  const { icon, title, description } = getStatusContent();
+
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
         <Card>
           <CardHeader>
-            <CardTitle>NFC Attendance</CardTitle>
+            <CardTitle>Automatic Wi-Fi Attendance</CardTitle>
             <CardDescription>
-              Use the simulated NFC scan for quick check-ins and check-outs.
+              Your attendance is automatically recorded when you're connected to a campus Wi-Fi zone during class hours.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="rounded-lg border bg-background p-4 space-y-4">
-                <div className="flex items-start gap-3">
-                    <HelpCircle className="h-5 w-5 mt-1 text-primary"/>
-                    <div>
-                        <h3 className="font-semibold">How to Mark Your Attendance Automatically</h3>
-                        <p className="text-sm text-muted-foreground">Follow these steps to ensure your attendance is recorded correctly:</p>
-                    </div>
-                </div>
-                <ol className="list-decimal list-inside space-y-2 text-sm pl-2">
-                    <li>
-                        <strong>Navigate here during class time.</strong> This screen will show you which class is currently active.
-                    </li>
-                    <li>
-                        <strong>Tap the "Simulate NFC Scan" button.</strong> This will check you in for the current subject.
-                    </li>
-                    <li>
-                        <strong>Tap again to check out.</strong> At the end of the class, return to this screen and tap the button again to check out.
-                    </li>
-                </ol>
-                <p className="text-xs text-muted-foreground pl-2">
-                    <strong>Note:</strong> An administrator must define a Wi-Fi zone in the settings for this feature to work. This simulates being in a specific location like a classroom.
-                </p>
-            </div>
-
             <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border-2 border-dashed p-12 text-center">
-                <Fingerprint className="h-16 w-16 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                    {activeCheckIn ? "Tap to Check Out" : (currentSubject ? `Tap to Check In for ${currentSubject.name}`: "No class right now")}
-                </p>
-                <Button size="lg" onClick={handleNfcScan}>
-                    Simulate NFC Scan
-                </Button>
+                {icon}
+                <div className="space-y-1">
+                    <h3 className="text-xl font-semibold">{title}</h3>
+                    <p className="text-muted-foreground">{description}</p>
+                </div>
             </div>
           </CardContent>
         </Card>
     </div>
   );
 }
+
+    

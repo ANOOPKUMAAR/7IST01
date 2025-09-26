@@ -52,22 +52,6 @@ function StudentDashboard() {
             Here is an overview of your subjects and attendance.
           </p>
         </div>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <FileUp className="mr-2 h-4 w-4" /> Upload Timetable
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload Timetable</DialogTitle>
-              <DialogDescription>
-                Select an image or PDF file to bulk-import subjects using AI.
-              </DialogDescription>
-            </DialogHeader>
-            <UploadTimetableDialog onDone={() => setUploadDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
       </div>
 
       <Tabs defaultValue="table" className="w-full">
@@ -199,25 +183,6 @@ function FacultyDashboard() {
             Here is your weekly class schedule. Click on a class to manage attendance.
             </p>
         </div>
-         <Dialog open={isUploadTimetableOpen} onOpenChange={setUploadTimetableOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <Upload className="mr-2" /> Upload Timetable
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Upload Timetable for {faculty.name}</DialogTitle>
-                    <DialogDescription>
-                        Upload a new timetable file. This will replace your current schedule.
-                    </DialogDescription>
-                </DialogHeader>
-                <UploadFacultyTimetableDialog
-                    faculty={faculty}
-                    onDone={() => setUploadTimetableOpen(false)}
-                />
-            </DialogContent>
-        </Dialog>
       </div>
       <FacultyTimetable />
     </div>

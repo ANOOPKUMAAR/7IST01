@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -231,7 +232,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           userDetailsData.deviceId = generateDeviceId();
       }
       if (!userDetailsData.avatar) {
-          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo}/200`;
+          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo || Math.random()}/200`;
       }
       if (!userDetailsData.id) {
           userDetailsData.id = userDetailsData.rollNo;
@@ -242,17 +243,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
       setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
       setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
-      setModeState(storedMode ? JSON.parse(storedMode) : null);
+      const currentMode = storedMode ? JSON.parse(storedMode) : null;
+      setModeState(currentMode);
 
       setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
       setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
+      
       const studentList = storedStudents ? JSON.parse(storedStudents) : mockStudents;
       const studentMap = new Map<string, Student>();
-      
-      if(userDetailsData.id) {
+      studentList.forEach((s: Student) => studentMap.set(s.id, s));
+      // Ensure the currently "logged in" user is in the student list if they are a student
+      if (currentMode === 'student' && userDetailsData.id) {
         studentMap.set(userDetailsData.id, userDetailsData);
       }
-      studentList.forEach((s: Student) => studentMap.set(s.id, s));
       setStudents(Array.from(studentMap.values()));
       
       setFaculties(storedFaculties ? JSON.parse(storedFaculties) : mockFaculties);
@@ -861,21 +864,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProgramsBySchool((prev) => {
       const newState = JSON.parse(JSON.stringify(prev));
   
-      // Un-assign the faculty from all current classes
+      // Step 1: Un-assign the faculty from all classes.
       for (const schoolId in newState) {
         newState[schoolId].forEach((program: Program) => {
-          program.departments.forEach((department) => {
-            department.classes.forEach((cls) => {
-              cls.faculties = cls.faculties.filter((f: Faculty) => f.id !== faculty.id);
+          program.departments.forEach(department => {
+            department.classes.forEach(cls => {
+              cls.faculties = cls.faculties.filter(
+                (f: Faculty) => f.id !== faculty.id
+              );
             });
           });
         });
       }
   
-      // Match or create and assign new classes
+      // Step 2: Assign faculty to new classes based on flexible matching or creation.
       for (const newClassData of classes) {
         let classAssigned = false;
-        // Attempt to find a matching class
         for (const schoolId in newState) {
           if (classAssigned) break;
           for (const program of newState[schoolId]) {
@@ -900,31 +904,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
   
-        // If no class was matched, create a new one
         if (!classAssigned && newClassData.name && newClassData.day && newClassData.startTime && newClassData.endTime) {
-          // Find the first department of the first program in the first school to add the class to. This is a fallback.
-          const targetSchoolId = Object.keys(newState)[0];
-          if (targetSchoolId) {
-             const targetProgram = newState[targetSchoolId][0];
-             if(targetProgram) {
-                const targetDepartment = targetProgram.departments[0];
-                if(targetDepartment) {
-                    const newClass: Class = {
-                        id: `cls_${Date.now()}_${Math.random()}`,
-                        name: newClassData.name,
-                        coordinator: newClassData.coordinator || 'N/A',
-                        day: newClassData.day,
-                        startTime: newClassData.startTime,
-                        endTime: newClassData.endTime,
-                        totalClasses: newClassData.totalClasses || 20,
-                        students: [],
-                        faculties: [faculty],
-                    };
-                    targetDepartment.classes.push(newClass);
-                    createdCount++;
-                    assignedCount++;
+          // Find the faculty's department to add the class to
+          let targetDepartment: Department | undefined;
+          let targetSchoolId: string | undefined;
+          let targetProgramId: string | undefined;
+
+          for (const schoolId in newState) {
+             for (const program of newState[schoolId]) {
+                const dept = program.departments.find(d => d.name.toLowerCase() === faculty.department.toLowerCase());
+                if (dept) {
+                    targetDepartment = dept;
+                    targetSchoolId = schoolId;
+                    targetProgramId = program.id;
+                    break;
                 }
              }
+             if (targetDepartment) break;
+          }
+          
+          if(targetDepartment && targetSchoolId && targetProgramId) {
+             const newClass: Class = {
+                id: `cls_${Date.now()}_${Math.random()}`,
+                name: newClassData.name,
+                coordinator: newClassData.coordinator || 'N/A',
+                day: newClassData.day,
+                startTime: newClassData.startTime,
+                endTime: newClassData.endTime,
+                totalClasses: newClassData.totalClasses || 20,
+                students: [],
+                faculties: [faculty],
+            };
+            
+            const schoolIndex = newState[targetSchoolId].findIndex((p: Program) => p.id === targetProgramId);
+            if(schoolIndex !== -1) {
+                const programIndex = newState[targetSchoolId][schoolIndex].departments.findIndex((d: Department) => d.id === targetDepartment.id);
+                if(programIndex !== -1) {
+                     newState[targetSchoolId][schoolIndex].departments[programIndex].classes.push(newClass);
+                     createdCount++;
+                     assignedCount++;
+                }
+            }
           }
         }
       }
@@ -938,7 +958,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } else {
           toast({
             title: "No Classes Updated",
-            description: `No matching or new classes could be processed for ${faculty.name}.`,
+            description: `Could not find any matching or new classes for ${faculty.name}. Ensure the faculty's department exists.`,
             variant: "destructive",
           });
         }
@@ -1094,5 +1114,3 @@ export function useAppContext(): AppContextType {
   }
   return context;
 }
-
-    

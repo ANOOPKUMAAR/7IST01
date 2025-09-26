@@ -225,14 +225,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (storedUserDetails) {
           userDetailsData = JSON.parse(storedUserDetails);
       } else {
-          userDetailsData = { ...initialUserDetails, id: initialUserDetails.rollNo };
+          const newDeviceId = generateDeviceId();
+          userDetailsData = { 
+              ...initialUserDetails, 
+              id: initialUserDetails.rollNo, 
+              deviceId: newDeviceId, 
+              avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` 
+          };
       }
       
       if (!userDetailsData.deviceId) {
           userDetailsData.deviceId = generateDeviceId();
       }
       if (!userDetailsData.avatar) {
-          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo || Math.random()}/200`;
+          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo || 'default'}/200`;
       }
       if (!userDetailsData.id) {
           userDetailsData.id = userDetailsData.rollNo;
@@ -252,7 +258,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const studentList = storedStudents ? JSON.parse(storedStudents) : mockStudents;
       const studentMap = new Map<string, Student>();
       studentList.forEach((s: Student) => studentMap.set(s.id, s));
-      // Ensure the currently "logged in" user is in the student list if they are a student
       if (currentMode === 'student' && userDetailsData.id) {
         studentMap.set(userDetailsData.id, userDetailsData);
       }
@@ -276,7 +281,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFaculties(mockFaculties);
     }
     setIsLoaded(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save to localStorage when the user is about to leave the page
@@ -310,8 +314,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (role: UserMode, username: string, password?: string): boolean => {
-    // Simple mock authentication
-    if (password !== '7777' && role !== 'admin') {
+    if (role !== 'admin' && password !== '7777') {
       toast({ title: 'Invalid Password', variant: 'destructive'});
       return false;
     }
@@ -340,7 +343,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (student) {
             setModeState('student');
             setUserDetails(student);
-            // Maybe load student specific subjects/attendance if needed in future
             router.push('/dashboard');
             return true;
         }
@@ -353,7 +355,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setUserDetails({
                 id: faculty.id,
                 name: faculty.name,
-                rollNo: faculty.id,
+                rollNo: faculty.id, // Using id for rollNo field for consistency
                 email: faculty.email,
                 phone: faculty.phone,
                 department: faculty.department,
@@ -685,7 +687,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateStudent = (updatedStudent: Student) => {
     if (updatedStudent.id !== updatedStudent.rollNo) {
         toast({ title: "Update Failed", description: "Roll No cannot be changed as it is the primary key.", variant: "destructive" });
-        // Revert the change in UI if it's based on optimistic update
         setStudents(prev => [...prev]);
         return;
     }
@@ -700,7 +701,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteStudent = (studentId: string) => {
     setStudents(prev => prev.filter(s => s.id !== studentId));
-    // Also remove from all classes
     setProgramsBySchool(prev => {
         const newProgramsBySchool = { ...prev };
         for (const schoolId in newProgramsBySchool) {
@@ -793,7 +793,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const deleteFaculty = (facultyId: string) => {
       setFaculties(prev => prev.filter(f => f.id !== facultyId));
-      // Also remove from all classes
       setProgramsBySchool(prev => {
           const newProgramsBySchool = { ...prev };
           for (const schoolId in newProgramsBySchool) {
@@ -889,7 +888,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProgramsBySchool((prev) => {
       const newState = JSON.parse(JSON.stringify(prev));
   
-      // Step 1: Un-assign the faculty from all classes.
       for (const schoolId in newState) {
         newState[schoolId].forEach((program: Program) => {
           program.departments.forEach(department => {
@@ -902,7 +900,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
   
-      // Step 2: Assign faculty to new classes based on flexible matching or creation.
       for (const newClassData of classes) {
         let classAssigned = false;
         for (const schoolId in newState) {
@@ -930,7 +927,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
   
         if (!classAssigned && newClassData.name && newClassData.day && newClassData.startTime && newClassData.endTime) {
-          // Find the faculty's department to add the class to
           let targetDepartment: Department | undefined;
           let targetSchoolId: string | undefined;
           let targetProgramId: string | undefined;
@@ -961,11 +957,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 faculties: [faculty],
             };
             
-            const schoolIndex = newState[targetSchoolId].findIndex((p: Program) => p.id === targetProgramId);
-            if(schoolIndex !== -1) {
-                const programIndex = newState[targetSchoolId][schoolIndex].departments.findIndex((d: Department) => d.id === targetDepartment!.id);
-                if(programIndex !== -1) {
-                     newState[targetSchoolId][schoolIndex].departments[programIndex].classes.push(newClass);
+            const programIndex = newState[targetSchoolId].findIndex((p: Program) => p.id === targetProgramId);
+            if(programIndex !== -1) {
+                const deptIndex = newState[targetSchoolId][programIndex].departments.findIndex((d: Department) => d.id === targetDepartment!.id);
+                if(deptIndex !== -1) {
+                     newState[targetSchoolId][programIndex].departments[deptIndex].classes.push(newClass);
                      createdCount++;
                      assignedCount++;
                 }

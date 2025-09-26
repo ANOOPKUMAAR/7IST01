@@ -854,28 +854,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     classes: Partial<Class>[]
   ) => {
     let assignedCount = 0;
+    let createdCount = 0;
+  
     setProgramsBySchool((prev) => {
       const newState = JSON.parse(JSON.stringify(prev));
-
-      // Step 1: Un-assign the faculty member from all classes.
+  
+      // Un-assign the faculty from all current classes
       for (const schoolId in newState) {
         newState[schoolId].forEach((program: Program) => {
-          program.departments.forEach(department => {
-            department.classes.forEach(cls => {
-              const facultyIndex = cls.faculties.findIndex(
-                (f: Faculty) => f.id === faculty.id
-              );
-              if (facultyIndex !== -1) {
-                cls.faculties.splice(facultyIndex, 1);
-              }
+          program.departments.forEach((department) => {
+            department.classes.forEach((cls) => {
+              cls.faculties = cls.faculties.filter((f: Faculty) => f.id !== faculty.id);
             });
           });
         });
       }
-
-      // Step 2: Assign faculty to new classes based on flexible matching.
+  
+      // Match or create and assign new classes
       for (const newClassData of classes) {
         let classAssigned = false;
+        // Attempt to find a matching class
         for (const schoolId in newState) {
           if (classAssigned) break;
           for (const program of newState[schoolId]) {
@@ -883,13 +881,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             for (const department of program.departments) {
               if (classAssigned) break;
               for (const cls of department.classes) {
-                // Flexible matching: check name, day, and time
                 if (
                   cls.name.toLowerCase() === newClassData.name?.toLowerCase() &&
                   cls.day.toLowerCase() === newClassData.day?.toLowerCase() &&
                   cls.startTime === newClassData.startTime
                 ) {
-                  // Avoid duplicates
                   if (!cls.faculties.some((f: Faculty) => f.id === faculty.id)) {
                     cls.faculties.push(faculty);
                     assignedCount++;
@@ -901,23 +897,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
           }
         }
+  
+        // If no class was matched, create a new one
+        if (!classAssigned && newClassData.name && newClassData.day && newClassData.startTime && newClassData.endTime) {
+          // Find the first department of the first program in the first school to add the class to. This is a fallback.
+          const targetSchoolId = Object.keys(newState)[0];
+          if (targetSchoolId) {
+             const targetProgram = newState[targetSchoolId][0];
+             if(targetProgram) {
+                const targetDepartment = targetProgram.departments[0];
+                if(targetDepartment) {
+                    const newClass: Class = {
+                        id: `cls_${Date.now()}_${Math.random()}`,
+                        name: newClassData.name,
+                        coordinator: newClassData.coordinator || 'N/A',
+                        day: newClassData.day,
+                        startTime: newClassData.startTime,
+                        endTime: newClassData.endTime,
+                        totalClasses: newClassData.totalClasses || 20,
+                        students: [],
+                        faculties: [faculty],
+                    };
+                    targetDepartment.classes.push(newClass);
+                    createdCount++;
+                    assignedCount++;
+                }
+             }
+          }
+        }
       }
-
+  
       setTimeout(() => {
         if (assignedCount > 0) {
           toast({
-            title: "Timetable Updated",
-            description: `${faculty.name} has been assigned to ${assignedCount} classes.`,
+            title: "Timetable Processed",
+            description: `${faculty.name} was assigned to ${assignedCount} class(es). ${createdCount} new class(es) were created.`,
           });
         } else {
           toast({
-            title: "No Matching Classes Found",
-            description: `Could not find any existing classes that match the timetable for ${faculty.name}. Please ensure classes are created first.`,
+            title: "No Classes Updated",
+            description: `No matching or new classes could be processed for ${faculty.name}.`,
             variant: "destructive",
           });
         }
       }, 0);
-
+  
       return newState;
     });
   };

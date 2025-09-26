@@ -86,7 +86,7 @@ export function LoginForm({ role }: LoginFormProps) {
             />
             {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
              <p className="text-xs text-muted-foreground pt-1">
-                Hint: Use 'password' for any student/faculty, and 'admin'/'admin' for the admin.
+                Hint: Use '7777' for any student/faculty, and 'admin'/'admin' for the admin.
             </p>
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>

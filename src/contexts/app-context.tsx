@@ -311,7 +311,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const login = (role: UserMode, username: string, password?: string): boolean => {
     // Simple mock authentication
-    if (password !== 'password' && role !== 'admin') {
+    if (password !== '7777' && role !== 'admin') {
       toast({ title: 'Invalid Password', variant: 'destructive'});
       return false;
     }

@@ -49,7 +49,7 @@ interface AppContextType {
   students: Student[];
   faculties: Faculty[];
   facultyClasses: Class[];
-  setMode: (mode: UserMode) => void;
+  login: (role: UserMode, username: string, password?: string) => boolean;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, "id">[]) => void;
@@ -309,42 +309,67 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setMode = (newMode: UserMode) => {
-    setModeState(newMode);
-    if (newMode === 'student') {
-        const studentUser = students.find(s => s.rollNo === '20221IST0001') || students[0];
-        if (studentUser) {
-            setUserDetails(studentUser);
-        }
-        setSubjectsState(initialStudentSubjects);
-        setAttendance(generateInitialAttendance());
-    } else if (newMode === 'faculty') {
-        const facultyUser = faculties[0];
-        if (facultyUser) {
-            setUserDetails({
-                id: facultyUser.id,
-                name: facultyUser.name,
-                rollNo: facultyUser.id,
-                email: facultyUser.email,
-                phone: facultyUser.phone,
-                department: facultyUser.department,
-                designation: facultyUser.designation,
-                avatar: facultyUser.avatar
-            } as any);
-        }
-        setSubjectsState([]);
-        setAttendance({});
-    } else { // admin
-        setUserDetails({
-            id: 'admin',
-            name: 'Admin User',
-            rollNo: 'admin',
-            avatar: `https://picsum.photos/seed/admin/200`
-        } as any);
-        setSubjectsState([]);
-        setAttendance({});
+  const login = (role: UserMode, username: string, password?: string): boolean => {
+    // Simple mock authentication
+    if (password !== 'password' && role !== 'admin') {
+      toast({ title: 'Invalid Password', variant: 'destructive'});
+      return false;
     }
-  };
+    
+    if (role === 'admin') {
+        if (username === 'admin' && password === 'admin') {
+            setModeState('admin');
+            setUserDetails({
+                id: 'admin',
+                name: 'Admin User',
+                rollNo: 'admin',
+                avatar: `https://picsum.photos/seed/admin/200`
+            } as any);
+            setSubjectsState([]);
+            setAttendance({});
+            router.push('/dashboard');
+            return true;
+        } else {
+            toast({ title: 'Invalid Admin Credentials', variant: 'destructive'});
+            return false;
+        }
+    }
+
+    if (role === 'student') {
+        const student = students.find(s => s.rollNo === username);
+        if (student) {
+            setModeState('student');
+            setUserDetails(student);
+            // Maybe load student specific subjects/attendance if needed in future
+            router.push('/dashboard');
+            return true;
+        }
+    }
+    
+    if (role === 'faculty') {
+        const faculty = faculties.find(f => f.email === username);
+        if (faculty) {
+            setModeState('faculty');
+            setUserDetails({
+                id: faculty.id,
+                name: faculty.name,
+                rollNo: faculty.id,
+                email: faculty.email,
+                phone: faculty.phone,
+                department: faculty.department,
+                designation: faculty.designation,
+                avatar: faculty.avatar
+            } as any);
+            setSubjectsState([]);
+            setAttendance({});
+            router.push('/dashboard');
+            return true;
+        }
+    }
+
+    toast({ title: 'User not found', variant: 'destructive' });
+    return false;
+  }
 
   const logout = () => {
     setModeState(null);
@@ -1056,7 +1081,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     students,
     faculties,
     facultyClasses,
-    setMode,
+    login,
     logout,
     addSubject,
     bulkAddSubjects,

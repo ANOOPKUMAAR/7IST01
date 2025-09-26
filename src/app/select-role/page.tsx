@@ -1,21 +1,29 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { useAppContext } from '@/contexts/app-context';
+import { useState } from 'react';
 import type { UserMode } from '@/lib/types';
 import { Icons } from '@/components/icons';
 import { Card, CardContent } from '@/components/ui/card';
-import { GraduationCap, Briefcase, Database } from 'lucide-react';
+import { GraduationCap, Briefcase, Database, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LoginForm } from '@/components/auth/login-form';
+
 
 export default function SelectRolePage() {
-    const { setMode } = useAppContext();
-    const router = useRouter();
+    const [selectedRole, setSelectedRole] = useState<UserMode | null>(null);
 
-    const handleSelectRole = (mode: UserMode) => {
-        setMode(mode);
-        router.push('/dashboard');
-    };
+    if (selectedRole) {
+        return (
+             <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+                <div className="w-full max-w-sm space-y-6">
+                    <Button variant="ghost" onClick={() => setSelectedRole(null)} className="absolute top-4 left-4">
+                        <ArrowLeft className="mr-2"/> Back to role selection
+                    </Button>
+                    <LoginForm role={selectedRole} />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -27,14 +35,14 @@ export default function SelectRolePage() {
                 </div>
                  <Card>
                     <CardContent className="p-6 flex flex-col gap-4">
-                        <Button size="lg" onClick={() => handleSelectRole('student')}>
-                            <GraduationCap className="mr-2"/> Student Login
+                        <Button size="lg" onClick={() => setSelectedRole('student')}>
+                            <GraduationCap className="mr-2"/> Student
                         </Button>
-                        <Button size="lg" variant="secondary" onClick={() => handleSelectRole('faculty')}>
-                            <Briefcase className="mr-2"/> Faculty Login
+                        <Button size="lg" variant="secondary" onClick={() => setSelectedRole('faculty')}>
+                            <Briefcase className="mr-2"/> Faculty
                         </Button>
-                         <Button size="lg" variant="secondary" onClick={() => handleSelectRole('admin')}>
-                            <Database className="mr-2"/> Admin Login
+                         <Button size="lg" variant="secondary" onClick={() => setSelectedRole('admin')}>
+                            <Database className="mr-2"/> Admin
                          </Button>
                     </CardContent>
                 </Card>

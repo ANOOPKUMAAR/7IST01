@@ -11,6 +11,14 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+  } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Subject, Student, Class } from "@/lib/types";
@@ -97,7 +105,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const students = subject.students || [];
+  const students = useMemo(() => subject.students || [], [subject.students]);
 
   const presentCount = useMemo(() => {
     return Object.values(attendance).filter(s => s === 'present').length;
@@ -106,14 +114,12 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const isMismatch = cameraHeadcount !== null && cameraHeadcount !== presentCount;
 
   useEffect(() => {
-    if (isAttendanceActive) {
-      const initialAttendance: Record<string, AttendanceStatus> = {};
+    const initialAttendance: Record<string, AttendanceStatus> = {};
       students.forEach(student => {
         initialAttendance[student.id] = 'unmarked';
       });
       setAttendance(initialAttendance);
-    }
-  }, [isAttendanceActive, students]);
+  }, [students]);
 
   const handleWifiSync = async () => {
     if (cameraHeadcount === null) {
@@ -312,13 +318,39 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Attendance Not Started</CardTitle>
-                <CardDescription>Click the "Start Attendance" button to begin the session.</CardDescription>
+                <CardTitle>Class Roster ({students.length} Students)</CardTitle>
+                <CardDescription>A list of all students enrolled in {subject.name}.</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center text-center gap-4 p-12">
-                <Users className="h-24 w-24 text-muted-foreground" />
-                <p className="text-muted-foreground">The attendance roster will appear here once the session starts.</p>
+            <CardContent>
+                {students.length > 0 ? (
+                    <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Roll Number</TableHead>
+                                    <TableHead>Name</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {students.map(student => (
+                                    <TableRow key={student.id}>
+                                        <TableCell>{student.rollNo}</TableCell>
+                                        <TableCell>{student.name}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                ) : (
+                     <div className="flex flex-col items-center justify-center text-center gap-4 p-12">
+                        <Users className="h-24 w-24 text-muted-foreground" />
+                        <p className="text-muted-foreground">No students have been enrolled in this class yet.</p>
+                    </div>
+                )}
             </CardContent>
+            <CardFooter className="border-t pt-6">
+                <p className="text-sm text-muted-foreground">Click the "Start Attendance" button to begin the session.</p>
+            </CardFooter>
         </Card>
     );
   }
@@ -380,7 +412,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Class Roster</CardTitle>
+                        <CardTitle>Mark Attendance ({students.length} Students)</CardTitle>
                         <CardDescription>Mark attendance for each student below.</CardDescription>
                     </div>
                     <div className="flex gap-2">
@@ -422,6 +454,3 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 }
 
     
-
-    
-

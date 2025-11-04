@@ -26,8 +26,9 @@ const studentNames = [
     "Riya Chopra", "Amit Singh", "Deepika Reddy", "Vikram Rathore"
 ];
 
-export const mockStudents: Student[] = studentNames.map((name, index) => {
+export const mockStudents: Student[] = Array.from({ length: 54 }, (_, index) => {
     const rollNo = `20221IST${(index + 1).toString().padStart(4, '0')}`;
+    const name = studentNames[index % studentNames.length] + (index >= studentNames.length ? ` ${Math.floor(index / studentNames.length) + 1}` : '');
     return {
         ...baseStudentDetails,
         id: rollNo,
@@ -63,7 +64,7 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
                 { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(40, 50), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [], totalClasses: 15 },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ist', name: 'IST', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]], totalClasses: 20 },
+                 { id: 'ist', name: 'CSE1147', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]], totalClasses: 20 },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },

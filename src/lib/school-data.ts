@@ -1,3 +1,4 @@
+
 import type { Student, School, Program, Faculty } from './types';
 import { mockFaculties } from './faculty-data';
 
@@ -11,23 +12,31 @@ const baseStudentDetails = {
     address: "123 University Ave, College Town, USA",
 };
 
-export const mockStudents: Student[] = [
-    { ...baseStudentDetails, id: '20221IST0001', name: 'Bob Johnson', rollNo: '20221IST0001', deviceId: 'dev_user', avatar: `https://picsum.photos/seed/s0/200` },
-    { ...baseStudentDetails, id: '20221IST0002', name: 'Priya Singh', rollNo: '20221IST0002', deviceId: 'dev_abc123', avatar: `https://picsum.photos/seed/s1/200` },
-    { ...baseStudentDetails, id: '20221IST0003', name: 'Rohan Gupta', rollNo: '20221IST0003', deviceId: 'dev_def456', avatar: `https://picsum.photos/seed/s2/200` },
-    { ...baseStudentDetails, id: '20221IST0004', name: 'Sneha Patel', rollNo: '20221IST0004', deviceId: 'dev_ghi789', avatar: `https://picsum.photos/seed/s3/200` },
-    { ...baseStudentDetails, id: '20221IST0005', name: 'Vikram Reddy', rollNo: '20221IST0005', deviceId: 'dev_jkl012', avatar: `https://picsum.photos/seed/s4/200` },
-    { ...baseStudentDetails, id: '20221IST0006', name: 'Anjali Desai', rollNo: '20221IST0006', deviceId: 'dev_mno345', avatar: `https://picsum.photos/seed/s5/200` },
-    { ...baseStudentDetails, id: '20221IST0007', name: 'Karan Kumar', rollNo: '20221IST0007', deviceId: 'dev_pqr678', avatar: `https://picsum.photos/seed/s6/200` },
-    { ...baseStudentDetails, id: '20221IST0008', name: 'Neha Joshi', rollNo: '20221IST0008', deviceId: 'dev_stu901', avatar: `https://picsum.photos/seed/s7/200` },
-    { ...baseStudentDetails, id: '20221IST0009', name: 'Sameer Verma', rollNo: '20221IST0009', deviceId: 'dev_vwx234', avatar: `https://picsum.photos/seed/s8/200` },
-    { ...baseStudentDetails, id: '20221IST0010', name: 'Pooja Mehta', rollNo: '20221IST0010', deviceId: 'dev_yza567', avatar: `https://picsum.photos/seed/s9/200` },
-    { ...baseStudentDetails, id: '20221IST0011', name: 'Arjun Nair', rollNo: '20221IST0011', deviceId: 'dev_bcd890', avatar: `https://picsum.photos/seed/s10/200` },
-    { ...baseStudentDetails, id: '20221IST0012', name: 'Divya Iyer', rollNo: '20221IST0012', deviceId: 'dev_efg123', avatar: `https://picsum.photos/seed/s11/200` },
-    { ...baseStudentDetails, id: '20221IST0013', name: 'Harish Singhania', rollNo: '20221IST0013', deviceId: 'dev_hij456', avatar: `https://picsum.photos/seed/s12/200` },
-    { ...baseStudentDetails, id: '20221IST0014', name: 'Ishita Chatterjee', rollNo: '20221IST0014', deviceId: 'dev_klm789', avatar: `https://picsum.photos/seed/s13/200` },
-    { ...baseStudentDetails, id: '20221IST0015', name: 'Manish Pandey', rollNo: '20221IST0015', deviceId: 'dev_nop012', avatar: `https://picsum.photos/seed/s14/200` },
+const studentNames = [
+    "Aarav Sharma", "Vivaan Singh", "Aditya Kumar", "Vihaan Patel", "Arjun Gupta", 
+    "Sai Reddy", "Reyansh Joshi", "Ayaan Verma", "Krishna Mehta", "Ishaan Ali",
+    "Saanvi Sharma", "Aanya Singh", "Aadhya Kumar", "Ananya Patel", "Diya Gupta",
+    "Pari Reddy", "Myra Joshi", "Aarohi Verma", "Anika Mehta", "Navya Ali",
+    "Rohan Desai", "Aryan Khan", "Advik Iyer", "Kabir Chatterjee", "Ansh Pandey",
+    "Ishika Shah", "Prisha Reddy", "Zara Das", "Samaira Basu", "Kiara Menon",
+    "Mohammed Rahman", "Yusuf Ahmed", "Fatima Begum", "Aisha Khanom", "Zainab Sultana",
+    "Liam O'Sullivan", "Aoife Murphy", "Finn Kelly", "Ciara Walsh", "Niamh Byrne",
+    "Alex Johnson", "Taylor Smith", "Jordan Williams", "Morgan Brown", "Casey Jones",
+    "Dev Patel", "Rajesh Koothrappali", "Priya Kumar", "Sunita Sharma", "Anil Gupta",
+    "Riya Chopra", "Amit Singh", "Deepika Reddy", "Vikram Rathore"
 ];
+
+export const mockStudents: Student[] = studentNames.map((name, index) => {
+    const rollNo = `20221IST${(index + 1).toString().padStart(4, '0')}`;
+    return {
+        ...baseStudentDetails,
+        id: rollNo,
+        name: name,
+        rollNo: rollNo,
+        deviceId: `dev_${rollNo}`,
+        avatar: `https://picsum.photos/seed/${rollNo}/200`
+    };
+});
 
 
 export const initialSchools: School[] = [
@@ -43,18 +52,18 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
     engineering: [
         { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [
             {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing', classes: [
-                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace', students: mockStudents.slice(0, 2), day: 'Monday', startTime: '09:00', endTime: '10:30', faculties: mockFaculties.slice(0,2), totalClasses: 20 },
-                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents.slice(2, 5), day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: [mockFaculties[2]], totalClasses: 25 },
+                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace', students: mockStudents.slice(0, 10), day: 'Monday', startTime: '09:00', endTime: '10:30', faculties: mockFaculties.slice(0,2), totalClasses: 20 },
+                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents.slice(10, 20), day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: [mockFaculties[2]], totalClasses: 25 },
             ]},
             {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
-                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(1, 3), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [], totalClasses: 18 },
-                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(0, 4), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[4]], totalClasses: 22 },
+                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(20, 30), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [], totalClasses: 18 },
+                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(30, 40), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[4]], totalClasses: 22 },
             ]},
             {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
-                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(3, 5), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [], totalClasses: 15 },
+                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(40, 50), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [], totalClasses: 15 },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ist', name: 'IST', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents.slice(0, 15), day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]], totalClasses: 20 },
+                 { id: 'ist', name: 'IST', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]], totalClasses: 20 },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },
@@ -95,5 +104,3 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
         { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', name: 'Fashion Design', hod: 'Dr. Coco Chanel', classes: []}]},
     ],
 };
-
-    

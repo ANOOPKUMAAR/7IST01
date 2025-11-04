@@ -165,7 +165,11 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       startAttendanceSystems();
     } else {
       setCameraHeadcount(null);
-      setAttendance({});
+      const unmarkedAttendance: Record<string, AttendanceStatus> = {};
+      students.forEach(student => {
+        unmarkedAttendance[student.id] = 'unmarked';
+      });
+      setAttendance(unmarkedAttendance);
       stopCameraStream(streamRef.current, videoRef.current);
       streamRef.current = null;
     }
@@ -175,7 +179,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       streamRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAttendanceActive, subject.id]);
+  }, [isAttendanceActive, subject.id, students]);
 
 
   const handleWifiSync = async () => {

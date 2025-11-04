@@ -49,7 +49,7 @@ interface AppContextType {
   students: Student[];
   faculties: Faculty[];
   facultyClasses: Class[];
-  login: (role: UserMode, username: string) => boolean;
+  login: (role: UserMode, username?: string) => boolean;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, "id">[]) => void;
@@ -313,55 +313,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (role: UserMode, username: string): boolean => {
+  const login = (role: UserMode, username?: string): boolean => {
+    let userToLogin: (Student | Faculty | { id: string, name: string, rollNo: string, avatar: string }) | undefined;
+    let defaultUsername: string;
+
     if (role === 'admin') {
-        if (username === 'admin') {
-            setModeState('admin');
-            setUserDetails({
-                id: 'admin',
-                name: 'Admin User',
-                rollNo: 'admin',
-                avatar: `https://picsum.photos/seed/admin/200`
-            } as any);
-            setSubjectsState([]);
-            setAttendance({});
-            router.push('/dashboard');
-            return true;
-        } else {
-            toast({ title: 'Invalid Admin Username', variant: 'destructive'});
-            return false;
-        }
+        defaultUsername = 'admin';
+        userToLogin = {
+            id: 'admin',
+            name: 'Admin User',
+            rollNo: 'admin',
+            avatar: `https://picsum.photos/seed/admin/200`
+        };
+    } else if (role === 'student') {
+        defaultUsername = '20221IST0001';
+        userToLogin = students.find(s => s.rollNo === (username || defaultUsername));
+    } else if (role === 'faculty') {
+        defaultUsername = 'geoffrey.hinton@example.com';
+        userToLogin = faculties.find(f => f.email === (username || defaultUsername));
+    } else {
+        toast({ title: 'Invalid Role', variant: 'destructive' });
+        return false;
     }
 
-    if (role === 'student') {
-        const student = students.find(s => s.rollNo === username);
-        if (student) {
-            setModeState('student');
-            setUserDetails(student);
-            router.push('/dashboard');
-            return true;
-        }
-    }
-    
-    if (role === 'faculty') {
-        const faculty = faculties.find(f => f.email === username);
-        if (faculty) {
-            setModeState('faculty');
-            setUserDetails({
-                id: faculty.id,
-                name: faculty.name,
-                rollNo: faculty.id, // Using id for rollNo field for consistency
-                email: faculty.email,
-                phone: faculty.phone,
-                department: faculty.department,
-                designation: faculty.designation,
-                avatar: faculty.avatar
-            } as any);
+    if (userToLogin) {
+        setModeState(role);
+        setUserDetails(userToLogin as any);
+        if (role !== 'student') {
             setSubjectsState([]);
             setAttendance({});
-            router.push('/dashboard');
-            return true;
         }
+        router.push('/dashboard');
+        return true;
     }
 
     toast({ title: 'User not found', variant: 'destructive' });

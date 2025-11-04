@@ -121,6 +121,63 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       setAttendance(initialAttendance);
   }, [students]);
 
+  useEffect(() => {
+    const startAttendanceSystems = async () => {
+      startClassAttendance(subject);
+      
+      const newAttendanceState: Record<string, AttendanceStatus> = {};
+      students.forEach(student => {
+        newAttendanceState[student.id] = 'unmarked';
+      });
+
+      // Automatically mark a few students as present for demonstration
+      const studentsToMark = [
+          students.find(s => s.rollNo === '20221IST0002'),
+          students.find(s => s.rollNo === '20221IST0005'),
+          students.find(s => s.rollNo === '20221IST0008')
+      ].filter(Boolean) as Student[];
+
+      if (studentsToMark.length > 0) {
+        setTimeout(() => {
+          setAttendance(prev => {
+            const updatedAttendance = { ...prev };
+            studentsToMark.forEach(student => {
+                updatedAttendance[student.id] = 'present';
+            });
+            return updatedAttendance;
+          });
+          toast({
+              title: "Students Auto-Marked",
+              description: `${studentsToMark.map(s => s.name.split(' ')[0]).join(', ')} marked present via auto check-in.`
+          })
+        }, 3000);
+      } else {
+        setAttendance(newAttendanceState);
+      }
+      
+      streamRef.current = await requestCameraPermission(videoRef.current, true);
+      if(streamRef.current){
+        fetchCameraHeadcount();
+      }
+    };
+    
+    if (isAttendanceActive) {
+      startAttendanceSystems();
+    } else {
+      setCameraHeadcount(null);
+      setAttendance({});
+      stopCameraStream(streamRef.current, videoRef.current);
+      streamRef.current = null;
+    }
+
+    return () => {
+      stopCameraStream(streamRef.current, videoRef.current);
+      streamRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAttendanceActive, subject.id]);
+
+
   const handleWifiSync = async () => {
     if (cameraHeadcount === null) {
         toast({
@@ -224,49 +281,6 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
         setIsVerifyingCamera(false);
     }
   }, [toast]);
-
-  useEffect(() => {
-    const startAttendanceSystems = async () => {
-      startClassAttendance(subject);
-      
-      const newAttendanceState: Record<string, AttendanceStatus> = {};
-      students.forEach(student => {
-        newAttendanceState[student.id] = 'unmarked';
-      });
-      setAttendance(newAttendanceState);
-
-      const studentToMark = students.find(s => s.rollNo === '20221IST0002');
-      if (studentToMark) {
-          setTimeout(() => {
-              setAttendance(prev => ({...prev, [studentToMark.id]: 'present'}));
-              toast({
-                  title: "Student Auto-Marked",
-                  description: `${studentToMark.name} has been marked present.`
-              })
-          }, 3000);
-      }
-      
-      streamRef.current = await requestCameraPermission(videoRef.current, true);
-      if(streamRef.current){
-        fetchCameraHeadcount();
-      }
-    };
-    
-    if (isAttendanceActive) {
-      startAttendanceSystems();
-    } else {
-      setCameraHeadcount(null);
-      setAttendance({});
-      stopCameraStream(streamRef.current, videoRef.current);
-      streamRef.current = null;
-    }
-
-    return () => {
-      stopCameraStream(streamRef.current, videoRef.current);
-      streamRef.current = null;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAttendanceActive, subject.id]);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendance(prev => ({ ...prev, [studentId]: status }));

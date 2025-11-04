@@ -5,7 +5,7 @@ import { mockFaculties } from './faculty-data';
 const baseStudentDetails = {
     program: "Bachelor of Technology",
     branch: "Computer Science",
-    department: "Engineering",
+    department: "Data Science",
     section: "A",
     phone: "+1 (555) 123-4567",
     parentName: "Parent Name",

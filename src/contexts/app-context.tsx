@@ -211,23 +211,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const currentMode = storedMode ? JSON.parse(storedMode) : null;
       setModeState(currentMode);
 
-      let storedUserDetails = localStorage.getItem("witrack_userDetails");
-      let userDetailsData: (UserDetails & { id: string }) | null = storedUserDetails ? JSON.parse(storedUserDetails) : null;
-
-      if (!userDetailsData?.deviceId) {
-        if(userDetailsData) {
-          userDetailsData.deviceId = generateDeviceId();
-        }
+      let userDetailsData: (UserDetails & { id: string }) | null = null;
+      const storedUserDetails = localStorage.getItem("witrack_userDetails");
+      if (storedUserDetails) {
+        userDetailsData = JSON.parse(storedUserDetails);
       }
       
-      if (!userDetailsData?.avatar) {
-        if (userDetailsData) {
-          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo || 'default'}/200`;
-        }
-      }
+      const allFaculties = localStorage.getItem("witrack_faculties") ? JSON.parse(localStorage.getItem("witrack_faculties")!) : mockFaculties;
+      setFaculties(allFaculties);
 
-      if (userDetailsData) {
+      const allStudents = localStorage.getItem("witrack_students") ? JSON.parse(localStorage.getItem("witrack_students")!) : mockStudents;
+      setStudents(allStudents);
+
+      if (currentMode === 'student') {
+        const studentUser = allStudents.find((s: Student) => s.rollNo === '20221IST0001') || allStudents[0];
+        setUserDetails(studentUser);
+      } else if (currentMode === 'faculty') {
+        const facultyUser = allFaculties.find((f: Faculty) => f.email === 'geoffrey.hinton@example.com') || allFaculties[0];
+        setUserDetails(facultyUser as any);
+      } else if (currentMode === 'admin') {
+        setUserDetails({
+            id: 'admin',
+            name: 'Admin User',
+            rollNo: 'admin',
+            avatar: `https://picsum.photos/seed/admin/200`
+        } as any);
+      } else if(userDetailsData) {
         setUserDetails(userDetailsData);
+      } else {
+        const defaultStudent = allStudents.find((s: Student) => s.rollNo === '20221IST0001') || allStudents[0];
+        setUserDetails(defaultStudent);
       }
       
       const storedSubjects = localStorage.getItem("witrack_subjects");
@@ -248,15 +261,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedPrograms = localStorage.getItem("witrack_programs");
       setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
       
-      const storedStudents = localStorage.getItem("witrack_students");
-      setStudents(storedStudents ? JSON.parse(storedStudents) : mockStudents);
-
-      const storedFaculties = localStorage.getItem("witrack_faculties");
-      setFaculties(storedFaculties ? JSON.parse(storedFaculties) : mockFaculties);
-
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      // Fallback to initial data if localStorage is corrupt or unavailable
       const deviceId = generateDeviceId();
       const currentUserDetails = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
       
@@ -272,7 +278,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFaculties(mockFaculties);
     }
     setIsLoaded(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save to localStorage when the user is about to leave the page
@@ -317,8 +322,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
     } else if (role === 'student') {
         userToLogin = students.find(s => s.rollNo === '20221IST0001');
+        if (!userToLogin && students.length > 0) userToLogin = students[0];
     } else if (role === 'faculty') {
         userToLogin = faculties.find(f => f.email === 'geoffrey.hinton@example.com');
+        if (!userToLogin && faculties.length > 0) userToLogin = faculties[0];
     } else {
         toast({ title: 'Invalid Role', variant: 'destructive' });
         return false;
@@ -338,7 +345,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return true;
     }
 
-    toast({ title: 'Default user not found', variant: 'destructive' });
+    toast({ title: 'Default user not found', description: `Could not find the default user for the ${role} role.`, variant: 'destructive' });
     return false;
   }
 

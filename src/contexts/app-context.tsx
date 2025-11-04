@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import type { ReactNode } from "react";
@@ -49,7 +48,7 @@ interface AppContextType {
   students: Student[];
   faculties: Faculty[];
   facultyClasses: Class[];
-  login: (role: UserMode, username?: string) => boolean;
+  login: (role: UserMode) => boolean;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, "id">[]) => void;
@@ -208,67 +207,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const storedSubjects = localStorage.getItem("witrack_subjects");
-      const storedAttendance = localStorage.getItem("witrack_attendance");
-      const storedWifiZones = localStorage.getItem("witrack_wifiZones");
-      const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
       const storedMode = localStorage.getItem("witrack_mode");
-      
-      const storedSchools = localStorage.getItem("witrack_schools");
-      const storedPrograms = localStorage.getItem("witrack_programs");
-      const storedStudents = localStorage.getItem("witrack_students");
-      const storedFaculties = localStorage.getItem("witrack_faculties");
-
-      let storedUserDetails = localStorage.getItem("witrack_userDetails");
-      let userDetailsData;
-
-      if (storedUserDetails) {
-          userDetailsData = JSON.parse(storedUserDetails);
-      } else {
-          const newDeviceId = generateDeviceId();
-          userDetailsData = { 
-              ...initialUserDetails, 
-              id: initialUserDetails.rollNo, 
-              deviceId: newDeviceId, 
-              avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` 
-          };
-      }
-      
-      if (!userDetailsData.deviceId) {
-          userDetailsData.deviceId = generateDeviceId();
-      }
-      if (!userDetailsData.avatar) {
-          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo || 'default'}/200`;
-      }
-      if (!userDetailsData.id) {
-          userDetailsData.id = userDetailsData.rollNo;
-      }
-      setUserDetails(userDetailsData);
-      
-      setSubjectsState(storedSubjects ? JSON.parse(storedSubjects) : initialStudentSubjects);
-      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
-      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
       const currentMode = storedMode ? JSON.parse(storedMode) : null;
       setModeState(currentMode);
 
+      let storedUserDetails = localStorage.getItem("witrack_userDetails");
+      let userDetailsData: (UserDetails & { id: string }) | null = storedUserDetails ? JSON.parse(storedUserDetails) : null;
+
+      if (!userDetailsData?.deviceId) {
+        if(userDetailsData) {
+          userDetailsData.deviceId = generateDeviceId();
+        }
+      }
+      
+      if (!userDetailsData?.avatar) {
+        if (userDetailsData) {
+          userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo || 'default'}/200`;
+        }
+      }
+
+      if (userDetailsData) {
+        setUserDetails(userDetailsData);
+      }
+      
+      const storedSubjects = localStorage.getItem("witrack_subjects");
+      setSubjectsState(storedSubjects ? JSON.parse(storedSubjects) : (currentMode === 'student' ? initialStudentSubjects : []));
+      
+      const storedAttendance = localStorage.getItem("witrack_attendance");
+      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : (currentMode === 'student' ? generateInitialAttendance() : {}));
+      
+      const storedWifiZones = localStorage.getItem("witrack_wifiZones");
+      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+      
+      const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
+      setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
+      
+      const storedSchools = localStorage.getItem("witrack_schools");
       setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
+      
+      const storedPrograms = localStorage.getItem("witrack_programs");
       setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
       
-      const studentList = storedStudents ? JSON.parse(storedStudents) : mockStudents;
-      const studentMap = new Map<string, Student>();
-      studentList.forEach((s: Student) => studentMap.set(s.id, s));
-      if (currentMode === 'student' && userDetailsData.id) {
-        studentMap.set(userDetailsData.id, userDetailsData);
-      }
-      setStudents(Array.from(studentMap.values()));
-      
+      const storedStudents = localStorage.getItem("witrack_students");
+      setStudents(storedStudents ? JSON.parse(storedStudents) : mockStudents);
+
+      const storedFaculties = localStorage.getItem("witrack_faculties");
       setFaculties(storedFaculties ? JSON.parse(storedFaculties) : mockFaculties);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
+      // Fallback to initial data if localStorage is corrupt or unavailable
       const deviceId = generateDeviceId();
       const currentUserDetails = { ...initialUserDetails, id: initialUserDetails.rollNo, deviceId, avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
+      
       setUserDetails(currentUserDetails);
       setSubjectsState(initialStudentSubjects);
       setAttendance(generateInitialAttendance());
@@ -277,10 +268,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setModeState(null);
       setSchools(initialSchools);
       setProgramsBySchool(initialProgramsBySchool);
-      setStudents([currentUserDetails, ...mockStudents]);
+      setStudents(mockStudents);
       setFaculties(mockFaculties);
     }
     setIsLoaded(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save to localStorage when the user is about to leave the page
@@ -313,12 +305,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (role: UserMode, username?: string): boolean => {
+  const login = (role: UserMode): boolean => {
     let userToLogin: (Student | Faculty | { id: string, name: string, rollNo: string, avatar: string }) | undefined;
-    let defaultUsername: string;
-
+    
     if (role === 'admin') {
-        defaultUsername = 'admin';
         userToLogin = {
             id: 'admin',
             name: 'Admin User',
@@ -326,11 +316,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             avatar: `https://picsum.photos/seed/admin/200`
         };
     } else if (role === 'student') {
-        defaultUsername = '20221IST0001';
-        userToLogin = students.find(s => s.rollNo === (username || defaultUsername));
+        userToLogin = students.find(s => s.rollNo === '20221IST0001');
     } else if (role === 'faculty') {
-        defaultUsername = 'geoffrey.hinton@example.com';
-        userToLogin = faculties.find(f => f.email === (username || defaultUsername));
+        userToLogin = faculties.find(f => f.email === 'geoffrey.hinton@example.com');
     } else {
         toast({ title: 'Invalid Role', variant: 'destructive' });
         return false;
@@ -339,7 +327,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (userToLogin) {
         setModeState(role);
         setUserDetails(userToLogin as any);
-        if (role !== 'student') {
+        if (role === 'student') {
+            setSubjectsState(initialStudentSubjects);
+            setAttendance(generateInitialAttendance());
+        } else {
             setSubjectsState([]);
             setAttendance({});
         }
@@ -347,13 +338,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return true;
     }
 
-    toast({ title: 'User not found', variant: 'destructive' });
+    toast({ title: 'Default user not found', variant: 'destructive' });
     return false;
   }
 
   const logout = () => {
     setModeState(null);
-    localStorage.removeItem("witrack_mode");
     router.push('/select-role');
     toast({ title: "Logged Out" });
   };

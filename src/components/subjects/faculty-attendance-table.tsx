@@ -105,6 +105,16 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   
   const isMismatch = cameraHeadcount !== null && cameraHeadcount !== presentCount;
 
+  useEffect(() => {
+    if (isAttendanceActive) {
+      const initialAttendance: Record<string, AttendanceStatus> = {};
+      students.forEach(student => {
+        initialAttendance[student.id] = 'unmarked';
+      });
+      setAttendance(initialAttendance);
+    }
+  }, [isAttendanceActive, students]);
+
   const handleWifiSync = async () => {
     if (cameraHeadcount === null) {
         toast({
@@ -414,3 +424,4 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     
 
     
+

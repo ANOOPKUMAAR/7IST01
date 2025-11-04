@@ -49,7 +49,7 @@ interface AppContextType {
   students: Student[];
   faculties: Faculty[];
   facultyClasses: Class[];
-  login: (role: UserMode, username: string, password?: string) => boolean;
+  login: (role: UserMode, username: string) => boolean;
   logout: () => void;
   addSubject: (subject: Omit<Subject, "id">) => void;
   bulkAddSubjects: (newSubjects: Omit<Subject, "id">[]) => void;
@@ -313,14 +313,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (role: UserMode, username: string, password?: string): boolean => {
-    if (role !== 'admin' && password !== '7777') {
-      toast({ title: 'Invalid Password', variant: 'destructive'});
-      return false;
-    }
-    
+  const login = (role: UserMode, username: string): boolean => {
     if (role === 'admin') {
-        if (username === 'admin' && password === 'admin') {
+        if (username === 'admin') {
             setModeState('admin');
             setUserDetails({
                 id: 'admin',
@@ -333,7 +328,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             router.push('/dashboard');
             return true;
         } else {
-            toast({ title: 'Invalid Admin Credentials', variant: 'destructive'});
+            toast({ title: 'Invalid Admin Username', variant: 'destructive'});
             return false;
         }
     }

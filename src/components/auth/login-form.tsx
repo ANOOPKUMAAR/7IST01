@@ -15,7 +15,6 @@ import { capitalize } from '@/lib/utils';
 
 const formSchema = z.object({
   username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
 });
 
 type FormInputs = z.infer<typeof formSchema>;
@@ -46,7 +45,7 @@ export function LoginForm({ role }: LoginFormProps) {
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     setIsLoading(true);
-    const success = login(role, data.username, data.password);
+    const success = login(role, data.username);
     if (!success) {
       setIsLoading(false);
     }
@@ -75,19 +74,6 @@ export function LoginForm({ role }: LoginFormProps) {
               autoComplete="username"
             />
             {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              {...register('password')}
-              autoComplete="current-password"
-            />
-            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-             <p className="text-xs text-muted-foreground pt-1">
-                Hint: Use '7777' for any student/faculty, and 'admin'/'admin' for the admin.
-            </p>
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? <Loader2 className="animate-spin" /> : `Login as ${capitalize(role)}`}

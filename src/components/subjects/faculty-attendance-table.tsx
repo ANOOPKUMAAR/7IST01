@@ -19,14 +19,23 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Subject, Student, Class } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye } from 'lucide-react';
+import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye, FileUp } from 'lucide-react';
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
 import { StudentDetailsDialog } from "@/components/admin/student-details-dialog";
+import { UploadRosterDialog } from "@/components/faculty/upload-roster-dialog";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
 
@@ -102,6 +111,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const [isVerifyingCamera, setIsVerifyingCamera] = useState(false);
   const [isSyncingWifi, setIsSyncingWifi] = useState(false);
   const [cameraHeadcount, setCameraHeadcount] = useState<number | null>(null);
+  const [isUploadRosterOpen, setUploadRosterOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -336,9 +346,25 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   if (!isAttendanceActive) {
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>Class Roster ({students.length} Students)</CardTitle>
-                <CardDescription>A list of all students enrolled in {subject.name}.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Class Roster ({students.length} Students)</CardTitle>
+                    <CardDescription>A list of all students enrolled in {subject.name}.</CardDescription>
+                </div>
+                <Dialog open={isUploadRosterOpen} onOpenChange={setUploadRosterOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline"><FileUp /> Upload Roster</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Upload Class Roster</DialogTitle>
+                            <DialogDescription>
+                                Upload a CSV or text file to enroll students in this class.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <UploadRosterDialog classId={subject.id} onDone={() => setUploadRosterOpen(false)} />
+                    </DialogContent>
+                </Dialog>
             </CardHeader>
             <CardContent>
                 {students.length > 0 ? (

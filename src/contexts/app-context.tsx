@@ -78,6 +78,7 @@ interface AppContextType {
   deleteStudent: (studentId: string) => void;
   addStudentToClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
   removeStudentFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
+  enrollStudentsInClass: (classId: string, newStudents: Omit<Student, "id" | "avatar" | "deviceId">[]) => void;
   addFaculty: (faculty: Omit<Faculty, "id">) => void;
   bulkAddFaculty: (newFaculty: Omit<Faculty, "id" | "avatar">[]) => void;
   updateFaculty: (faculty: Faculty) => void;
@@ -724,6 +725,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast({ title: "Student Removed from Class", variant: "destructive" });
   };
   
+  const enrollStudentsInClass = (classId: string, newStudents: Omit<Student, "id" | "avatar" | "deviceId">[]) => {
+    const studentMap = new Map<string, Student>();
+    students.forEach(s => studentMap.set(s.rollNo, s));
+    newStudents.forEach(s => {
+        studentMap.set(s.rollNo, {
+            ...s,
+            id: s.rollNo,
+            deviceId: generateDeviceId(),
+            avatar: `https://picsum.photos/seed/${s.rollNo}/200`,
+        });
+    });
+    const allStudents = Array.from(studentMap.values());
+    setStudents(allStudents);
+
+    const studentsToEnroll = newStudents.map(s => allStudents.find(st => st.rollNo === s.rollNo)!);
+
+    setProgramsBySchool(prev => {
+        const newState = { ...prev };
+        for (const schoolId in newState) {
+            for (const program of newState[schoolId]) {
+                for (const department of program.departments) {
+                    const cls = department.classes.find(c => c.id === classId);
+                    if (cls) {
+                        const classStudentMap = new Map<string, Student>();
+                        cls.students.forEach(s => classStudentMap.set(s.id, s));
+                        studentsToEnroll.forEach(s => classStudentMap.set(s.id, s));
+                        cls.students = Array.from(classStudentMap.values());
+                        break;
+                    }
+                }
+            }
+        }
+        return newState;
+    });
+
+    toast({
+        title: "Roster Updated",
+        description: `${newStudents.length} students have been enrolled in the class.`,
+    });
+  };
+  
   const addFaculty = (facultyData: Omit<Faculty, 'id'>) => {
       if (faculties.some(f => f.email.toLowerCase() === facultyData.email.toLowerCase())) {
           toast({ title: "Faculty Exists", description: "A faculty member with this email already exists.", variant: "destructive" });
@@ -1074,6 +1116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteStudent,
     addStudentToClass,
     removeStudentFromClass,
+    enrollStudentsInClass,
     addFaculty,
     bulkAddFaculty: bulkAddFaculty as any,
     updateFaculty,

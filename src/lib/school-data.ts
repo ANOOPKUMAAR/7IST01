@@ -57,7 +57,7 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
                 { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents.slice(10, 20), day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: [mockFaculties[2]], totalClasses: 25 },
             ]},
             {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
-                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(20, 30), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [], totalClasses: 18 },
+                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(20, 30), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [mockFaculties[3]], totalClasses: 18 },
                 { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(30, 40), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[4]], totalClasses: 22 },
             ]},
             {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [

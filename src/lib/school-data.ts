@@ -58,13 +58,13 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
             ]},
             {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
                 { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(20, 30), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [mockFaculties[3]], totalClasses: 18 },
-                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(30, 40), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[4]], totalClasses: 22 },
+                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents.slice(30, 40), day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[3], mockFaculties[4]], totalClasses: 22 },
             ]},
             {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
                 { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents.slice(40, 50), day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [], totalClasses: 15 },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ist', name: 'CSE1147', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [mockFaculties[3]], totalClasses: 20 },
+                 { id: 'ist', name: 'CSE1147', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [], totalClasses: 20 },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },
@@ -105,3 +105,5 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
         { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', name: 'Fashion Design', hod: 'Dr. Coco Chanel', classes: []}]},
     ],
 };
+
+    

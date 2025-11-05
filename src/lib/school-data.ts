@@ -64,7 +64,7 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
                 { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents, day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [], totalClasses: 15 },
             ]},
             {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'ist', name: 'CSE1147', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [], totalClasses: 20 },
+                 { id: 'cse1147', name: 'CSE1147', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [], totalClasses: 20 },
             ]},
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },

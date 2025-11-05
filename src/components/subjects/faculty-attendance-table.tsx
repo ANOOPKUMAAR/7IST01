@@ -130,29 +130,31 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
         newAttendanceState[student.id] = 'unmarked';
       });
 
-      // Automatically mark a few students as present for demonstration
-      const studentsToMark = [
-          students.find(s => s.rollNo === '20221IST0002'),
-          students.find(s => s.rollNo === '20221IST0005'),
-          students.find(s => s.rollNo === '20221IST0008')
-      ].filter(Boolean) as Student[];
+      setAttendance(newAttendanceState);
 
-      if (studentsToMark.length > 0) {
-        setTimeout(() => {
-          setAttendance(prev => {
-            const updatedAttendance = { ...prev };
-            studentsToMark.forEach(student => {
-                updatedAttendance[student.id] = 'present';
+      // Automatically mark a few students as present for demonstration
+      if(students.length > 0) {
+        const studentsToMark = [
+            students.find(s => s.rollNo === '20221IST0002'),
+            students.find(s => s.rollNo === '20221IST0005'),
+            students.find(s => s.rollNo === '20221IST0008')
+        ].filter(Boolean) as Student[];
+
+        if (studentsToMark.length > 0) {
+          setTimeout(() => {
+            setAttendance(prev => {
+              const updatedAttendance = { ...prev };
+              studentsToMark.forEach(student => {
+                  updatedAttendance[student.id] = 'present';
+              });
+              return updatedAttendance;
             });
-            return updatedAttendance;
-          });
-          toast({
-              title: "Students Auto-Marked",
-              description: `${studentsToMark.map(s => s.name.split(' ')[0]).join(', ')} marked present via auto check-in.`
-          })
-        }, 3000);
-      } else {
-        setAttendance(newAttendanceState);
+            toast({
+                title: "Students Auto-Marked",
+                description: `${studentsToMark.map(s => s.name.split(' ')[0]).join(', ')} marked present via auto check-in.`
+            })
+          }, 3000);
+        }
       }
       
       streamRef.current = await requestCameraPermission(videoRef.current, true);
@@ -179,7 +181,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       streamRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAttendanceActive, subject.id, students]);
+  }, [isAttendanceActive, subject.id]);
 
 
   const handleWifiSync = async () => {

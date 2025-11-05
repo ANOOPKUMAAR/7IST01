@@ -1,4 +1,5 @@
 
+
 import type { Student, School, Program, Faculty } from './types';
 import { mockFaculties } from './faculty-data';
 
@@ -49,23 +50,31 @@ export const initialSchools: School[] = [
     { id: 'design', name: 'School of Design' },
 ];
 
+const cs_ug_classes = [
+    { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace', students: mockStudents, day: 'Monday', startTime: '09:00', endTime: '10:30', faculties: mockFaculties.slice(0,2), totalClasses: 20 },
+    { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents, day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: [mockFaculties[2]], totalClasses: 25 },
+];
+
+const ai_classes = [
+    { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents.slice(0, 10), day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [mockFaculties[3]], totalClasses: 18 },
+    { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents, day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[3], mockFaculties[4]], totalClasses: 22 },
+];
+
+const cybersecurity_classes = [
+    { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents, day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [], totalClasses: 15 },
+];
+
+const datascience_classes = [
+     { id: 'cse1147', name: 'CSE1147', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [], totalClasses: 20 },
+];
+
 export const initialProgramsBySchool: Record<string, Program[]> = {
     engineering: [
         { id: 'btech-cs', name: 'B.Tech in Computer Science', description: 'Focuses on software development and theoretical computer science.', departments: [
-            {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing', classes: [
-                { id: 'cs101', name: 'Introduction to Programming', coordinator: 'Prof. Ada Lovelace', students: mockStudents, day: 'Monday', startTime: '09:00', endTime: '10:30', faculties: mockFaculties.slice(0,2), totalClasses: 20 },
-                { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents, day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: [mockFaculties[2]], totalClasses: 25 },
-            ]},
-            {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
-                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: [], day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [mockFaculties[3]], totalClasses: 18 },
-                { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents, day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[3], mockFaculties[4]], totalClasses: 22 },
-            ]},
-            {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
-                { id: 'cyb301', name: 'Network Security', coordinator: 'Prof. Ron Rivest', students: mockStudents, day: 'Friday', startTime: '13:00', endTime: '14:30', faculties: [], totalClasses: 15 },
-            ]},
-            {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: [
-                 { id: 'cse1147', name: 'CSE1147', coordinator: 'Prof. Jeff Hammerbacher', students: mockStudents, day: 'Monday', startTime: '16:00', endTime: '17:30', faculties: [], totalClasses: 20 },
-            ]},
+            {id: 'cs-ug', name: 'UG Computer Science', hod: 'Dr. Alan Turing', classes: cs_ug_classes },
+            {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: ai_classes },
+            {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: cybersecurity_classes },
+            {id: 'cs-ds', name: 'Data Science', hod: 'Dr. DJ Patil', classes: datascience_classes },
         ] },
         { id: 'mtech-cs', name: 'M.Tech in Computer Science', description: 'Advanced studies in computer science and research.', departments: [{id: 'cs-pg', name: 'Postgraduate Computer Science', hod: 'Dr. Grace Hopper', classes: []}] },
         { id: 'btech-mech', name: 'B.Tech in Mechanical Engineering', description: 'Covers the design, construction, and use of machines.', departments: [

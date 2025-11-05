@@ -388,7 +388,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mode, userDetails.id, programsBySchool, subjectsState]);
   
   const facultyClasses = useMemo(() => {
-    if (mode !== 'faculty') return [];
+    if (mode !== 'faculty' || !userDetails) return [];
     
     const facultyId = userDetails.id;
     if (!facultyId) return [];
@@ -405,7 +405,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     return assignedClasses;
 
-  }, [mode, userDetails.id, programsBySchool]);
+  }, [mode, userDetails, programsBySchool]);
 
 
   const addSubject = (subject: Omit<Subject, "id">) => {

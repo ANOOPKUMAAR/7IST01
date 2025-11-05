@@ -132,7 +132,6 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 
       setAttendance(newAttendanceState);
 
-      // Automatically mark a few students as present for demonstration
       if(students.length > 0) {
         const studentsToMark = [
             students.find(s => s.rollNo === '20221IST0002'),
@@ -472,5 +471,3 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
-
-    

@@ -89,7 +89,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                     variant={'secondary'}
                     onClick={() => onStatusChange(student.id, "present")}
                 >
-                    Present
+                    <UserCheck className="mr-2 h-4 w-4" /> Present
                 </Button>
                 <Button 
                     className="w-full"
@@ -97,7 +97,7 @@ function StudentAttendanceCard({ student, status, onStatusChange }: { student: S
                     variant={'secondary'}
                     onClick={() => onStatusChange(student.id, "absent")}
                 >
-                    Absent
+                    <UserX className="mr-2 h-4 w-4" /> Absent
                 </Button>
             </CardFooter>
         </Card>
@@ -359,7 +359,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                         <DialogHeader>
                             <DialogTitle>Upload Class Roster</DialogTitle>
                             <DialogDescription>
-                                Upload a CSV or text file to enroll students in this class.
+                                Upload a CSV, TXT, or Excel file to enroll students in this class.
                             </DialogDescription>
                         </DialogHeader>
                         <UploadRosterDialog classId={subject.id} onDone={() => setUploadRosterOpen(false)} />
@@ -414,7 +414,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                      <div className="flex gap-2">
                          <Button variant="outline" onClick={handleWifiSync} disabled={isSyncingWifi}>
                             {isSyncingWifi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2"/>}
-                            publish attendence
+                            Publish Attendance
                         </Button>
                          <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>
                             {isVerifyingCamera ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2"/>}
@@ -497,3 +497,5 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+    

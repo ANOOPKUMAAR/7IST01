@@ -81,11 +81,11 @@ export function UploadRosterDialog({ classId, onDone }: UploadRosterDialogProps)
           <Input
             id="roster-file"
             type="file"
-            accept=".csv, .txt"
+            accept=".csv, .txt, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={handleFileChange}
           />
           <p className="text-xs text-muted-foreground">
-            Upload a CSV or TXT file. The file should contain at least a name and roll number for each student.
+            Upload a CSV, TXT, or Excel file. The file should contain at least a name and roll number for each student.
           </p>
         </div>
       </div>
@@ -108,4 +108,3 @@ export function UploadRosterDialog({ classId, onDone }: UploadRosterDialogProps)
     </>
   );
 }
-

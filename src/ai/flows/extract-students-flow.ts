@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -27,7 +28,7 @@ const ExtractStudentsInputSchema = z.object({
   fileDataUri: z
     .string()
     .describe(
-      "A file (CSV, TXT) containing a list of students, as a data URI. It must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A file (CSV, TXT, XLSX) containing a list of students, as a data URI. It must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type ExtractStudentsInput = z.infer<typeof ExtractStudentsInputSchema>;
@@ -50,7 +51,7 @@ const prompt = ai.definePrompt({
   output: {schema: ExtractStudentsOutputSchema},
   prompt: `You are an expert at parsing and extracting structured information from various file formats containing student data.
 
-Analyze the provided file (e.g., CSV, TXT) and extract all the students listed. The file may contain headers or be simple comma-separated values. Identify the following details for each student. All fields are required except for 'phone', 'parentName', and 'address'.
+Analyze the provided file (e.g., CSV, TXT, Excel) and extract all the students listed. The file may contain headers or be simple comma-separated values. Identify the following details for each student. All fields are required except for 'phone', 'parentName', and 'address'.
 
 - name: The student's full name.
 - rollNo: The unique roll number or student ID.

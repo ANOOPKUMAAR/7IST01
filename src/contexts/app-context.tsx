@@ -381,16 +381,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mode, userDetails.id, programsBySchool, subjectsState]);
   
   const facultyClasses = useMemo(() => {
-    if (mode !== 'faculty') return [];
+    if (mode !== 'faculty' || !userDetails?.id) return [];
     
     const facultyId = userDetails.id;
-    if (!facultyId) return [];
-
     const assignedClasses: Class[] = [];
+
     Object.values(programsBySchool).flat().forEach(program => {
-        program.departments.forEach(department => {
-            department.classes.forEach(cls => {
-                if(cls.faculties.some(f => f.id === facultyId)) {
+        program.departments?.forEach(department => {
+            department.classes?.forEach(cls => {
+                if (cls.faculties?.some(f => f.id === facultyId)) {
                     assignedClasses.push(cls);
                 }
             })
@@ -398,7 +397,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     return assignedClasses;
 
-  }, [mode, userDetails.id, programsBySchool]);
+  }, [mode, userDetails?.id, programsBySchool]);
 
 
   const addSubject = (subject: Omit<Subject, "id">) => {

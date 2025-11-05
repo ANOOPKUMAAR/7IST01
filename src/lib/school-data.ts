@@ -57,7 +57,7 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
                 { id: 'cs201', name: 'Data Structures', coordinator: 'Prof. Niklaus Wirth', students: mockStudents, day: 'Wednesday', startTime: '11:00', endTime: '12:30', faculties: [mockFaculties[2]], totalClasses: 25 },
             ]},
             {id: 'cs-ai', name: 'Artificial Intelligence', hod: 'Dr. John McCarthy', classes: [
-                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: mockStudents, day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [mockFaculties[3]], totalClasses: 18 },
+                { id: 'ai301', name: 'Intro to AI', coordinator: 'Prof. Geoffrey Hinton', students: [], day: 'Tuesday', startTime: '14:00', endTime: '15:30', faculties: [mockFaculties[3]], totalClasses: 18 },
                 { id: 'ai401', name: 'Machine Learning', coordinator: 'Prof. Andrew Ng', students: mockStudents, day: 'Thursday', startTime: '10:00', endTime: '11:30', faculties: [mockFaculties[3], mockFaculties[4]], totalClasses: 22 },
             ]},
             {id: 'cs-cyber', name: 'Cybersecurity', hod: 'Dr. Kevin Mitnick', classes: [
@@ -105,5 +105,3 @@ export const initialProgramsBySchool: Record<string, Program[]> = {
         { id: 'bdes-fash', name: 'B.Des in Fashion Design', description: 'The art of applying design and aesthetics to clothing.', departments: [{id: 'fash-ug', name: 'Fashion Design', hod: 'Dr. Coco Chanel', classes: []}]},
     ],
 };
-
-    

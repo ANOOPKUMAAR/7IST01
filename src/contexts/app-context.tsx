@@ -207,60 +207,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const storedMode = localStorage.getItem("witrack_mode");
-      const currentMode = storedMode ? JSON.parse(storedMode) : null;
-      setModeState(currentMode);
-
-      let userDetailsData: (UserDetails & { id: string }) | null = null;
-      const storedUserDetails = localStorage.getItem("witrack_userDetails");
-      if (storedUserDetails) {
-        userDetailsData = JSON.parse(storedUserDetails);
-      }
-      
-      const allFaculties = localStorage.getItem("witrack_faculties") ? JSON.parse(localStorage.getItem("witrack_faculties")!) : mockFaculties;
-      setFaculties(allFaculties);
-
-      const allStudents = localStorage.getItem("witrack_students") ? JSON.parse(localStorage.getItem("witrack_students")!) : mockStudents;
-      setStudents(allStudents);
-
-      if (currentMode === 'student') {
-        const studentUser = allStudents.find((s: Student) => s.rollNo === '20221IST0001') || allStudents[0];
-        setUserDetails(studentUser);
-      } else if (currentMode === 'faculty') {
-        const facultyUser = allFaculties.find((f: Faculty) => f.email === 'geoffrey.hinton@example.com') || allFaculties[0];
-        setUserDetails(facultyUser as any);
-      } else if (currentMode === 'admin') {
-        setUserDetails({
-            id: 'admin',
-            name: 'Admin User',
-            rollNo: 'admin',
-            avatar: `https://picsum.photos/seed/admin/200`
-        } as any);
-      } else if(userDetailsData) {
-        setUserDetails(userDetailsData);
-      } else {
-        const defaultStudent = allStudents.find((s: Student) => s.rollNo === '20221IST0001') || allStudents[0];
-        setUserDetails(defaultStudent);
-      }
-      
       const storedSubjects = localStorage.getItem("witrack_subjects");
-      setSubjectsState(storedSubjects ? JSON.parse(storedSubjects) : (currentMode === 'student' ? initialStudentSubjects : []));
-      
       const storedAttendance = localStorage.getItem("witrack_attendance");
-      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : (currentMode === 'student' ? generateInitialAttendance() : {}));
-      
       const storedWifiZones = localStorage.getItem("witrack_wifiZones");
-      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
-      
       const storedActiveCheckIn = localStorage.getItem("witrack_activeCheckIn");
-      setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
+      const storedMode = localStorage.getItem("witrack_mode");
       
       const storedSchools = localStorage.getItem("witrack_schools");
-      setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
-      
       const storedPrograms = localStorage.getItem("witrack_programs");
-      setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
+      const storedStudents = localStorage.getItem("witrack_students");
+      const storedFaculties = localStorage.getItem("witrack_faculties");
+
+      let storedUserDetails = localStorage.getItem("witrack_userDetails");
+      let userDetailsData;
+
+      if (storedUserDetails) {
+          userDetailsData = JSON.parse(storedUserDetails);
+          if (!userDetailsData.deviceId) {
+              userDetailsData.deviceId = generateDeviceId();
+          }
+          if (!userDetailsData.avatar) {
+              userDetailsData.avatar = `https://picsum.photos/seed/${Math.random()}/200`;
+          }
+           if (!userDetailsData.id) {
+              userDetailsData.id = userDetailsData.rollNo;
+          }
+      } else {
+          userDetailsData = { ...initialUserDetails, deviceId: generateDeviceId(), avatar: `https://picsum.photos/seed/${initialUserDetails.rollNo}/200` };
+      }
+      setUserDetails(userDetailsData);
       
+      setSubjectsState(storedSubjects ? JSON.parse(storedSubjects) : initialStudentSubjects);
+      setAttendance(storedAttendance ? JSON.parse(storedAttendance) : generateInitialAttendance());
+      setWifiZones(storedWifiZones ? JSON.parse(storedWifiZones) : initialWifiZones);
+      setActiveCheckIn(storedActiveCheckIn ? JSON.parse(storedActiveCheckIn) : null);
+      setModeState(storedMode ? JSON.parse(storedMode) : null);
+
+      setSchools(storedSchools ? JSON.parse(storedSchools) : initialSchools);
+      setProgramsBySchool(storedPrograms ? JSON.parse(storedPrograms) : initialProgramsBySchool);
+      const studentList = storedStudents ? JSON.parse(storedStudents) : mockStudents;
+      const studentMap = new Map<string, Student>();
+      // Ensure current user is in the list
+      studentMap.set(userDetailsData.id, userDetailsData);
+      studentList.forEach((s: Student) => studentMap.set(s.id, s));
+      setStudents(Array.from(studentMap.values()));
+      
+      setFaculties(storedFaculties ? JSON.parse(storedFaculties) : mockFaculties);
+
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       const deviceId = generateDeviceId();
@@ -274,7 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setModeState(null);
       setSchools(initialSchools);
       setProgramsBySchool(initialProgramsBySchool);
-      setStudents(mockStudents);
+      setStudents([currentUserDetails, ...mockStudents]);
       setFaculties(mockFaculties);
     }
     setIsLoaded(true);
@@ -388,7 +381,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mode, userDetails.id, programsBySchool, subjectsState]);
   
   const facultyClasses = useMemo(() => {
-    if (mode !== 'faculty' || !userDetails) return [];
+    if (mode !== 'faculty') return [];
     
     const facultyId = userDetails.id;
     if (!facultyId) return [];
@@ -405,7 +398,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     return assignedClasses;
 
-  }, [mode, userDetails, programsBySchool]);
+  }, [mode, userDetails.id, programsBySchool]);
 
 
   const addSubject = (subject: Omit<Subject, "id">) => {

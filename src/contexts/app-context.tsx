@@ -76,6 +76,7 @@ interface AppContextType {
   bulkAddStudents: (newStudents: Omit<Student, "id" | 'avatar' | 'deviceId'>[]) => void;
   updateStudent: (student: Student) => void;
   deleteStudent: (studentId: string) => void;
+  enrollStudentInClass: (classId: string, studentData: { name: string; rollNo: string; }) => void;
   addStudentToClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
   removeStudentFromClass: (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => void;
   addFaculty: (faculty: Omit<Faculty, "id">) => void;
@@ -304,7 +305,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (role: UserMode): boolean => {
-    let userToLogin: (Student | Faculty | { id: string, name: string, rollNo: string, avatar: string }) | undefined;
+    let userToLogin: (Student | Faculty | { id: string, name: string, rollNo: string, avatar: string, email?: string, designation?: string, department?: string }) | undefined;
     
     if (role === 'admin') {
         userToLogin = {
@@ -685,6 +686,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return newProgramsBySchool;
     });
     toast({ title: "Student Deleted", variant: "destructive" });
+  };
+
+  const enrollStudentInClass = (classId: string, studentData: { name: string; rollNo: string; }) => {
+    let student = students.find(s => s.rollNo === studentData.rollNo);
+    let isNewStudent = false;
+    if (!student) {
+      isNewStudent = true;
+      const newStudent: Student = {
+        id: studentData.rollNo,
+        name: studentData.name,
+        rollNo: studentData.rollNo,
+        program: 'N/A',
+        branch: 'N/A',
+        department: 'N/A',
+        section: 'N/A',
+        phone: '',
+        parentName: '',
+        address: '',
+        deviceId: generateDeviceId(),
+        avatar: `https://picsum.photos/seed/${studentData.rollNo}/200`
+      };
+      setStudents(prev => [...prev, newStudent]);
+      student = newStudent;
+    }
+
+    setProgramsBySchool(prev => {
+      const newState = { ...prev };
+      for (const schoolId of Object.keys(newState)) {
+        for (const program of newState[schoolId]) {
+          for (const department of program.departments) {
+            const cls = department.classes.find(c => c.id === classId);
+            if (cls) {
+              if (!cls.students.some(s => s.id === student!.id)) {
+                cls.students.push(student!);
+                toast({
+                  title: isNewStudent ? "Student Created & Enrolled" : "Student Enrolled",
+                  description: `${student!.name} has been added to ${cls.name}.`
+                });
+              } else {
+                toast({
+                  title: "Student Already Enrolled",
+                  description: `${student!.name} is already in this class.`,
+                  variant: "destructive"
+                });
+              }
+              return newState;
+            }
+          }
+        }
+      }
+      return newState;
+    });
   };
 
   const addStudentToClass = (schoolId: string, programId: string, departmentId: string, classId: string, studentId: string) => {
@@ -1072,6 +1125,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     bulkAddStudents: bulkAddStudents as any,
     updateStudent,
     deleteStudent,
+    enrollStudentInClass,
     addStudentToClass,
     removeStudentFromClass,
     addFaculty,

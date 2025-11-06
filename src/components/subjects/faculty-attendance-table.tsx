@@ -24,9 +24,11 @@ import { Badge } from "@/components/ui/badge";
 import type { Subject, Student, Class } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye, Smartphone } from 'lucide-react';
+import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye, Smartphone, PlusCircle } from 'lucide-react';
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
 import { StudentDetailsDialog } from "@/components/admin/student-details-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { StudentEnrollmentDialog } from "@/components/faculty/student-enrollment-dialog";
 
 type AttendanceStatus = "present" | "absent" | "unmarked";
 
@@ -104,6 +106,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
   const [cameraHeadcount, setCameraHeadcount] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [isEnrollStudentOpen, setEnrollStudentOpen] = useState(false);
 
   const students = useMemo(() => subject.students || [], [subject.students]);
 
@@ -337,9 +340,22 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     return (
         <Card>
             <CardHeader>
-                <div>
-                    <CardTitle>Class Roster ({students.length} Students)</CardTitle>
-                    <CardDescription>A list of all students enrolled in {subject.name}.</CardDescription>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Class Roster ({students.length} Students)</CardTitle>
+                        <CardDescription>A list of all students enrolled in {subject.name}.</CardDescription>
+                    </div>
+                    <Dialog open={isEnrollStudentOpen} onOpenChange={setEnrollStudentOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline"><PlusCircle/> Add Student</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Enroll New Student</DialogTitle>
+                            </DialogHeader>
+                            <StudentEnrollmentDialog classId={subject.id} onDone={() => setEnrollStudentOpen(false)} />
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </CardHeader>
             <CardContent>
@@ -485,6 +501,3 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
-
-
-    

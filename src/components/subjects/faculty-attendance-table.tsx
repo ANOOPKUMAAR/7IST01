@@ -378,7 +378,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 
   return (
     <div className="space-y-6">
-        <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
+        <video ref={videoRef} className="w-1/2 mx-auto aspect-video rounded-md bg-muted" autoPlay muted playsInline />
 
         <Card className={cn(isMismatch && "border-destructive")}>
             <CardHeader>

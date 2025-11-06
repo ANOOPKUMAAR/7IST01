@@ -227,7 +227,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               userDetailsData.deviceId = generateDeviceId();
           }
           if (!userDetailsData.avatar) {
-              userDetailsData.avatar = `https://picsum.photos/seed/${Math.random()}/200`;
+              userDetailsData.avatar = `https://picsum.photos/seed/${userDetailsData.rollNo || userDetailsData.id}/200`;
           }
            if (!userDetailsData.id) {
               userDetailsData.id = userDetailsData.rollNo;

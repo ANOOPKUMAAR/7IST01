@@ -378,56 +378,62 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 
   return (
     <div className="space-y-6">
-        <video ref={videoRef} className="w-1/4 mx-auto aspect-video rounded-md bg-muted" autoPlay muted playsInline />
+        <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="w-full md:w-1/2 lg:w-1/3">
+                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
+            </div>
 
-        <Card className={cn(isMismatch && "border-destructive")}>
-            <CardHeader>
-                <div className="flex justify-between items-start flex-wrap gap-4">
-                    <div>
-                        <CardTitle>Attendance Verification</CardTitle>
-                        <CardDescription>Compare automated headcounts with your manual count.</CardDescription>
-                    </div>
-                     <div className="flex gap-2">
-                         <Button variant="outline" onClick={handleWifiSync} disabled={isSyncingWifi}>
-                            {isSyncingWifi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2"/>}
-                            Publish Attendance
-                        </Button>
-                         <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>
-                            {isVerifyingCamera ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2"/>}
-                            Refresh Camera
-                        </Button>
-                     </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 gap-4 rounded-lg bg-muted p-4">
-                     <div className="text-center">
-                        <p className="text-3xl font-bold flex items-center justify-center gap-2">
-                           <Camera/> {cameraHeadcount ?? '-'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">AI Camera Headcount</p>
-                    </div>
-                     <div className="text-center">
-                        <p className="text-3xl font-bold flex items-center justify-center gap-2">
-                           <Check/> {presentCount}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Marked as Present</p>
-                    </div>
-                </div>
-                {isMismatch && (
-                    <div className="mt-4 text-center text-destructive flex items-center justify-center gap-2">
-                       <AlertTriangle className="h-4 w-4" />
-                       <p>Camera headcount does not match. Please review.</p>
-                    </div>
-                )}
-                 {hasCameraPermission === false && (
-                    <div className="mt-4 text-center text-destructive flex items-center justify-center gap-2">
-                        <AlertTriangle className="h-4 w-4" />
-                        <p>Camera permission denied. Camera headcount is unavailable.</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+            <div className="flex-1 w-full">
+                <Card className={cn(isMismatch && "border-destructive")}>
+                    <CardHeader>
+                        <div className="flex justify-between items-start flex-wrap gap-4">
+                            <div>
+                                <CardTitle>Attendance Verification</CardTitle>
+                                <CardDescription>Compare automated headcounts with your manual count.</CardDescription>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={handleWifiSync} disabled={isSyncingWifi}>
+                                    {isSyncingWifi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wifi className="mr-2"/>}
+                                    Publish Attendance
+                                </Button>
+                                <Button variant="outline" onClick={fetchCameraHeadcount} disabled={isVerifyingCamera}>
+                                    {isVerifyingCamera ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2"/>}
+                                    Refresh Camera
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted p-4">
+                            <div className="text-center">
+                                <p className="text-3xl font-bold flex items-center justify-center gap-2">
+                                <Camera/> {cameraHeadcount ?? '-'}
+                                </p>
+                                <p className="text-sm text-muted-foreground">AI Camera Headcount</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-3xl font-bold flex items-center justify-center gap-2">
+                                <Check/> {presentCount}
+                                </p>
+                                <p className="text-sm text-muted-foreground">Marked as Present</p>
+                            </div>
+                        </div>
+                        {isMismatch && (
+                            <div className="mt-4 text-center text-destructive flex items-center justify-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            <p>Camera headcount does not match. Please review.</p>
+                            </div>
+                        )}
+                        {hasCameraPermission === false && (
+                            <div className="mt-4 text-center text-destructive flex items-center justify-center gap-2">
+                                <AlertTriangle className="h-4 w-4" />
+                                <p>Camera permission denied. Camera headcount is unavailable.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
 
         <Card>
             <CardHeader>

@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Subject, Student, Class } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye, FileUp } from 'lucide-react';
+import { Check, Wifi, Loader2, Users, AlertTriangle, Camera, UserCheck, UserX, Eye, Smartphone } from 'lucide-react';
 import { getCameraHeadcount } from "@/ai/flows/get-camera-headcount-flow";
 import { StudentDetailsDialog } from "@/components/admin/student-details-dialog";
 
@@ -378,8 +378,8 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
 
   return (
     <div className="space-y-6">
-        <div className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="w-full md:w-1/2 lg:w-1/3">
+       <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="w-full md:w-1/4 mx-auto">
                 <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
             </div>
 
@@ -404,7 +404,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg bg-muted p-4">
                             <div className="text-center">
                                 <p className="text-3xl font-bold flex items-center justify-center gap-2">
                                 <Camera/> {cameraHeadcount ?? '-'}
@@ -416,6 +416,12 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                                 <Check/> {presentCount}
                                 </p>
                                 <p className="text-sm text-muted-foreground">Marked as Present</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-3xl font-bold flex items-center justify-center gap-2">
+                                <Smartphone/> {presentCount}
+                                </p>
+                                <p className="text-sm text-muted-foreground">Devices Connected</p>
                             </div>
                         </div>
                         {isMismatch && (
@@ -479,3 +485,6 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
     </div>
   );
 }
+
+
+    

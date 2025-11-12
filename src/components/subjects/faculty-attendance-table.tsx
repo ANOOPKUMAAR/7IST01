@@ -136,24 +136,18 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       setAttendance(newAttendanceState);
 
       if(students.length > 0) {
-        const studentsToMark = [
-            students.find(s => s.rollNo === '20221IST0002'),
-            students.find(s => s.rollNo === '20221IST0005'),
-            students.find(s => s.rollNo === '20221IST0008')
-        ].filter(Boolean) as Student[];
+        const studentToMark = students.find(s => s.rollNo === '20221IST0004');
 
-        if (studentsToMark.length > 0) {
+        if (studentToMark) {
           setTimeout(() => {
             setAttendance(prev => {
               const updatedAttendance = { ...prev };
-              studentsToMark.forEach(student => {
-                  updatedAttendance[student.id] = 'present';
-              });
+              updatedAttendance[studentToMark.id] = 'present';
               return updatedAttendance;
             });
             toast({
-                title: "Students Auto-Marked",
-                description: `${studentsToMark.map(s => s.name.split(' ')[0]).join(', ')} marked present via auto check-in.`
+                title: "Student Auto-Marked",
+                description: `${studentToMark.name.split(' ')[0]} marked present via auto check-in.`
             })
           }, 3000);
         }
@@ -420,7 +414,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg bg-muted p-4">
+                        <div className="grid grid-cols-1 gap-4 rounded-lg bg-muted p-4">
                             <div className="text-center">
                                 <p className="text-3xl font-bold flex items-center justify-center gap-2">
                                 <Camera/> {cameraHeadcount ?? '-'}

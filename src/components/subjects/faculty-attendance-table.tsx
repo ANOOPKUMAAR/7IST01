@@ -133,7 +133,7 @@ export function FacultyAttendanceTable({ subject, isAttendanceActive }: { subjec
       setAttendance(newAttendanceState);
 
       if(students.length > 0) {
-        const studentToMark = students.find(s => s.rollNo === '20221IST0004');
+        const studentToMark = students[0];
 
         if (studentToMark) {
           setTimeout(() => {
